@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 import { connectDB } from './config/db';
 import userRoutes from './routes/userRoutes';
 import { User } from './models/User';
