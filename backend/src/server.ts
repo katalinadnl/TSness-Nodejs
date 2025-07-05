@@ -1,10 +1,12 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import jwt from 'jsonwebtoken';
 import { connectDB } from './config/db';
 import userRoutes from './routes/userRoutes';
 import { User } from './models/User';
+import trainingRoomRoutes from './routes/trainingRoomRoutes';
+import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
+import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -15,8 +17,18 @@ app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (_req: Request, res: Response) => {
-    res.json({ message: 'App is working and we can start the developement' });
+    res.json({
+        message: 'API Fitness - Gestion des salles d\'entraînement et types d\'exercices',
+        version: '1.0.0',
+        endpoints: {
+            trainingRooms: '/api/training-rooms',
+            exerciseTypes: '/api/exercise-types'
+        }
+    });
 });
+
+app.use('/api/training-rooms', trainingRoomRoutes);
+app.use('/api/exercise-types', exerciseTypeRoutes);
 
 app.get('/users', (_req: Request, res: Response) => {
     res.send('ici ya des users');
@@ -108,6 +120,9 @@ app.get('/api/verify-token', (req: Request, res: Response): void => {
 });
 
 app.use('/api/users', userRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 async function startServer() {
     try {
