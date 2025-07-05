@@ -1,38 +1,33 @@
 import dotenv from 'dotenv';
 import { connectDB } from '../config/db';
 import { User } from '../models/User';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-async function createAdmin() {
+async function getExistingAdmin() {
     await connectDB();
 
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-
-    const admin = new User({
-        username: 'superadmin',
-        email: 'admin@tsness.com',
-        password: hashedPassword,
-        firstName: 'Super',
-        lastName: 'Admin',
-        role: 'super_admin',
-        isActive: true
-    });
-
     try {
-        const savedAdmin = await admin.save();
-        console.log('Admin créé avec succès !');
-        console.log('ID:', savedAdmin._id);
+        const admin = await User.findOne({ role: 'super_admin' });
+
+        if (!admin) {
+            console.log('Aucun admin trouvé');
+            process.exit(1);
+        }
+
+        console.log('Admin trouvé !');
+        console.log('ID:', admin._id);
+        console.log('Username:', admin.username);
+        console.log('Email:', admin.email);
 
         const token = jwt.sign(
-            { userId: savedAdmin._id },
+            { userId: admin._id },
             process.env.JWT_SECRET as string,
             { expiresIn: '7d' }
         );
 
-        console.log('Token JWT de l\'utilisateur :');
+        console.log('Token JWT avec l\'admin existant :');
         console.log(token);
 
     } catch (error) {
@@ -42,4 +37,4 @@ async function createAdmin() {
     process.exit(0);
 }
 
-createAdmin();
+getExistingAdmin();

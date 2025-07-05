@@ -4,6 +4,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { connectDB } from './config/db';
 import userRoutes from './routes/userRoutes';
+import { User } from './models/User';
 
 dotenv.config();
 
@@ -23,7 +24,15 @@ app.get('/users', (_req: Request, res: Response) => {
 
 app.post('/api/test-login', async (req: Request, res: Response): Promise<void> => {
     try {
-        const fakeUserId = "60d5ecb74b2b1c001f8d4c51";
+        const admin = await User.findOne({ role: 'super_admin' }).select('_id username email role');
+
+        if (!admin) {
+            res.status(404).json({
+                success: false,
+                message: 'Aucun super admin trouvé en base'
+            });
+            return;
+        }
 
         const jwtSecret = process.env.JWT_SECRET;
         if (!jwtSecret) {
@@ -35,7 +44,7 @@ app.post('/api/test-login', async (req: Request, res: Response): Promise<void> =
         }
 
         const token = jwt.sign(
-            { userId: fakeUserId },
+            { userId: admin._id },
             jwtSecret,
             { expiresIn: '24h' }
         );
@@ -43,8 +52,13 @@ app.post('/api/test-login', async (req: Request, res: Response): Promise<void> =
         res.json({
             success: true,
             token: token,
-            message: "Token de test généré (valide 24h)",
-            note: "Ceci est un token de test - L'utilisateur n'existe pas vraiment en base"
+            message: "Token généré avec le vrai super admin",
+            admin: {
+                id: admin._id,
+                username: admin.username,
+                email: admin.email,
+                role: admin.role
+            }
         });
     } catch (error) {
         console.error('Erreur génération token:', error);
