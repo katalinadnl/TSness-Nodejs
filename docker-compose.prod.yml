@@ -21,10 +21,6 @@ services:
       - ./backend/.env
     depends_on:
       - mongo
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: npm run dev
 
   frontend:
     build:

@@ -7,6 +7,7 @@ import userRoutes from './routes/userRoutes';
 import { User } from './models/User';
 import trainingRoomRoutes from './routes/trainingRoomRoutes';
 import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
+import badgeRoutes from './routes/badgeRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/api/training-rooms', trainingRoomRoutes);
 app.use('/api/exercise-types', exerciseTypeRoutes);
+app.use('/api/badges', badgeRoutes);
 
 app.get('/users', (_req: Request, res: Response) => {
     res.send('ici ya des users');
