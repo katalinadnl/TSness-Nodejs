@@ -8,6 +8,10 @@ import { User } from './models/User';
 import trainingRoomRoutes from './routes/trainingRoomRoutes';
 import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
 import badgeRoutes from './routes/badgeRoutes';
+import gymRoutes from "./routes/gymRoutes";
+import challengeRoutes from './routes/challengeRoutes';
+import participationRoutes from './routes/participationRoutes';
+import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -32,6 +36,11 @@ app.get('/', (_req: Request, res: Response) => {
 app.use('/api/training-rooms', trainingRoomRoutes);
 app.use('/api/exercise-types', exerciseTypeRoutes);
 app.use('/api/badges', badgeRoutes);
+app.use('/api/gyms', gymRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/participations', participationRoutes);
+app.use('/api/invitations', invitationRoutes);
+
 
 app.get('/users', (_req: Request, res: Response) => {
     res.send('ici ya des users');
