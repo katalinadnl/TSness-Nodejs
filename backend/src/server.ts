@@ -5,6 +5,11 @@ import {connectDB} from './config/db';
 import trainingRoomRoutes from './routes/trainingRoomRoutes';
 import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
 import badgeRoutes from './routes/badgeRoutes';
+import gymRoutes from "./routes/gymRoutes";
+import challengeRoutes from './routes/challengeRoutes';
+import participationRoutes from './routes/participationRoutes';
+import invitationRoutes from './routes/invitationRoutes';
+import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import {errorHandler, notFoundHandler} from './middleware/errorHandler';
 import loginRoutes from "./routes/loginRoutes";
 import {UserService} from "./services/userService";
@@ -28,7 +33,10 @@ app.use('/api/users', userController.buildRoutes());
 app.use('/api/training-rooms', trainingRoomRoutes);
 app.use('/api/exercise-types', exerciseTypeRoutes);
 app.use('/api/badges', badgeRoutes);
-app.use('/api/login', loginRoutes);
+app.use('/api/gyms', gymRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/participations', participationRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
     res.json({
@@ -40,6 +48,8 @@ app.get('/', (_req: Request, res: Response) => {
         }
     });
 });
+
+
 app.get('/users', (_req: Request, res: Response) => {
     res.send('ici ya des users');
 });
