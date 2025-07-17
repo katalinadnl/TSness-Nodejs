@@ -1,10 +1,7 @@
-import express, { Request, Response } from 'express';
+import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import jwt from 'jsonwebtoken';
-import { connectDB } from './config/db';
-import userRoutes from './routes/userRoutes';
-import { User } from './models/User';
+import {connectDB} from './config/db';
 import trainingRoomRoutes from './routes/trainingRoomRoutes';
 import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
 import badgeRoutes from './routes/badgeRoutes';
@@ -13,14 +10,33 @@ import challengeRoutes from './routes/challengeRoutes';
 import participationRoutes from './routes/participationRoutes';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
+import {errorHandler, notFoundHandler} from './middleware/errorHandler';
+import loginRoutes from "./routes/loginRoutes";
+import {UserService} from "./services/userService";
+import {UserController} from "./controllers/userController";
 
 dotenv.config();
 
+// init des dépendances (services)
+const userService = new UserService();
+
+// conf express
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 5000;
+//init des controllers
+const userController = new UserController(userService);
+
+// init des routes
+app.use('/api/users', userController.buildRoutes());
+app.use('/api/training-rooms', trainingRoomRoutes);
+app.use('/api/exercise-types', exerciseTypeRoutes);
+app.use('/api/badges', badgeRoutes);
+app.use('/api/gyms', gymRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/participations', participationRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
     res.json({
@@ -33,109 +49,16 @@ app.get('/', (_req: Request, res: Response) => {
     });
 });
 
-app.use('/api/training-rooms', trainingRoomRoutes);
-app.use('/api/exercise-types', exerciseTypeRoutes);
-app.use('/api/badges', badgeRoutes);
-app.use('/api/gyms', gymRoutes);
-app.use('/api/challenges', challengeRoutes);
-app.use('/api/participations', participationRoutes);
-app.use('/api/invitations', invitationRoutes);
-
 
 app.get('/users', (_req: Request, res: Response) => {
     res.send('ici ya des users');
 });
 
-app.post('/api/test-login', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const admin = await User.findOne({ role: 'super_admin' }).select('_id username email role');
-
-        if (!admin) {
-            res.status(404).json({
-                success: false,
-                message: 'Aucun super admin trouvé en base'
-            });
-            return;
-        }
-
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            res.status(500).json({
-                success: false,
-                message: 'JWT_SECRET non configuré'
-            });
-            return;
-        }
-
-        const token = jwt.sign(
-            { userId: admin._id },
-            jwtSecret,
-            { expiresIn: '24h' }
-        );
-
-        res.json({
-            success: true,
-            token: token,
-            message: "Token généré avec le vrai super admin",
-            admin: {
-                id: admin._id,
-                username: admin.username,
-                email: admin.email,
-                role: admin.role
-            }
-        });
-    } catch (error) {
-        console.error('Erreur génération token:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erreur lors de la génération du token',
-            error: (error as Error).message
-        });
-    }
-});
-
-app.get('/api/verify-token', (req: Request, res: Response): void => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            message: 'Token manquant'
-        });
-        return;
-    }
-
-    try {
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            res.status(500).json({
-                success: false,
-                message: 'JWT_SECRET non configuré'
-            });
-            return;
-        }
-
-        const decoded = jwt.verify(token, jwtSecret);
-        res.json({
-            success: true,
-            message: 'Token valide',
-            decoded: decoded
-        });
-    } catch (error) {
-        res.status(403).json({
-            success: false,
-            message: 'Token invalide',
-            error: (error as Error).message
-        });
-    }
-});
-
-app.use('/api/users', userRoutes);
-
+// init des middleware
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+const PORT = process.env.PORT || 5000;
 async function startServer() {
     try {
         await connectDB();
@@ -143,7 +66,7 @@ async function startServer() {
             console.log(`Server started on port ${PORT}`);
             console.log(`Documentation:`);
             console.log(`   - Home: http://localhost:${PORT}/`);
-            console.log(`   - Test Login: POST http://localhost:${PORT}/api/test-login`);
+            console.log(`   - Test Login: POST http://localhost:${PORT}/api/login/test-login`);
             console.log(`   - Users API: http://localhost:${PORT}/api/users`);
         });
     } catch (error) {

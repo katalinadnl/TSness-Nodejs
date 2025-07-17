@@ -5,7 +5,7 @@ const message = ref<string>('Chargement...');
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:3001/');
+    const res = await fetch(import.meta.env.VITE_BACKEND_URL);
     const data = await res.json();
     message.value = data.message;
   } catch (error) {
