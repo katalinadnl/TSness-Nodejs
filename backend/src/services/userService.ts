@@ -1,10 +1,11 @@
-import { User, IUser } from '../models/User';
-import mongoose from 'mongoose';
+import {User} from '../models/User';
+import mongoose, {Error} from 'mongoose';
+import bcrypt from "bcryptjs";
 
 export class UserService {
 
-    // Récupérer tous les utilisateurs (avec pagination)
-    static async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
+// Récupérer tous les utilisateurs (avec pagination)
+    async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
         const skip = (page - 1) * limit;
 
         const query: any = {};
@@ -18,17 +19,17 @@ export class UserService {
         }
         if (filters?.search) {
             query.$or = [
-                { username: { $regex: filters.search, $options: 'i' } },
-                { email: { $regex: filters.search, $options: 'i' } },
-                { firstName: { $regex: filters.search, $options: 'i' } },
-                { lastName: { $regex: filters.search, $options: 'i' } }
+                {username: {$regex: filters.search, $options: 'i'}},
+                {email: {$regex: filters.search, $options: 'i'}},
+                {firstName: {$regex: filters.search, $options: 'i'}},
+                {lastName: {$regex: filters.search, $options: 'i'}}
             ];
         }
 
         const users = await User.find(query)
             .select('-password')
             .populate('gymId', 'name address')
-            .sort({ createdAt: -1 })
+            .sort({createdAt: -1})
             .skip(skip)
             .limit(limit);
 
@@ -47,7 +48,7 @@ export class UserService {
     }
 
     // Récupérer un utilisateur par ID
-    static async getUserById(userId: string) {
+    async getUserById(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('ID utilisateur invalide');
         }
@@ -64,7 +65,7 @@ export class UserService {
     }
 
     // Désactiver un utilisateur
-    static async deactivateUser(userId: string, adminId: string) {
+    async deactivateUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('ID utilisateur invalide');
         }
@@ -97,7 +98,7 @@ export class UserService {
     }
 
     // Réactiver un utilisateur
-    static async activateUser(userId: string) {
+    async activateUser(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('ID utilisateur invalide');
         }
@@ -122,7 +123,7 @@ export class UserService {
     }
 
     // Supprimer un utilisateur (soft delete)
-    static async deleteUser(userId: string, adminId: string) {
+    async deleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('ID utilisateur invalide');
         }
@@ -158,7 +159,7 @@ export class UserService {
     }
 
     // Supprimer définitivement un utilisateur (hard delete)
-    static async permanentDeleteUser(userId: string, adminId: string) {
+    async permanentDeleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('ID utilisateur invalide');
         }
@@ -185,26 +186,26 @@ export class UserService {
     }
 
     // Obtenir les statistiques des utilisateurs
-    static async getUserStats() {
+    async getUserStats() {
         const stats = await User.aggregate([
             {
                 $group: {
                     _id: null,
-                    totalUsers: { $sum: 1 },
+                    totalUsers: {$sum: 1},
                     activeUsers: {
-                        $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] }
+                        $sum: {$cond: [{$eq: ['$isActive', true]}, 1, 0]}
                     },
                     inactiveUsers: {
-                        $sum: { $cond: [{ $eq: ['$isActive', false] }, 1, 0] }
+                        $sum: {$cond: [{$eq: ['$isActive', false]}, 1, 0]}
                     },
                     clients: {
-                        $sum: { $cond: [{ $eq: ['$role', 'client'] }, 1, 0] }
+                        $sum: {$cond: [{$eq: ['$role', 'client']}, 1, 0]}
                     },
                     gymOwners: {
-                        $sum: { $cond: [{ $eq: ['$role', 'gym_owner'] }, 1, 0] }
+                        $sum: {$cond: [{$eq: ['$role', 'gym_owner']}, 1, 0]}
                     },
                     superAdmins: {
-                        $sum: { $cond: [{ $eq: ['$role', 'super_admin'] }, 1, 0] }
+                        $sum: {$cond: [{$eq: ['$role', 'super_admin']}, 1, 0]}
                     }
                 }
             }
@@ -219,4 +220,32 @@ export class UserService {
             superAdmins: 0
         };
     }
+
+    async createUser(username: string, email: string, password: string, firstname: string, lastname: string) {
+        const existingUser = await User.findOne({
+            $or: [
+                {email: email},
+                {username: username}
+            ]
+        });
+        if (existingUser) {
+            throw new Error('Un utilisateur avec cet email ou ce nom d\'utilisateur existe déjà');
+        }
+
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
+        const user = new User({
+            username: username,
+            email: email,
+            password: hashedPassword,
+            firstName: firstname,
+            lastName: lastname,
+            role: 'client',
+            isActive: true,
+            isDeleted: false
+        });
+
+        return await user.save();
+    }
+
 }

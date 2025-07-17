@@ -34,6 +34,8 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
 
 volumes:
   mongo_data:
