@@ -2,8 +2,6 @@ import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import {connectDB} from './config/db';
-import trainingRoomRoutes from './routes/trainingRoomRoutes';
-import exerciseTypeRoutes from './routes/exerciseTypeRoutes';
 import badgeRoutes from './routes/badgeRoutes';
 import gymRoutes from "./routes/gymRoutes";
 import challengeRoutes from './routes/challengeRoutes';
@@ -14,6 +12,8 @@ import {errorHandler, notFoundHandler} from './middleware/errorHandler';
 import loginRoutes from "./routes/loginRoutes";
 import {UserService} from "./services/userService";
 import {UserController} from "./controllers/userController";
+import {ExerciseTypeController} from "./controllers/exerciseTypeController";
+import {TrainingRoomController} from "./controllers/trainingRoomController";
 
 dotenv.config();
 
@@ -27,11 +27,13 @@ app.use(express.json());
 
 //init des controllers
 const userController = new UserController(userService);
+const exerciseTypeController = new ExerciseTypeController();
+const trainingRoomController = new TrainingRoomController();
 
 // init des routes
 app.use('/api/users', userController.buildRoutes());
-app.use('/api/training-rooms', trainingRoomRoutes);
-app.use('/api/exercise-types', exerciseTypeRoutes);
+app.use('/api/training-rooms', trainingRoomController.buildRoutes());
+app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
 app.use('/api/badges', badgeRoutes);
 app.use('/api/gyms', gymRoutes);
 app.use('/api/challenges', challengeRoutes);
