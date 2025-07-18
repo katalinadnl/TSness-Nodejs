@@ -1,4 +1,4 @@
-import {Request, Response} from "express";
+import express, {Request, Response} from "express";
 import {User} from "../models/User";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -101,6 +101,15 @@ export class LoginController {
                 error: (error as Error).message
             });
         }
+    }
+
+    buildRoutes() {
+        const router = express.Router();
+
+        router.post('/signin', this.signin.bind(this));
+        router.get('/verify-token', this.verifyToken.bind(this));
+
+        return router;
     }
 
 }

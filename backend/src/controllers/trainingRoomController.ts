@@ -274,3 +274,25 @@ export const setDifficultyLevel = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getTrainingRoomsByGym = async (req: Request, res: Response) => {
+  try {
+    const { gymId } = req.params;
+    
+    const rooms = await TrainingRoom.find()
+      .populate('assignedExerciseTypeId', 'name description')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      count: rooms.length,
+      data: rooms
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching training rooms for gym',
+      error: (error as Error).message
+    });
+  }
+};

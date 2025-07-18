@@ -7,12 +7,15 @@ import {
   deleteTrainingRoom,
   approveTrainingRoom,
   assignExerciseType,
-  setDifficultyLevel
+  setDifficultyLevel,
+  getTrainingRoomsByGym
 } from '../controllers/trainingRoomController';
 
 const router = express.Router();
 
 router.get('/', getAllTrainingRooms as any);
+
+router.get('/gym/:gymId', getTrainingRoomsByGym as any);
 
 router.get('/:id', getTrainingRoomById as any);
 

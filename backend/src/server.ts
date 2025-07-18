@@ -10,10 +10,9 @@ import challengeRoutes from './routes/challengeRoutes';
 import participationRoutes from './routes/participationRoutes';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
-import {errorHandler, notFoundHandler} from './middleware/errorHandler';
-import loginRoutes from "./routes/loginRoutes";
 import {UserService} from "./services/userService";
 import {UserController} from "./controllers/userController";
+import {LoginController} from "./controllers/loginController";
 
 dotenv.config();
 
@@ -27,9 +26,11 @@ app.use(express.json());
 
 //init des controllers
 const userController = new UserController(userService);
+const loginController = new LoginController();
 
 // init des routes
 app.use('/api/users', userController.buildRoutes());
+app.use('/api/login', loginController.buildRoutes());
 app.use('/api/training-rooms', trainingRoomRoutes);
 app.use('/api/exercise-types', exerciseTypeRoutes);
 app.use('/api/badges', badgeRoutes);
