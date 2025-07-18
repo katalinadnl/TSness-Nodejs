@@ -16,7 +16,7 @@ export class TrainingRoomController {
       const rooms = await TrainingRoom.find()
         .populate('assignedExerciseTypeId', 'name description')
         .sort({ createdAt: -1 });
-      
+
       res.status(200).json({
         success: true,
         count: rooms.length,
@@ -34,10 +34,10 @@ export class TrainingRoomController {
   async getTrainingRoomById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const room = await TrainingRoom.findById(id)
         .populate('assignedExerciseTypeId', 'name description targetedMuscles');
-      
+
       if (!room) {
         res.status(404).json({
           success: false,
@@ -45,7 +45,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       res.status(200).json({
         success: true,
         data: room
@@ -62,7 +62,7 @@ export class TrainingRoomController {
   async createTrainingRoom(req: Request, res: Response): Promise<void> {
     try {
       const { name, capacity, equipment, features, difficultyLevel }: CreateTrainingRoomRequest = req.body;
-      
+
       if (!name || !capacity || !equipment || !features || !difficultyLevel) {
         res.status(400).json({
           success: false,
@@ -70,7 +70,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const existingRoom = await TrainingRoom.findOne({ name });
       if (existingRoom) {
         res.status(409).json({
@@ -79,7 +79,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const room = await TrainingRoom.create({
         name,
         capacity,
@@ -88,7 +88,7 @@ export class TrainingRoomController {
         difficultyLevel,
         createdBy: req.user?.id || 'system'
       });
-      
+
       res.status(201).json({
         success: true,
         message: 'Training room created successfully',
@@ -107,7 +107,7 @@ export class TrainingRoomController {
     try {
       const { id } = req.params;
       const { name, capacity, equipment, features, difficultyLevel, assignedExerciseTypeId }: UpdateTrainingRoomRequest = req.body;
-      
+
       if (!name && !capacity && !equipment && !features && !difficultyLevel && !assignedExerciseTypeId) {
         res.status(400).json({
           success: false,
@@ -115,7 +115,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const existingRoom = await TrainingRoom.findById(id);
       if (!existingRoom) {
         res.status(404).json({
@@ -124,7 +124,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       if (name && name !== existingRoom.name) {
         const duplicateRoom = await TrainingRoom.findOne({ name });
         if (duplicateRoom) {
@@ -135,7 +135,7 @@ export class TrainingRoomController {
           return;
         }
       }
-      
+
       if (assignedExerciseTypeId) {
         const exerciseType = await ExerciseType.findById(assignedExerciseTypeId);
         if (!exerciseType) {
@@ -146,7 +146,7 @@ export class TrainingRoomController {
           return;
         }
       }
-      
+
       const updateData: Partial<UpdateTrainingRoomRequest> = {};
       if (name) updateData.name = name;
       if (capacity) updateData.capacity = capacity;
@@ -154,13 +154,13 @@ export class TrainingRoomController {
       if (features) updateData.features = features;
       if (difficultyLevel) updateData.difficultyLevel = difficultyLevel;
       if (assignedExerciseTypeId) updateData.assignedExerciseTypeId = assignedExerciseTypeId;
-      
+
       const updatedRoom = await TrainingRoom.findByIdAndUpdate(
         id,
         updateData,
         { new: true, runValidators: true }
       ).populate('assignedExerciseTypeId', 'name description targetedMuscles');
-      
+
       res.status(200).json({
         success: true,
         message: 'Training room updated successfully',
@@ -178,7 +178,7 @@ export class TrainingRoomController {
   async deleteTrainingRoom(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const room = await TrainingRoom.findById(id);
       if (!room) {
         res.status(404).json({
@@ -187,9 +187,9 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       await TrainingRoom.findByIdAndDelete(id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Training room deleted successfully'
@@ -206,7 +206,7 @@ export class TrainingRoomController {
   async approveTrainingRoom(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const room = await TrainingRoom.findById(id);
       if (!room) {
         res.status(404).json({
@@ -215,13 +215,13 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const updatedRoom = await TrainingRoom.findByIdAndUpdate(
         id,
         { isApproved: true },
         { new: true }
       ).populate('assignedExerciseTypeId', 'name description targetedMuscles');
-      
+
       res.status(200).json({
         success: true,
         message: 'Training room approved successfully',
@@ -240,7 +240,7 @@ export class TrainingRoomController {
     try {
       const { id } = req.params;
       const { exerciseTypeId } = req.body;
-      
+
       if (!exerciseTypeId) {
         res.status(400).json({
           success: false,
@@ -248,7 +248,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const room = await TrainingRoom.findById(id);
       if (!room) {
         res.status(404).json({
@@ -257,7 +257,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const exerciseType = await ExerciseType.findById(exerciseTypeId);
       if (!exerciseType) {
         res.status(404).json({
@@ -266,13 +266,13 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const updatedRoom = await TrainingRoom.findByIdAndUpdate(
         id,
         { assignedExerciseTypeId: exerciseTypeId },
         { new: true }
       ).populate('assignedExerciseTypeId', 'name description targetedMuscles');
-      
+
       res.status(200).json({
         success: true,
         message: 'Exercise type assigned successfully',
@@ -291,7 +291,7 @@ export class TrainingRoomController {
     try {
       const { id } = req.params;
       const { difficultyLevel } = req.body;
-      
+
       if (!difficultyLevel || !Object.values(DifficultyLevel).includes(difficultyLevel)) {
         res.status(400).json({
           success: false,
@@ -300,7 +300,7 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const room = await TrainingRoom.findById(id);
       if (!room) {
         res.status(404).json({
@@ -309,13 +309,13 @@ export class TrainingRoomController {
         });
         return;
       }
-      
+
       const updatedRoom = await TrainingRoom.findByIdAndUpdate(
         id,
         { difficultyLevel },
         { new: true }
       ).populate('assignedExerciseTypeId', 'name description targetedMuscles');
-      
+
       res.status(200).json({
         success: true,
         message: 'Difficulty level updated successfully',
@@ -348,3 +348,25 @@ export class TrainingRoomController {
     return router;
   }
 }
+
+export const getTrainingRoomsByGym = async (req: Request, res: Response) => {
+  try {
+    const { gymId } = req.params;
+
+    const rooms = await TrainingRoom.find()
+      .populate('assignedExerciseTypeId', 'name description')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: rooms.length,
+      data: rooms
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching training rooms for gym',
+      error: (error as Error).message
+    });
+  }
+};

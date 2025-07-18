@@ -1,4 +1,3 @@
-// seeders/seedGyms.ts
 import { Gym } from '../models/Gym';
 
 export const seedGyms = async () => {

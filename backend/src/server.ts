@@ -8,12 +8,11 @@ import challengeRoutes from './routes/challengeRoutes';
 import participationRoutes from './routes/participationRoutes';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
-import {errorHandler, notFoundHandler} from './middleware/errorHandler';
-import loginRoutes from "./routes/loginRoutes";
 import {UserService} from "./services/userService";
 import {UserController} from "./controllers/userController";
 import {ExerciseTypeController} from "./controllers/exerciseTypeController";
 import {TrainingRoomController} from "./controllers/trainingRoomController";
+import {LoginController} from "./controllers/loginController";
 
 dotenv.config();
 
@@ -29,9 +28,11 @@ app.use(express.json());
 const userController = new UserController(userService);
 const exerciseTypeController = new ExerciseTypeController();
 const trainingRoomController = new TrainingRoomController();
+const loginController = new LoginController();
 
 // init des routes
 app.use('/api/users', userController.buildRoutes());
+app.use('/api/login', loginController.buildRoutes());
 app.use('/api/training-rooms', trainingRoomController.buildRoutes());
 app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
 app.use('/api/badges', badgeRoutes);
