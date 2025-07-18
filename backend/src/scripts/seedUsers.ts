@@ -7,9 +7,6 @@ export const seedUsers = async () => {
 
     await User.deleteMany({});
 
-    const gym = await Gym.findOne();
-    if (!gym) throw new Error('No gym found! Please seed gyms first.');
-
     const hashedSuperAdminPassword = await bcrypt.hash('superadmin123', 10);
     const hashedGymOwnerPassword = await bcrypt.hash('gymowner123', 10);
     const hashedClientPassword = await bcrypt.hash('client123', 10);
@@ -31,7 +28,6 @@ export const seedUsers = async () => {
         firstName: 'Gym',
         lastName: 'Owner',
         role: 'gym_owner',
-        gymId: gym._id,
         isActive: true
     });
 
@@ -47,6 +43,6 @@ export const seedUsers = async () => {
 
     console.log('Users seeded:');
     console.log(`   - SuperAdmin: ${superAdmin.username} (${superAdmin.email})`);
-    console.log(`   - GymOwner: ${gymOwner.username} (${gymOwner.email}) linked to Gym: ${gym.name}`);
+    console.log(`   - GymOwner: ${gymOwner.username} (${gymOwner.email})`);
     console.log(`   - Client: ${client.username} (${client.email})`);
 };

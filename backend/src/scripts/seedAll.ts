@@ -16,11 +16,12 @@ dotenv.config();
         await mongoose.connect(mongoUri);
         console.log('✅ Connected to MongoDB');
 
-        console.log('\n--- Seeding gyms ---');
-        await seedGyms();
 
         console.log('\n--- Seeding users ---');
         await seedUsers();
+
+        console.log('\n--- Seeding gyms ---');
+        await seedGyms();
 
         console.log('\n--- Seeding badges ---');
         await seedBadges();

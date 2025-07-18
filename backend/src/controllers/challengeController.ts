@@ -1,84 +1,97 @@
-import { Request, Response } from 'express';
-import { Challenge } from '../models/Challenge';
-import mongoose from 'mongoose';
+import express, { Request, Response, Router } from 'express';
+import { ChallengeService } from '../services/challengeService';
+import { authenticateToken } from '../middleware/auth';
 
-export const createChallenge = async (req: Request, res: Response) => {
-    try {
-        const challenge = new Challenge(req.body);
-        const saved = await challenge.save();
-        res.status(201).json(saved);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ message: 'Error creating challenge', error });
+export class ChallengeController {
+    constructor(private readonly challengeService: ChallengeService) {}
+
+    async createChallenge(req: Request, res: Response): Promise<void> {
+        try {
+            const creatorId = req.user?._id;
+            const creatorRole = req.user?.role;
+            const challenge = await this.challengeService.createChallenge(req.body, creatorId, creatorRole);
+            res.status(201).json({
+                success: true,
+                message: 'Défi créé avec succès',
+                data: challenge
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: (error as Error).message
+            });
+        }
     }
-};
 
-export const getAllChallenges = async (_req: Request, res: Response) => {
-    try {
-        const challenges = await Challenge.find()
-            .populate('creatorId', 'username email')
-            .populate('gymId', 'name')
-            .populate('recommendedExerciseTypeIds', 'name');
-        res.status(200).json(challenges);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching challenges', error });
+    async getMyChallenges(req: Request, res: Response): Promise<void> {
+        try {
+            const ownerId = req.user?._id;
+            const challenges = await this.challengeService.getChallengesByOwner(ownerId);
+            res.status(200).json({ success: true, data: challenges });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: (error as Error).message
+            });
+        }
     }
-};
 
-export const getChallengeById = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
-
-        const challenge = await Challenge.findById(id)
-            .populate('creatorId', 'username email')
-            .populate('gymId', 'name')
-            .populate('recommendedExerciseTypeIds', 'name');
-        if (!challenge)
-            return res.status(404).json({ message: 'Challenge not found' });
-
-        res.status(200).json(challenge);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching challenge', error });
+    async getAll(req: Request, res: Response): Promise<void> {
+        try {
+            const filters = req.query;
+            const challenges = await this.challengeService.getAllChallenges(filters);
+            res.status(200).json({ success: true, data: challenges });
+        } catch (error) {
+            res.status(500).json({ success: false, message: (error as Error).message });
+        }
     }
-};
 
-export const updateChallenge = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
-
-        const updated = await Challenge.findByIdAndUpdate(id, req.body, {
-            new: true,
-            runValidators: true
-        });
-        if (!updated)
-            return res.status(404).json({ message: 'Challenge not found' });
-
-        res.status(200).json(updated);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ message: 'Error updating challenge', error });
+    async participate(req: Request, res: Response): Promise<void> {
+        try {
+            const challengeId = req.params.id;
+            const userId = req.user?._id;
+            const challenge = await this.challengeService.participateInChallenge(challengeId, userId);
+            res.status(200).json({ success: true, message: 'Participation enregistrée', data: challenge });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
     }
-};
 
-export const deleteChallenge = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
-
-        const deleted = await Challenge.findByIdAndDelete(id);
-        if (!deleted)
-            return res.status(404).json({ message: 'Challenge not found' });
-
-        res.status(200).json({ message: 'Challenge deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error deleting challenge', error });
+    async updateProgress(req: Request, res: Response): Promise<void> {
+        try {
+            const challengeId = req.params.id;
+            const userId = req.user?._id;
+            const challenge = await this.challengeService.updateProgress(challengeId, userId, req.body);
+            res.status(200).json({ success: true, message: 'Progression mise à jour', data: challenge });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
     }
-};
+
+    async getMySessions(req: Request, res: Response): Promise<void> {
+        try {
+            const challengeId = req.params.id;
+            const userId = req.user?._id;
+            const result = await this.challengeService.getMySessions(challengeId, userId);
+            res.status(200).json({ success: true, data: result });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
+
+
+    buildRoutes(): Router {
+        const router = express.Router();
+
+        router.use(authenticateToken);
+
+        router.get('/', this.getAll.bind(this));
+        router.post('/', this.createChallenge.bind(this));
+        router.get('/mine', this.getMyChallenges.bind(this));
+        router.post('/:id/participate', this.participate.bind(this));
+        router.patch('/:id/progress', this.updateProgress.bind(this));
+        router.get('/:id/sessions', this.getMySessions.bind(this));
+
+        return router;
+    }
+}

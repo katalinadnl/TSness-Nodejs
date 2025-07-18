@@ -1,9 +1,15 @@
 import { Gym } from '../models/Gym';
+import { User } from '../models/User';
 
 export const seedGyms = async () => {
     console.log('Seeding gyms...');
 
     await Gym.deleteMany({});
+
+    const gymOwner = await User.findOne({ email: 'gymowner@example.com' });
+    if (!gymOwner) {
+        throw new Error('Gym owner not found. Please run seedUsers first.');
+    }
 
     const gyms = await Gym.insertMany([
         {
@@ -14,6 +20,7 @@ export const seedGyms = async () => {
             description: 'Spacious gym with modern equipment and classes.',
             equipment: ['Treadmills', 'Free Weights', 'Squat Racks', 'Ellipticals'],
             activities: ['Yoga', 'HIIT', 'CrossFit', 'Bodybuilding'],
+            ownerId: gymOwner._id,
             isApproved: true
         },
         {
@@ -24,10 +31,11 @@ export const seedGyms = async () => {
             description: 'Premium training facilities with personal coaching.',
             equipment: ['Rowing Machines', 'Kettlebells', 'Pull-up Bars'],
             activities: ['Strength Training', 'Pilates', 'Cardio Workouts'],
+            ownerId: gymOwner._id,
             isApproved: true
         }
     ]);
 
-    console.log(`Seeded ${gyms.length} gyms`);
+    console.log(`Seeded ${gyms.length} gyms for gym owner: ${gymOwner.email}`);
     return gyms;
 };

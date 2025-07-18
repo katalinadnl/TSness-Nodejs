@@ -2,9 +2,7 @@ import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import {connectDB} from './config/db';
-import badgeRoutes from './routes/badgeRoutes';
 import gymRoutes from "./routes/gymRoutes";
-import challengeRoutes from './routes/challengeRoutes';
 import participationRoutes from './routes/participationRoutes';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
@@ -13,11 +11,18 @@ import {UserController} from "./controllers/userController";
 import {ExerciseTypeController} from "./controllers/exerciseTypeController";
 import {TrainingRoomController} from "./controllers/trainingRoomController";
 import {LoginController} from "./controllers/loginController";
+import { BadgeController } from './controllers/badgeController';
+import { BadgeService } from './services/badgeService';
+import { ChallengeService } from './services/challengeService';
+import { ChallengeController } from './controllers/challengeController';
+
 
 dotenv.config();
 
 // init des dépendances (services)
 const userService = new UserService();
+const badgeService = new BadgeService();
+const challengeService = new ChallengeService();
 
 // conf express
 const app = express();
@@ -29,15 +34,19 @@ const userController = new UserController(userService);
 const exerciseTypeController = new ExerciseTypeController();
 const trainingRoomController = new TrainingRoomController();
 const loginController = new LoginController();
+const badgeController = new BadgeController(badgeService);
+const challengeController = new ChallengeController(challengeService);
+
+app.use('/api/challenges', challengeController.buildRoutes());
 
 // init des routes
 app.use('/api/users', userController.buildRoutes());
 app.use('/api/login', loginController.buildRoutes());
 app.use('/api/training-rooms', trainingRoomController.buildRoutes());
 app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
-app.use('/api/badges', badgeRoutes);
+app.use('/api/badges', badgeController.buildRoutes());
+app.use('/api/challenges', challengeController.buildRoutes());
 app.use('/api/gyms', gymRoutes);
-app.use('/api/challenges', challengeRoutes);
 app.use('/api/participations', participationRoutes);
 app.use('/api/invitations', invitationRoutes);
 

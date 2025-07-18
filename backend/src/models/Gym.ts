@@ -8,6 +8,7 @@ export interface IGym extends Document {
     description?: string;
     equipment: string[];
     activities: string[];
+    ownerId: mongoose.Types.ObjectId;
     isApproved: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -49,6 +50,11 @@ const GymSchema = new Schema<IGym>(
         activities: {
             type: [String],
             default: []
+        },
+        ownerId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
         },
         isApproved: {
             type: Boolean,

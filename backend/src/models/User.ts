@@ -10,7 +10,6 @@ export interface IUser extends Document {
     role: 'client' | 'gym_owner' | 'super_admin';
     isActive: boolean;
     isDeleted: boolean;
-    gymId?: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;
@@ -61,13 +60,6 @@ const UserSchema = new Schema<IUser>({
     isDeleted: {
         type: Boolean,
         default: false
-    },
-    gymId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Gym',
-        required: function(this: IUser) {
-            return this.role === 'gym_owner';
-        }
     },
     deletedAt: {
         type: Date,

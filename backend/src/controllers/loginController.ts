@@ -40,7 +40,10 @@ export class LoginController {
             }
 
             const token = jwt.sign(
-                {userId: admin._id},
+                {
+                    userId: admin._id,
+                    role: admin.role,
+                },
                 jwtSecret,
                 {expiresIn: '24h'}
             );
@@ -88,7 +91,7 @@ export class LoginController {
                 return;
             }
 
-            const decoded = jwt.verify(token, jwtSecret);
+            const decoded = jwt.verify(token, jwtSecret) as { userId: string, role: string };
             res.json({
                 success: true,
                 message: 'Token valide',

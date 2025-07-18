@@ -32,7 +32,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
             return;
         }
 
-        const decoded = jwt.verify(token, jwtSecret) as { userId: string };
+        const decoded = jwt.verify(token, jwtSecret) as { userId: string; role: string };
         const user = await User.findById(decoded.userId).select('-password');
 
         if (!user) {
@@ -51,8 +51,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
             return;
         }
 
-        req.user = user;
+        req.user = {
+            ...user.toObject(),
+            role: decoded.role
+        };
+
         next();
+
     } catch (error) {
         res.status(403).json({
             success: false,

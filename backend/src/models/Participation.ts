@@ -1,5 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface ISession {
+    date: Date;
+    progress: number;
+    caloriesBurned: number;
+}
+
 export interface IParticipation extends Document {
     userId: mongoose.Types.ObjectId;
     challengeId: mongoose.Types.ObjectId;
@@ -8,9 +14,11 @@ export interface IParticipation extends Document {
     caloriesBurned: number;
     startedAt?: Date;
     completedAt?: Date;
+    sessions: ISession[];
     createdAt: Date;
     updatedAt: Date;
 }
+
 
 const ParticipationSchema = new Schema<IParticipation>(
     {
@@ -42,7 +50,13 @@ const ParticipationSchema = new Schema<IParticipation>(
         },
         completedAt: {
             type: Date
-        }
+        },
+        sessions: [{
+            date: { type: Date, default: Date.now },
+            progress: { type: Number, required: true },
+            caloriesBurned: { type: Number, required: true }
+        }],
+
     },
     {
         timestamps: true,

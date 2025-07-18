@@ -37,6 +37,12 @@ const router = createRouter({
       component: () => import('../views/ClientView.vue'),
       meta: { requiresAuth: true, requiresClient: true }
     },
+    {
+      path: '/client/challenges',
+      name: 'client-challenges',
+      component: () => import('../views/ClientChallengesView.vue'),
+      meta: { requiresAuth: true, requiresClient: true }
+    },
   ],
 })
 
