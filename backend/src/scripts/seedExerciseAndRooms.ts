@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { ExerciseType } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
+import { User } from '../models/User';
 import { DifficultyLevel } from '../types';
 
 dotenv.config();
@@ -77,6 +78,7 @@ const sampleTrainingRooms: any[] = [
     }
 ];
 
+
 export const seedExercisesAndRooms = async () => {
     console.log('Seeding exercise types and rooms...');
 
@@ -85,12 +87,23 @@ export const seedExercisesAndRooms = async () => {
 
     const createdExerciseTypes = await ExerciseType.insertMany(sampleExerciseTypes);
 
+    // Récupérer le gym owner
+    const gymOwner = await User.findOne({ role: 'gym_owner' });
+    if (!gymOwner) throw new Error('No gym owner found. Please seed users first.');
+
+    // Associer les exerciseTypes et ajouter owner
     sampleTrainingRooms[0].assignedExerciseTypeId = createdExerciseTypes[0]._id;
     sampleTrainingRooms[1].assignedExerciseTypeId = createdExerciseTypes[1]._id;
     sampleTrainingRooms[2].assignedExerciseTypeId = createdExerciseTypes[4]._id;
     sampleTrainingRooms[3].assignedExerciseTypeId = createdExerciseTypes[3]._id;
 
-    const createdRooms = await TrainingRoom.insertMany(sampleTrainingRooms);
+    // Ajouter owner à chaque salle
+    const roomsWithOwner = sampleTrainingRooms.map(room => ({
+        ...room,
+        owner: gymOwner._id
+    }));
+
+    const createdRooms = await TrainingRoom.insertMany(roomsWithOwner);
 
     console.log(`${createdExerciseTypes.length} exercise types created`);
     console.log(`${createdRooms.length} training rooms created`);

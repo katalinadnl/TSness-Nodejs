@@ -41,8 +41,19 @@ export const seedUsers = async () => {
         isActive: true
     });
 
+    const client2 = await User.create({
+        username: 'clientuser2',
+        email: 'client2@example.com',
+        password: hashedClientPassword,
+        firstName: 'Client',
+        lastName: 'User',
+        role: 'client',
+        isActive: true
+    });
+
     console.log('Users seeded:');
     console.log(`   - SuperAdmin: ${superAdmin.username} (${superAdmin.email})`);
     console.log(`   - GymOwner: ${gymOwner.username} (${gymOwner.email})`);
-    console.log(`   - Client: ${client.username} (${client.email})`);
+    console.log(`   - Client: ${client.username} (${client.email}) id=${client._id}`);
+    console.log(`   - Client2: ${client2.username} (${client2.email}) id=${client2._id}`);
 };

@@ -7,7 +7,7 @@ import {
   UpdateTrainingRoomRequest, 
   DifficultyLevel 
 } from '../types';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken, requireSuperAdmin, requireOwner } from '../middleware/auth';
 
 export class TrainingRoomController {
 
@@ -61,12 +61,12 @@ export class TrainingRoomController {
 
   async createTrainingRoom(req: Request, res: Response): Promise<void> {
     try {
-      const { name, capacity, equipment, features, difficultyLevel }: CreateTrainingRoomRequest = req.body;
+      const { name, capacity, equipment, features, difficultyLevel, owner }: CreateTrainingRoomRequest = req.body;
 
-      if (!name || !capacity || !equipment || !features || !difficultyLevel) {
+      if (!name || !capacity || !equipment || !features || !difficultyLevel || !owner) {
         res.status(400).json({
           success: false,
-          message: 'All fields are required'
+          message: 'All fields (including owner) are required'
         });
         return;
       }
@@ -80,12 +80,23 @@ export class TrainingRoomController {
         return;
       }
 
+      // Vérifier que le propriétaire existe
+      const user = await require('../models/User').User.findById(owner);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'Owner (user) not found'
+        });
+        return;
+      }
+
       const room = await TrainingRoom.create({
         name,
         capacity,
         equipment,
         features,
         difficultyLevel,
+        owner,
         createdBy: req.user?._id || 'system'
       });
 
@@ -106,9 +117,9 @@ export class TrainingRoomController {
   async updateTrainingRoom(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { name, capacity, equipment, features, difficultyLevel, assignedExerciseTypeId }: UpdateTrainingRoomRequest = req.body;
+      const { name, capacity, equipment, features, difficultyLevel, assignedExerciseTypeId, owner }: UpdateTrainingRoomRequest = req.body;
 
-      if (!name && !capacity && !equipment && !features && !difficultyLevel && !assignedExerciseTypeId) {
+      if (!name && !capacity && !equipment && !features && !difficultyLevel && !assignedExerciseTypeId && !owner) {
         res.status(400).json({
           success: false,
           message: 'At least one field is required for update'
@@ -147,6 +158,17 @@ export class TrainingRoomController {
         }
       }
 
+      if (owner) {
+        const user = await require('../models/User').User.findById(owner);
+        if (!user) {
+          res.status(404).json({
+            success: false,
+            message: 'Owner (user) not found'
+          });
+          return;
+        }
+      }
+
       const updateData: Partial<UpdateTrainingRoomRequest> = {};
       if (name) updateData.name = name;
       if (capacity) updateData.capacity = capacity;
@@ -154,12 +176,13 @@ export class TrainingRoomController {
       if (features) updateData.features = features;
       if (difficultyLevel) updateData.difficultyLevel = difficultyLevel;
       if (assignedExerciseTypeId) updateData.assignedExerciseTypeId = assignedExerciseTypeId;
+      if (owner) updateData.owner = owner;
 
       const updatedRoom = await TrainingRoom.findByIdAndUpdate(
         id,
         updateData,
         { new: true, runValidators: true }
-      ).populate('assignedExerciseTypeId', 'name description targetedMuscles');
+      ).populate('assignedExerciseTypeId', 'name description targetedMuscles').populate('owner', 'username email');
 
       res.status(200).json({
         success: true,
@@ -170,6 +193,54 @@ export class TrainingRoomController {
       res.status(500).json({
         success: false,
         message: 'Error updating training room',
+        error: (error as Error).message
+      });
+    }
+  }
+  // Endpoint pour changer le propriétaire d'une salle
+  async changeOwner(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { owner } = req.body;
+
+      if (!owner) {
+        res.status(400).json({
+          success: false,
+          message: 'Owner (userId) is required'
+        });
+        return;
+      }
+
+      const user = await require('../models/User').User.findById(owner);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'Owner (user) not found'
+        });
+        return;
+      }
+
+      const room = await TrainingRoom.findById(id);
+      if (!room) {
+        res.status(404).json({
+          success: false,
+          message: 'Training room not found'
+        });
+        return;
+      }
+
+      room.owner = owner;
+      await room.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Owner changed successfully',
+        data: room
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error changing owner',
         error: (error as Error).message
       });
     }
@@ -335,6 +406,7 @@ export class TrainingRoomController {
 
     router.use(authenticateToken);
     router.use(requireSuperAdmin);
+    router.use(requireOwner);
 
     router.get('/', this.getAllTrainingRooms.bind(this));
     router.get('/:id', this.getTrainingRoomById.bind(this));
@@ -344,6 +416,7 @@ export class TrainingRoomController {
     router.patch('/:id/approve', this.approveTrainingRoom.bind(this));
     router.patch('/:id/assign-exercise-type', this.assignExerciseType.bind(this));
     router.patch('/:id/set-difficulty', this.setDifficultyLevel.bind(this));
+    router.patch('/:id/change-owner', this.changeOwner.bind(this));
 
     return router;
   }
