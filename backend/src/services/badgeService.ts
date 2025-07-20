@@ -1,12 +1,12 @@
-import { Badge } from '../models/Badge';
+import { Badge, IBadge } from '../models/Badge';
 import { Types } from 'mongoose';
 
 export class BadgeService {
-    async getAllBadges(): Promise<typeof Badge[]> {
+    async getAllBadges(): Promise<IBadge[]> {
         return await Badge.find().sort({ createdAt: -1 });
     }
 
-    async getBadgeById(id: string): Promise<typeof Badge | null> {
+    async getBadgeById(id: string): Promise<IBadge> {
         if (!Types.ObjectId.isValid(id)) {
             throw new Error('ID invalide');
         }
@@ -19,12 +19,12 @@ export class BadgeService {
         return badge;
     }
 
-    async createBadge(data: any): Promise<typeof Badge> {
+    async createBadge(data: any): Promise<IBadge> {
         const badge = new Badge(data);
         return await badge.save();
     }
 
-    async updateBadge(id: string, data: any): Promise<typeof Badge> {
+    async updateBadge(id: string, data: any): Promise<IBadge> {
         if (!Types.ObjectId.isValid(id)) {
             throw new Error('ID invalide');
         }

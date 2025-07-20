@@ -86,7 +86,7 @@ export class TrainingRoomController {
         equipment,
         features,
         difficultyLevel,
-        createdBy: req.user?.id || 'system'
+        createdBy: req.user?._id || 'system'
       });
 
       res.status(201).json({

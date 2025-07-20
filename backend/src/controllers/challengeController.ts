@@ -7,8 +7,13 @@ export class ChallengeController {
 
     async createChallenge(req: Request, res: Response): Promise<void> {
         try {
-            const creatorId = req.user?._id;
-            const creatorRole = req.user?.role;
+            if (!req.user || !req.user._id || !req.user.role) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
+            const creatorId = req.user._id.toString();
+            const creatorRole = req.user.role;
             const challenge = await this.challengeService.createChallenge(req.body, creatorId, creatorRole);
             res.status(201).json({
                 success: true,
@@ -25,7 +30,12 @@ export class ChallengeController {
 
     async getMyChallenges(req: Request, res: Response): Promise<void> {
         try {
-            const ownerId = req.user?._id;
+            if (!req.user || !req.user._id) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
+            const ownerId = req.user._id.toString();
             const challenges = await this.challengeService.getChallengesByOwner(ownerId);
             res.status(200).json({ success: true, data: challenges });
         } catch (error) {
@@ -48,8 +58,13 @@ export class ChallengeController {
 
     async participate(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user || !req.user._id) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
             const challengeId = req.params.id;
-            const userId = req.user?._id;
+            const userId = req.user._id.toString();
             const challenge = await this.challengeService.participateInChallenge(challengeId, userId);
             res.status(200).json({ success: true, message: 'Participation enregistrée', data: challenge });
         } catch (error) {
@@ -59,8 +74,13 @@ export class ChallengeController {
 
     async updateProgress(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user || !req.user._id) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
             const challengeId = req.params.id;
-            const userId = req.user?._id;
+            const userId = req.user._id.toString();
             const challenge = await this.challengeService.updateProgress(challengeId, userId, req.body);
             res.status(200).json({ success: true, message: 'Progression mise à jour', data: challenge });
         } catch (error) {
@@ -70,15 +90,19 @@ export class ChallengeController {
 
     async getMySessions(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user || !req.user._id) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
             const challengeId = req.params.id;
-            const userId = req.user?._id;
+            const userId = req.user._id.toString();
             const result = await this.challengeService.getMySessions(challengeId, userId);
             res.status(200).json({ success: true, data: result });
         } catch (error) {
             res.status(400).json({ success: false, message: (error as Error).message });
         }
     }
-
 
     buildRoutes(): Router {
         const router = express.Router();

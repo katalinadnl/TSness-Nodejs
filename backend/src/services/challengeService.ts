@@ -56,34 +56,39 @@ export class ChallengeService {
             .populate('recommendedExerciseTypeIds');
     }
 
-    async participateInChallenge(challengeId: string, userId: string) {
-        const challenge = await Challenge.findById(challengeId);
-        if (!challenge) throw new Error('Défi non trouvé');
 
-        const already = challenge.participants.some(p => p.userId.equals(userId));
-        if (already) throw new Error('Déjà inscrit à ce défi');
+async participateInChallenge(challengeId: string, userId: string) {
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) throw new Error('Défi non trouvé');
 
-        challenge.participants.push({
-            userId,
-            status: 'accepted',
-            progress: 0,
-            caloriesBurned: 0
-        });
-        await challenge.save();
+    const objectUserId = new Types.ObjectId(userId);
 
-        await Participation.create({
-            userId,
-            challengeId,
-            status: 'accepted',
-            progress: 0,
-            caloriesBurned: 0,
-            startedAt: new Date()
-        });
+    const already = challenge.participants.some(p => p.userId.equals(objectUserId));
+    if (already) throw new Error('Déjà inscrit à ce défi');
 
-        return challenge;
-    }
+    challenge.participants.push({
+        userId: objectUserId,
+        status: 'accepted',
+        progress: 0,
+        caloriesBurned: 0
+    });
 
-    async updateProgress(challengeId: string, userId: string, data: { progress: number, caloriesBurned: number }) {
+    await challenge.save();
+
+    await Participation.create({
+        userId: objectUserId,
+        challengeId,
+        status: 'accepted',
+        progress: 0,
+        caloriesBurned: 0,
+        startedAt: new Date()
+    });
+
+    return challenge;
+}
+
+
+async updateProgress(challengeId: string, userId: string, data: { progress: number, caloriesBurned: number }) {
         const challenge = await Challenge.findById(challengeId);
         if (!challenge) throw new Error('Défi non trouvé');
 
