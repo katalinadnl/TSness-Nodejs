@@ -39,6 +39,11 @@ const trainingRoomSchema = new Schema<TrainingRoomDocument>(
       ref: 'ExerciseType',
       default: null
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Owner is required']
+    },
     createdBy: {
       type: String,
       required: [true, 'Creator is required'],
