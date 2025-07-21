@@ -6,8 +6,6 @@ export interface IGym extends Document {
     contactEmail: string;
     contactPhone?: string;
     description?: string;
-    equipment: string[];
-    activities: string[];
     ownerId: mongoose.Types.ObjectId;
     isApproved: boolean;
     createdAt: Date;
@@ -18,19 +16,19 @@ const GymSchema = new Schema<IGym>(
     {
         name: {
             type: String,
-            required: [true, 'Gym name is required'],
+            required: true,
             trim: true,
             maxlength: 100,
             unique: true
         },
         address: {
             type: String,
-            required: [true, 'Address is required'],
+            required: true,
             trim: true
         },
         contactEmail: {
             type: String,
-            required: [true, 'Contact email is required'],
+            required: true,
             trim: true,
             lowercase: true
         },
@@ -42,14 +40,6 @@ const GymSchema = new Schema<IGym>(
             type: String,
             trim: true,
             maxlength: 500
-        },
-        equipment: {
-            type: [String],
-            default: []
-        },
-        activities: {
-            type: [String],
-            default: []
         },
         ownerId: {
             type: Schema.Types.ObjectId,

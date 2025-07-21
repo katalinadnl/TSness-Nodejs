@@ -23,11 +23,11 @@ dotenv.config();
         console.log('\n--- Seeding gyms ---');
         await seedGyms();
 
-        console.log('\n--- Seeding badges ---');
-        await seedBadges();
-
         console.log('\n--- Seeding exercises and rooms ---');
         await seedExercisesAndRooms();
+
+        console.log('\n--- Seeding badges ---');
+        await seedBadges();
 
         console.log('\n✅ All seeding completed successfully!');
     } catch (error) {

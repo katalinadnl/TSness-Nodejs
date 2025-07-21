@@ -104,6 +104,25 @@ export class ChallengeController {
         }
     }
 
+    async deleteChallenge(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user || !req.user._id || !req.user.role) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
+            const challengeId = req.params.id;
+            const userId = req.user._id.toString();
+            const userRole = req.user.role;
+
+            await this.challengeService.deleteChallenge(challengeId, userId, userRole);
+            res.status(200).json({ success: true, message: 'Défi supprimé avec succès' });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
+
+
     buildRoutes(): Router {
         const router = express.Router();
 
@@ -115,6 +134,7 @@ export class ChallengeController {
         router.post('/:id/participate', this.participate.bind(this));
         router.patch('/:id/progress', this.updateProgress.bind(this));
         router.get('/:id/sessions', this.getMySessions.bind(this));
+        router.delete('/:id', this.deleteChallenge.bind(this));
 
         return router;
     }

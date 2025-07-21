@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 export enum DifficultyLevel {
   BEGINNER = 'beginner',
   INTERMEDIATE = 'intermediate',
@@ -12,8 +14,8 @@ export interface ITrainingRoom {
   features: string[];
   isApproved: boolean;
   difficultyLevel: DifficultyLevel;
-  assignedExerciseTypeId?: string;
-  createdBy: string;
+  assignedExerciseTypeId?: Types.ObjectId;
+  gymId: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -34,7 +36,7 @@ export interface CreateTrainingRoomRequest {
   features: string[];
   difficultyLevel: DifficultyLevel;
   assignedExerciseTypeId?: string;
-  createdBy: string;
+  gymId: string;
 }
 
 export interface UpdateTrainingRoomRequest {

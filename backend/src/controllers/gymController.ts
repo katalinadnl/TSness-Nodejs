@@ -1,75 +1,135 @@
-import { Request, Response } from 'express';
+import express, { Request, Response, Router } from 'express';
+import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
 import { Gym } from '../models/Gym';
+import { TrainingRoom } from '../models/TrainingRoom';
 import mongoose from 'mongoose';
 
-export const createGym = async (req: Request, res: Response) => {
-    try {
-        const gym = new Gym(req.body);
-        const savedGym = await gym.save();
-        return res.status(201).json(savedGym);
-    } catch (error) {
-        console.error(error);
-        return res.status(400).json({ message: 'Error creating gym', error });
+export class GymController {
+    async getAllGyms(req: Request, res: Response): Promise<void> {
+        try {
+            const gyms = await Gym.find();
+            res.status(200).json({ success: true, message: 'Salles de sport récupérées', data: gyms });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+        }
     }
-};
 
-export const getAllGyms = async (_req: Request, res: Response) => {
-    try {
-        const gyms = await Gym.find();
-        return res.status(200).json(gyms);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Error fetching gyms', error });
+    async getGymById(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({ success: false, message: 'ID invalide' });
+                return;
+            }
+            const gym = await Gym.findById(id);
+            if (!gym) {
+                res.status(404).json({ success: false, message: 'Salle de sport non trouvée' });
+                return;
+            }
+            res.status(200).json({ success: true, message: 'Salle récupérée', data: gym });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+        }
     }
-};
 
-export const getGymById = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid ID format' });
+    async createGym(req: Request, res: Response): Promise<void> {
+        try {
+            const gym = new Gym(req.body);
+            const saved = await gym.save();
+            res.status(201).json({ success: true, message: 'Salle de sport créée', data: saved });
+        } catch (error) {
+            res.status(400).json({ success: false, message: 'Erreur lors de la création', error: (error as Error).message });
         }
-        const gym = await Gym.findById(id);
-        if (!gym) {
-            return res.status(404).json({ message: 'Gym not found' });
-        }
-        return res.status(200).json(gym);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Error fetching gym', error });
     }
-};
 
-export const updateGym = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid ID format' });
+    async updateGym(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({ success: false, message: 'ID invalide' });
+                return;
+            }
+            const updated = await Gym.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+            if (!updated) {
+                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                return;
+            }
+            res.status(200).json({ success: true, message: 'Salle mise à jour', data: updated });
+        } catch (error) {
+            res.status(400).json({ success: false, message: 'Erreur lors de la mise à jour', error: (error as Error).message });
         }
-        const updatedGym = await Gym.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
-        if (!updatedGym) {
-            return res.status(404).json({ message: 'Gym not found' });
-        }
-        return res.status(200).json(updatedGym);
-    } catch (error) {
-        console.error(error);
-        return res.status(400).json({ message: 'Error updating gym', error });
     }
-};
 
-export const deleteGym = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid ID format' });
+    async deleteGym(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({ success: false, message: 'ID invalide' });
+                return;
+            }
+            const deleted = await Gym.findByIdAndDelete(id);
+            if (!deleted) {
+                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                return;
+            }
+            res.status(200).json({ success: true, message: 'Salle supprimée avec succès' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
         }
-        const deletedGym = await Gym.findByIdAndDelete(id);
-        if (!deletedGym) {
-            return res.status(404).json({ message: 'Gym not found' });
-        }
-        return res.status(200).json({ message: 'Gym deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Error deleting gym', error });
     }
-};
+
+    async getGymsWithRooms(req: Request, res: Response): Promise<void> {
+        try {
+            const gyms = await Gym.find();
+
+            const fullGyms = await Promise.all(
+                gyms.map(async (gym) => {
+                    const rooms = await TrainingRoom.find({ gymId: gym._id }).populate('assignedExerciseTypeId');
+                    return { ...gym.toObject(), trainingRooms: rooms };
+                })
+            );
+
+            res.status(200).json({ success: true, message: 'Salles avec détails récupérées', data: fullGyms });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+        }
+    }
+
+    async getGymWithRoomsById(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({ success: false, message: 'ID invalide' });
+                return;
+            }
+
+            const gym = await Gym.findById(id);
+            if (!gym) {
+                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                return;
+            }
+
+            const rooms = await TrainingRoom.find({ gymId: id }).populate('assignedExerciseTypeId');
+            res.status(200).json({ success: true, message: 'Salle avec détails récupérée', data: { ...gym.toObject(), trainingRooms: rooms } });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+        }
+    }
+
+
+    buildRoutes(): Router {
+        const router = express.Router();
+
+        router.use(authenticateToken);
+
+        router.get('/', this.getAllGyms.bind(this));
+        router.get('/full', this.getGymsWithRooms.bind(this));
+        router.get('/:id', this.getGymById.bind(this));
+        router.get('/:id/full', this.getGymWithRoomsById.bind(this));
+        router.post('/', requireSuperAdmin, this.createGym.bind(this));
+        router.put('/:id', requireSuperAdmin, this.updateGym.bind(this));
+        router.delete('/:id', requireSuperAdmin, this.deleteGym.bind(this));
+
+        return router;
+    }
+}
