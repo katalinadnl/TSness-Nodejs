@@ -43,7 +43,7 @@ interface Badge {
   _id: string
   name: string
   description: string
-  icon: string
+  iconUrl: string
   isActive: boolean
   createdAt: string
 }
@@ -417,7 +417,7 @@ onMounted(() => {
           <div v-for="badge in badges" :key="badge._id" class="item-card">
             <div class="item-info">
               <div class="item-avatar badge-avatar">
-                {{ badge.icon || '🏆' }}
+                <img :src="badge.iconUrl" :alt="badge.name" class="badge-icon" />
               </div>
               <div class="item-details">
                 <h3>{{ badge.name }}</h3>
@@ -727,6 +727,12 @@ onMounted(() => {
 .badge-avatar {
   background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
   font-size: 1.5rem;
+}
+
+.badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .item-details h3 {

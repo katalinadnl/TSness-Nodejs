@@ -32,7 +32,7 @@ interface Badge {
   _id: string
   name: string
   description: string
-  icon: string
+  iconUrl: string
   isActive: boolean
   createdAt: string
 }
@@ -152,14 +152,13 @@ const fetchMyBadges = async () => {
   if (!checkAuth()) return
 
   try {
-    // Pour simuler, on dit que l'utilisateur a obtenu le premier badge
-    myBadges.value = allBadges.value.length > 0 ? [
-      {
-        badgeId: allBadges.value[0]._id,
-        earnedAt: new Date().toISOString(),
-        badge: allBadges.value[0]
-      }
-    ] : []
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/user/my-badges`, {
+      headers: getAuthHeaders()
+    })
+    const data = await response.json()
+    if (data.success) {
+      myBadges.value = data.data
+    }
   } catch (err) {
     error.value = 'Erreur lors du chargement de vos badges'
   }
@@ -409,14 +408,14 @@ onMounted(async () => {
           <h2>Mes Badges</h2>
           <span class="count">{{ getEarnedBadgesCount() }}/{{ allBadges.length }} badge(s) obtenus</span>
         </div>
-        
+
         <div class="badges-section">
           <h3>Badges Obtenus</h3>
           <div class="items-grid">
             <div v-for="userBadge in myBadges" :key="userBadge.badgeId" class="item-card earned-badge">
               <div class="item-info">
                 <div class="item-avatar badge-avatar earned">
-                  {{ userBadge.badge.icon || '🏆' }}
+                  <img :src="userBadge.badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" :alt="userBadge.badge.name" class="badge-icon" />
                 </div>
                 <div class="item-details">
                   <h3>{{ userBadge.badge.name }}</h3>
@@ -436,14 +435,14 @@ onMounted(async () => {
         <div class="badges-section">
           <h3>Badges À Obtenir</h3>
           <div class="items-grid">
-            <div 
-              v-for="badge in allBadges.filter(b => getBadgeStatus(b) === 'available')" 
-              :key="badge._id" 
+            <div
+              v-for="badge in allBadges.filter(b => getBadgeStatus(b) === 'available')"
+              :key="badge._id"
               class="item-card available-badge"
             >
               <div class="item-info">
                 <div class="item-avatar badge-avatar available">
-                  {{ badge.icon || '🏆' }}
+                  <img :src="badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" :alt="badge.name" class="badge-icon" />
                 </div>
                 <div class="item-details">
                   <h3>{{ badge.name }}</h3>
@@ -501,7 +500,7 @@ onMounted(async () => {
               </div>
               <div class="detail-item">
                 <strong>Icône:</strong>
-                <span>{{ selectedItem.icon }}</span>
+                <img :src="selectedItem.iconUrl" :alt="selectedItem.name" class="modal-badge-icon" />
               </div>
             </template>
           </div>
@@ -818,6 +817,18 @@ onMounted(async () => {
 .badge-avatar.available {
   opacity: 0.5;
   filter: grayscale(1);
+}
+
+.badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.modal-badge-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .item-details h3 {
