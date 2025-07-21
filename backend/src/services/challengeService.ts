@@ -112,7 +112,7 @@ async updateProgress(challengeId: string, userId: string, data: { progress: numb
         participation.progress += data.progress;
         participation.caloriesBurned += data.caloriesBurned;
 
-// Ajout de la session
+        // Ajout de la session
         participation.sessions.push({
             date: new Date(),
             progress: data.progress,
@@ -144,5 +144,26 @@ async updateProgress(challengeId: string, userId: string, data: { progress: numb
         };
     }
 
+    async shareChallenge(challengeId: string, userIds: string[]): Promise<any> {
+        const challenge = await Challenge.findById(challengeId);
+        if (!challenge) throw new Error('Défi non trouvé');
+
+        let added = 0;
+        userIds.forEach(userId => {
+            const objectId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
+            if (!challenge.participants.some(p => p.userId.equals(objectId))) {
+                challenge.participants.push({
+                    userId: objectId,
+                    status: 'invited',
+                    progress: 0,
+                    caloriesBurned: 0
+                });
+                added++;
+            }
+        });
+        if (added === 0) throw new Error('Aucun nouvel utilisateur invité');
+        await challenge.save();
+        return challenge;
+    }
 
 }
