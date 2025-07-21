@@ -7,7 +7,7 @@ import {
   UpdateTrainingRoomRequest, 
   DifficultyLevel 
 } from '../types';
-import { authenticateToken, requireSuperAdmin, requireOwner } from '../middleware/auth';
+import { authenticateToken, requireSuperAdmin, requireAdmin } from '../middleware/auth';
 
 export class TrainingRoomController {
 
@@ -80,7 +80,6 @@ export class TrainingRoomController {
         return;
       }
 
-      // Vérifier que le propriétaire existe
       const user = await require('../models/User').User.findById(owner);
       if (!user) {
         res.status(404).json({
@@ -197,7 +196,6 @@ export class TrainingRoomController {
       });
     }
   }
-  // Endpoint pour changer le propriétaire d'une salle
   async changeOwner(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -405,8 +403,7 @@ export class TrainingRoomController {
     const router = express.Router();
 
     router.use(authenticateToken);
-    router.use(requireSuperAdmin);
-    router.use(requireOwner);
+    router.use(requireAdmin);
 
     router.get('/', this.getAllTrainingRooms.bind(this));
     router.get('/:id', this.getTrainingRoomById.bind(this));

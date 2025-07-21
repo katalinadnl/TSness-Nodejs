@@ -15,6 +15,7 @@ import { BadgeController } from './controllers/badgeController';
 import { BadgeService } from './services/badgeService';
 import { ChallengeService } from './services/challengeService';
 import { ChallengeController } from './controllers/challengeController';
+import { ThemeController } from './controllers/themeController';
 
 
 dotenv.config();
@@ -36,6 +37,7 @@ const trainingRoomController = new TrainingRoomController();
 const loginController = new LoginController();
 const badgeController = new BadgeController(badgeService);
 const challengeController = new ChallengeController(challengeService);
+const themeController = new ThemeController();
 
 app.use('/api/challenges', challengeController.buildRoutes());
 
@@ -46,6 +48,7 @@ app.use('/api/training-rooms', trainingRoomController.buildRoutes());
 app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
 app.use('/api/badges', badgeController.buildRoutes());
 app.use('/api/challenges', challengeController.buildRoutes());
+app.use('/api/themes', themeController.buildRoutes());
 app.use('/api/gyms', gymRoutes);
 app.use('/api/participations', participationRoutes);
 app.use('/api/invitations', invitationRoutes);

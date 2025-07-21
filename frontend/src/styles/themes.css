@@ -1,0 +1,227 @@
+/* Variables CSS globales pour les thèmes */
+:root {
+  /* Variables communes à tous les thèmes */
+  --border-radius: 8px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --color-background-mute: rgba(255, 255, 255, 0.05);
+  
+  /* Thème par défaut (clair) */
+  --color-primary: #6366f1;
+  --color-secondary: #8b5cf6;
+  --color-accent: #06b6d4;
+  --color-background: #ffffff;
+  --color-background-soft: #f8fafc;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+}
+
+/* Réajustement des variables pour le thème clair */
+.theme-default {
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
+  --color-background-mute: #f1f5f9;
+}
+
+/* Thème Débutant - Violet */
+.theme-debutant {
+  --color-primary: #8b5cf6;
+  --color-secondary: #a855f7;
+  --color-accent: #c084fc;
+  --color-background: #1a1625;
+  --color-background-soft: #2d1b3d;
+  --color-text: #e2e8f0;
+  --color-text-muted: #a855f7;
+  --color-border: rgba(168, 85, 247, 0.2);
+  --color-border-hover: rgba(168, 85, 247, 0.3);
+  --color-background-mute: rgba(168, 85, 247, 0.1);
+}
+
+/* Thème Intermédiaire - Bleu */
+.theme-intermediaire {
+  --color-primary: #3b82f6;
+  --color-secondary: #06b6d4;
+  --color-accent: #0ea5e9;
+  --color-background: #0f172a;
+  --color-background-soft: #1e293b;
+  --color-text: #e2e8f0;
+  --color-text-muted: #64748b;
+  --color-border: rgba(59, 130, 246, 0.2);
+  --color-border-hover: rgba(59, 130, 246, 0.3);
+  --color-background-mute: rgba(59, 130, 246, 0.1);
+}
+
+/* Thème Avancé - Orange */
+.theme-avance {
+  --color-primary: #f97316;
+  --color-secondary: #ea580c;
+  --color-accent: #fb923c;
+  --color-background: #1c1410;
+  --color-background-soft: #2d1b0e;
+  --color-text: #fef3e2;
+  --color-text-muted: #fdba74;
+  --color-border: rgba(249, 115, 22, 0.2);
+  --color-border-hover: rgba(249, 115, 22, 0.3);
+  --color-background-mute: rgba(249, 115, 22, 0.1);
+}
+
+/* Thème Champion - Gold */
+.theme-champion {
+  --color-primary: #eab308;
+  --color-secondary: #f59e0b;
+  --color-accent: #fbbf24;
+  --color-background: #1c1a0d;
+  --color-background-soft: #2d2411;
+  --color-text: #fefce8;
+  --color-text-muted: #fde047;
+  --color-border: rgba(234, 179, 8, 0.2);
+  --color-border-hover: rgba(234, 179, 8, 0.3);
+  --color-background-mute: rgba(234, 179, 8, 0.1);
+}
+
+/* Styles globaux pour tous les thèmes sombres */
+.theme-debutant,
+.theme-intermediaire,
+.theme-avance,
+.theme-champion {
+  color-scheme: dark;
+}
+
+/* Animation de transition pour les changements de thème */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Styles spéciaux pour les éléments avec les thèmes sombres */
+.theme-debutant input,
+.theme-intermediaire input,
+.theme-avance input,
+.theme-champion input {
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.theme-debutant input:focus,
+.theme-intermediaire input:focus,
+.theme-avance input:focus,
+.theme-champion input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.1);
+}
+
+/* Scrollbar personnalisée pour les thèmes sombres */
+.theme-debutant ::-webkit-scrollbar,
+.theme-intermediaire ::-webkit-scrollbar,
+.theme-avance ::-webkit-scrollbar,
+.theme-champion ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-debutant ::-webkit-scrollbar-track,
+.theme-intermediaire ::-webkit-scrollbar-track,
+.theme-avance ::-webkit-scrollbar-track,
+.theme-champion ::-webkit-scrollbar-track {
+  background: var(--color-background-soft);
+}
+
+.theme-debutant ::-webkit-scrollbar-thumb,
+.theme-intermediaire ::-webkit-scrollbar-thumb,
+.theme-avance ::-webkit-scrollbar-thumb,
+.theme-champion ::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+.theme-debutant ::-webkit-scrollbar-thumb:hover,
+.theme-intermediaire ::-webkit-scrollbar-thumb:hover,
+.theme-avance ::-webkit-scrollbar-thumb:hover,
+.theme-champion ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Styles pour les éléments de navigation dans les thèmes sombres */
+.theme-debutant .tab-button,
+.theme-intermediaire .tab-button,
+.theme-avance .tab-button,
+.theme-champion .tab-button {
+  background: transparent;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+}
+
+.theme-debutant .tab-button.active,
+.theme-intermediaire .tab-button.active,
+.theme-avance .tab-button.active,
+.theme-champion .tab-button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.theme-debutant .tab-button:hover,
+.theme-intermediaire .tab-button:hover,
+.theme-avance .tab-button:hover,
+.theme-champion .tab-button:hover {
+  color: var(--color-primary);
+  background: var(--color-background-mute);
+}
+
+/* Indicateur visuel du thème actuel */
+.theme-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 8px 16px;
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* Animation spéciale pour le thème Champion */
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.theme-champion .rank-number.gold,
+.theme-champion .badge-mini {
+  background: linear-gradient(45deg, #eab308, #f59e0b, #fbbf24, #eab308);
+  background-size: 200% 100%;
+  animation: goldShimmer 3s infinite linear;
+}
+
+/* Effet de lueur pour les thèmes sombres */
+.theme-debutant .stat-card:hover,
+.theme-intermediaire .stat-card:hover,
+.theme-avance .stat-card:hover,
+.theme-champion .stat-card:hover {
+  box-shadow: 0 8px 25px rgba(var(--color-primary-rgb), 0.3);
+}
+
+/* Variables RGB pour les effets de lueur */
+.theme-debutant {
+  --color-primary-rgb: 139, 92, 246;
+}
+
+.theme-intermediaire {
+  --color-primary-rgb: 59, 130, 246;
+}
+
+.theme-avance {
+  --color-primary-rgb: 249, 115, 22;
+}
+
+.theme-champion {
+  --color-primary-rgb: 234, 179, 8;
+}

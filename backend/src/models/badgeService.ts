@@ -111,12 +111,11 @@ class BadgeService {
                 .sort({ earnedAt: -1 })
                 .lean();
             
-            // Transformer la structure pour le frontend
             return userBadges.map(userBadge => ({
                 _id: userBadge._id,
                 userId: userBadge.userId,
                 badgeId: userBadge.badgeId._id,
-                badge: userBadge.badgeId, // Le badge peuplé
+                badge: userBadge.badgeId,
                 earnedAt: userBadge.earnedAt,
                 createdAt: userBadge.createdAt,
                 updatedAt: userBadge.updatedAt
@@ -159,11 +158,9 @@ class BadgeService {
         try {
             const { User } = await import('./User');
             
-            // Récupérer tous les clients
             const users = await User.find({ role: 'client' }).lean();
             console.log('DEBUG - Users found:', users.length);
             
-            // Pour chaque utilisateur, compter ses badges
             const leaderboard = [];
             
             for (const user of users) {
@@ -184,7 +181,6 @@ class BadgeService {
             
             console.log('DEBUG - Final leaderboard:', leaderboard.length, 'entries');
             
-            // Trier par nombre de badges (décroissant)
             return leaderboard.sort((a, b) => b.badgeCount - a.badgeCount);
         } catch (error) {
             console.error('Erreur lors de la récupération du classement:', error);
@@ -193,4 +189,5 @@ class BadgeService {
     }
 }
 
+export { BadgeService };
 export default new BadgeService();

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTheme } from '@/composables/useTheme'
 
 interface TrainingRoom {
   _id: string
@@ -67,6 +68,7 @@ interface User {
 }
 
 const router = useRouter()
+const { currentTheme, themeInfo, themeDisplayName, themeDescription, isDarkTheme } = useTheme()
 
 const activeTab = ref('dashboard')
 const loading = ref(false)
@@ -93,7 +95,7 @@ const checkAuth = () => {
   }
 
   const userData = JSON.parse(user)
-  if (userData.role !== 'client') {
+  if (!['client', 'superAdmin', 'owner'].includes(userData.role)) {
     router.push('/')
     return false
   }
@@ -114,7 +116,6 @@ const fetchMyGym = async () => {
   if (!checkAuth()) return
 
   try {
-    // Pour simuler, on prend le premier gym disponible
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/gyms`, {
       headers: getAuthHeaders()
     })
@@ -136,7 +137,6 @@ const fetchAvailableTrainingRooms = async () => {
     })
     const data = await response.json()
     if (data.success) {
-      // Filtrer uniquement les salles approuvées
       availableTrainingRooms.value = data.data.filter((room: TrainingRoom) => room.isApproved)
     }
   } catch (err) {
@@ -216,8 +216,13 @@ const logout = () => {
   router.push('/login')
 }
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('fr-FR', {
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return 'Date non disponible'
+
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'Date non disponible'
+
+  return date.toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
@@ -289,6 +294,13 @@ onMounted(async () => {
         class="tab-button"
       >
         🥇 Classement
+      </button>
+      <button
+        @click="activeTab = 'profile'"
+        :class="{ active: activeTab === 'profile' }"
+        class="tab-button"
+      >
+        👤 Profil
       </button>
     </div>
 
@@ -501,7 +513,7 @@ onMounted(async () => {
           <h2>Classement des Badges</h2>
           <span class="count">{{ leaderboard.length }} client(s) classé(s)</span>
         </div>
-        
+
         <div class="leaderboard-grid">
           <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card" :class="{ 'current-user': currentUser && entry.user._id === currentUser._id }">
             <div class="rank">
@@ -519,7 +531,7 @@ onMounted(async () => {
                 <span v-else>🏅</span>
               </div>
             </div>
-            
+
             <div class="user-info">
               <div class="user-avatar">
                 {{ entry.user.firstName.charAt(0) }}{{ entry.user.lastName.charAt(0) }}
@@ -530,21 +542,104 @@ onMounted(async () => {
                 <p class="badge-count">{{ entry.badgeCount }} badge(s)</p>
               </div>
             </div>
-            
+
             <div class="user-badges">
               <div class="badges-preview">
-                <div 
-                  v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)" 
-                  :key="userBadge.badgeId || userBadge._id" 
+                <div
+                  v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)"
+                  :key="userBadge.badgeId || userBadge._id"
                   class="badge-mini"
                 >
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" 
-                       :alt="userBadge.badge?.name || 'Badge'" 
-                       class="badge-mini-icon" 
+                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
+                       :alt="userBadge.badge?.name || 'Badge'"
+                       class="badge-mini-icon"
                   />
                 </div>
                 <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
                   +{{ entry.badges.length - 3 }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="activeTab === 'profile'" class="profile-content">
+        <div class="section-header">
+          <h2>Mon Profil</h2>
+        </div>
+
+        <div class="profile-details">
+          <div class="detail-card">
+            <h3>Informations personnelles</h3>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <strong>Nom:</strong>
+                <span>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Nom d'utilisateur:</strong>
+                <span>@{{ currentUser?.username }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Email:</strong>
+                <span>{{ currentUser?.email }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-card theme-card">
+            <h3>🎨 Thème d'Interface</h3>
+            <div class="theme-info">
+              <div class="theme-preview">
+                <div class="theme-colors">
+                  <div class="color-swatch primary" :style="{ backgroundColor: themeInfo?.colors.primary || '#6366f1' }"></div>
+                  <div class="color-swatch secondary" :style="{ backgroundColor: themeInfo?.colors.secondary || '#8b5cf6' }"></div>
+                  <div class="color-swatch accent" :style="{ backgroundColor: themeInfo?.colors.accent || '#06b6d4' }"></div>
+                </div>
+                <div class="theme-details">
+                  <h4>{{ themeDisplayName }}</h4>
+                  <p>{{ themeDescription }}</p>
+                  <div class="theme-badge" :class="`theme-${currentTheme}`">
+                    <span class="theme-level">{{ currentTheme === 'default' ? 'Standard' : currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="theme-progression">
+                <h4>🏆 Progression des Récompenses</h4>
+                <div class="progression-levels">
+                  <div class="progression-level" :class="{ 'achieved': currentTheme !== 'default' }">
+                    <div class="level-icon">🟣</div>
+                    <div class="level-info">
+                      <strong>Débutant</strong>
+                      <span>Thème violet - Complétez 1 défi</span>
+                    </div>
+                  </div>
+                  <div class="progression-level" :class="{ 'achieved': ['intermediaire', 'avance', 'champion'].includes(currentTheme) }">
+                    <div class="level-icon">🔵</div>
+                    <div class="level-info">
+                      <strong>Intermédiaire</strong>
+                      <span>Thème bleu - Complétez 5 défis</span>
+                    </div>
+                  </div>
+                  <div class="progression-level" :class="{ 'achieved': ['avance', 'champion'].includes(currentTheme) }">
+                    <div class="level-icon">🟠</div>
+                    <div class="level-info">
+                      <strong>Avancé</strong>
+                      <span>Thème orange - Complétez 10 défis</span>
+                    </div>
+                  </div>
+                  <div class="progression-level" :class="{ 'achieved': currentTheme === 'champion' }">
+                    <div class="level-icon">🟡</div>
+                    <div class="level-info">
+                      <strong>Champion</strong>
+                      <span>Thème doré - Complétez 20 défis</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="progression-tip">
+                  <p>💡 <strong>Astuce:</strong> Continuez à compléter des défis pour débloquer de nouveaux thèmes d'interface exclusifs !</p>
                 </div>
               </div>
             </div>
@@ -1261,17 +1356,217 @@ onMounted(async () => {
     gap: 16px;
     text-align: center;
   }
-  
+
   .rank {
     justify-self: center;
   }
-  
+
   .user-info {
     justify-content: center;
   }
-  
+
   .user-badges {
     justify-self: center;
+  }
+}
+
+/* Styles pour le profil */
+.profile-content {
+  padding: 0;
+}
+
+.profile-details {
+  display: grid;
+  gap: 24px;
+}
+
+.theme-card {
+  background: linear-gradient(135deg, var(--color-background-soft) 0%, rgba(var(--color-primary-rgb, 99, 102, 241), 0.05) 100%);
+  border-color: rgba(var(--color-primary-rgb, 99, 102, 241), 0.2);
+}
+
+.theme-info {
+  display: grid;
+  gap: 24px;
+}
+
+.theme-preview {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.theme-colors {
+  display: flex;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-details h4 {
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.theme-details p {
+  margin: 0 0 12px 0;
+  color: var(--color-text-muted);
+}
+
+.theme-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.theme-badge.theme-default {
+  background: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+}
+
+.theme-badge.theme-debutant {
+  background: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
+}
+
+.theme-badge.theme-intermediaire {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.theme-badge.theme-avance {
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+}
+
+.theme-badge.theme-champion {
+  background: linear-gradient(45deg, rgba(234, 179, 8, 0.2), rgba(251, 191, 36, 0.2));
+  color: #eab308;
+}
+
+.theme-progression h4 {
+  margin: 0 0 16px 0;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.progression-levels {
+  display: grid;
+  gap: 12px;
+}
+
+.progression-level {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: var(--border-radius);
+  background: var(--color-background-mute);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.progression-level.achieved {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb, 99, 102, 241), 0.05);
+}
+
+.level-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.level-info {
+  flex: 1;
+}
+
+.level-info strong {
+  display: block;
+  color: var(--color-text);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.level-info span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.progression-tip {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(var(--color-primary-rgb, 99, 102, 241), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb, 99, 102, 241), 0.2);
+  border-radius: var(--border-radius);
+}
+
+.progression-tip p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.stats-card {
+  background: linear-gradient(135deg, var(--color-background-soft) 0%, rgba(var(--color-accent-rgb, 6, 182, 212), 0.05) 100%);
+  border-color: rgba(var(--color-accent-rgb, 6, 182, 212), 0.2);
+}
+
+.user-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: var(--color-background-mute);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .theme-preview {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
