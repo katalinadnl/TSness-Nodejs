@@ -37,7 +37,12 @@ export class ChallengeController {
 
             const ownerId = req.user._id.toString();
             const challenges = await this.challengeService.getChallengesByOwner(ownerId);
-            res.status(200).json({ success: true, data: challenges });
+
+            res.status(200).json({
+                success: true,
+                count: challenges.length,
+                data: challenges
+            });
         } catch (error) {
             res.status(500).json({
                 success: false,
@@ -46,31 +51,47 @@ export class ChallengeController {
         }
     }
 
+
     async getAll(req: Request, res: Response): Promise<void> {
         try {
             const filters = req.query;
             const challenges = await this.challengeService.getAllChallenges(filters);
-            res.status(200).json({ success: true, data: challenges });
+
+            res.status(200).json({
+                success: true,
+                count: challenges.length,
+                data: challenges
+            });
         } catch (error) {
             res.status(500).json({ success: false, message: (error as Error).message });
         }
     }
 
+
     async participate(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id) {
+            if (!req.user || !req.user._id || !req.user.role) {
                 res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
                 return;
             }
 
-            const challengeId = req.params.id;
             const userId = req.user._id.toString();
+            const userRole = req.user.role;
+
+            if (userRole !== 'client') {
+                res.status(403).json({ success: false, message: 'Seuls les clients peuvent participer aux défis' });
+                return;
+            }
+
+            const challengeId = req.params.id;
             const challenge = await this.challengeService.participateInChallenge(challengeId, userId);
+
             res.status(200).json({ success: true, message: 'Participation enregistrée', data: challenge });
         } catch (error) {
             res.status(400).json({ success: false, message: (error as Error).message });
         }
     }
+
 
     async updateProgress(req: Request, res: Response): Promise<void> {
         try {

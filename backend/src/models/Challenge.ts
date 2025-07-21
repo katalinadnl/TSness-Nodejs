@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { DifficultyLevel, ChallengeGoal } from '../types/challengeEnum';
 
 export interface IChallengeParticipant {
     userId: mongoose.Types.ObjectId;
@@ -70,11 +71,13 @@ const ChallengeSchema = new Schema<IChallenge>(
         },
         difficultyLevel: {
             type: String,
+            enum: Object.values(DifficultyLevel),
             required: true,
             trim: true
         },
         goals: {
             type: String,
+            enum: Object.values(ChallengeGoal),
             required: true,
             trim: true
         },

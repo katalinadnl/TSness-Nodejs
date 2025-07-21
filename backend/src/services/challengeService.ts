@@ -80,10 +80,25 @@ export class ChallengeService {
             query.gymId = filters.gymId;
         }
 
+        if (filters.goals) {
+            query.goals = filters.goals;
+        }
+
+        if (filters.exerciseTypeId) {
+            query.recommendedExerciseTypeIds = filters.exerciseTypeId;
+        }
+
+        if (filters.minDuration || filters.maxDuration) {
+            query.duration = {};
+            if (filters.minDuration) query.duration.$gte = Number(filters.minDuration);
+            if (filters.maxDuration) query.duration.$lte = Number(filters.maxDuration);
+        }
+
         return await Challenge.find(query)
             .populate('gymId')
             .populate('recommendedExerciseTypeIds');
     }
+
 
     async participateInChallenge(challengeId: string, userId: string) {
         const challenge = await Challenge.findById(challengeId);
@@ -173,21 +188,24 @@ export class ChallengeService {
         const challenge = await Challenge.findById(challengeId);
         if (!challenge) throw new Error('Défi non trouvé');
 
-        if (userRole === 'client') {
+        if (userRole === 'super_admin') {
+            // peut tout supprimer
+        } else if (userRole === 'client') {
             if (!challenge.creatorId.equals(userId)) {
                 throw new Error("Vous n'avez pas le droit de supprimer ce défi");
             }
-        }
-
-        if (userRole === 'gym_owner') {
+        } else if (userRole === 'gym_owner') {
             const gym = await Gym.findById(challenge.gymId);
             if (!gym || !gym.ownerId.equals(userId)) {
                 throw new Error("Vous n'avez pas le droit de supprimer ce défi");
             }
+        } else {
+            throw new Error("Rôle non autorisé");
         }
 
         await Challenge.findByIdAndDelete(challengeId);
         await Participation.deleteMany({ challengeId });
     }
+
 
 }
