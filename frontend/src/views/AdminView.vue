@@ -48,6 +48,23 @@ interface Badge {
   createdAt: string
 }
 
+interface UserBadge {
+  badgeId: string
+  earnedAt: string
+  badge: Badge
+}
+
+interface LeaderboardEntry {
+  user: {
+    _id: string
+    username: string
+    firstName: string
+    lastName: string
+  }
+  badgeCount: number
+  badges: UserBadge[]
+}
+
 const router = useRouter()
 
 const activeTab = ref('dashboard')
@@ -58,6 +75,7 @@ const users = ref<User[]>([])
 const gyms = ref<Gym[]>([])
 const trainingRooms = ref<TrainingRoom[]>([])
 const badges = ref<Badge[]>([])
+const leaderboard = ref<LeaderboardEntry[]>([])
 
 const showModal = ref(false)
 const modalType = ref('')
@@ -153,6 +171,22 @@ const fetchBadges = async () => {
   }
 }
 
+const fetchLeaderboard = async () => {
+  if (!checkAuth()) return
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/leaderboard`, {
+      headers: getAuthHeaders()
+    })
+    const data = await response.json()
+    if (data.success) {
+      leaderboard.value = data.data
+    }
+  } catch (err) {
+    error.value = 'Erreur lors du chargement du classement'
+  }
+}
+
 const toggleUserStatus = async (userId: string, isActive: boolean) => {
   if (!checkAuth()) return
 
@@ -210,6 +244,7 @@ onMounted(() => {
     fetchGyms()
     fetchTrainingRooms()
     fetchBadges()
+    fetchLeaderboard()
   }
 })
 </script>
@@ -267,6 +302,13 @@ onMounted(() => {
         class="tab-button"
       >
         🏆 Badges
+      </button>
+      <button
+        @click="activeTab = 'leaderboard'"
+        :class="{ active: activeTab === 'leaderboard' }"
+        class="tab-button"
+      >
+        🥇 Classement
       </button>
     </div>
 
@@ -428,6 +470,62 @@ onMounted(() => {
               <button @click="viewDetails(badge, 'badge')" class="btn btn-info">
                 Voir
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="activeTab === 'leaderboard'" class="leaderboard-content">
+        <div class="section-header">
+          <h2>Classement des Badges</h2>
+          <span class="count">{{ leaderboard.length }} client(s) classé(s)</span>
+        </div>
+        
+        <div class="leaderboard-grid">
+          <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card">
+            <div class="rank">
+              <div class="rank-number" :class="{
+                'gold': index === 0,
+                'silver': index === 1,
+                'bronze': index === 2
+              }">
+                {{ index + 1 }}
+              </div>
+              <div class="rank-icon">
+                <span v-if="index === 0">🥇</span>
+                <span v-else-if="index === 1">🥈</span>
+                <span v-else-if="index === 2">🥉</span>
+                <span v-else>🏅</span>
+              </div>
+            </div>
+            
+            <div class="user-info">
+              <div class="user-avatar">
+                {{ entry.user.firstName.charAt(0) }}{{ entry.user.lastName.charAt(0) }}
+              </div>
+              <div class="user-details">
+                <h3>{{ entry.user.firstName }} {{ entry.user.lastName }}</h3>
+                <p>@{{ entry.user.username }}</p>
+                <p class="badge-count">{{ entry.badgeCount }} badge(s)</p>
+              </div>
+            </div>
+            
+            <div class="user-badges">
+              <div class="badges-preview">
+                <div 
+                  v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)" 
+                  :key="userBadge.badgeId || userBadge._id" 
+                  class="badge-mini"
+                >
+                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" 
+                       :alt="userBadge.badge?.name || 'Badge'" 
+                       class="badge-mini-icon" 
+                  />
+                </div>
+                <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
+                  +{{ entry.badges.length - 3 }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -955,6 +1053,181 @@ onMounted(() => {
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Styles pour le classement */
+.leaderboard-content {
+  padding: 0;
+}
+
+.leaderboard-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.leaderboard-card {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+.leaderboard-card:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.rank-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  background: var(--color-background-mute);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+}
+
+.rank-number.gold {
+  background: linear-gradient(45deg, #ffd700, #ffed4a);
+  color: #8b5a00;
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.rank-number.silver {
+  background: linear-gradient(45deg, #c0c0c0, #e2e8f0);
+  color: #4a5568;
+  border-color: #c0c0c0;
+  box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+}
+
+.rank-number.bronze {
+  background: linear-gradient(45deg, #cd7f32, #d69e2e);
+  color: #744210;
+  border-color: #cd7f32;
+  box-shadow: 0 0 20px rgba(205, 127, 50, 0.3);
+}
+
+.rank-icon {
+  font-size: 1.5rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.user-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.user-details h3 {
+  margin: 0 0 4px 0;
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.user-details p {
+  margin: 0 0 2px 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.badge-count {
+  color: var(--color-primary) !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+.user-badges {
+  flex-shrink: 0;
+}
+
+.badges-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-mini-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.badge-mini.more-badges {
+  background: var(--color-accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .rank {
+    justify-self: center;
+  }
+  
+  .user-info {
+    justify-content: center;
+  }
+  
+  .user-badges {
+    justify-self: center;
   }
 }
 </style>
