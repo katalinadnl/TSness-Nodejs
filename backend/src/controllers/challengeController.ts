@@ -37,7 +37,12 @@ export class ChallengeController {
 
             const ownerId = req.user._id.toString();
             const challenges = await this.challengeService.getChallengesByOwner(ownerId);
-            res.status(200).json({ success: true, data: challenges });
+
+            res.status(200).json({
+                success: true,
+                count: challenges.length,
+                data: challenges
+            });
         } catch (error) {
             res.status(500).json({
                 success: false,
@@ -50,7 +55,12 @@ export class ChallengeController {
         try {
             const filters = req.query;
             const challenges = await this.challengeService.getAllChallenges(filters);
-            res.status(200).json({ success: true, data: challenges });
+
+            res.status(200).json({
+                success: true,
+                count: challenges.length,
+                data: challenges
+            });
         } catch (error) {
             res.status(500).json({ success: false, message: (error as Error).message });
         }
@@ -58,14 +68,22 @@ export class ChallengeController {
 
     async participate(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id) {
+            if (!req.user || !req.user._id || !req.user.role) {
                 res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
                 return;
             }
 
-            const challengeId = req.params.id;
             const userId = req.user._id.toString();
+            const userRole = req.user.role;
+
+            if (userRole !== 'client') {
+                res.status(403).json({ success: false, message: 'Seuls les clients peuvent participer aux défis' });
+                return;
+            }
+
+            const challengeId = req.params.id;
             const challenge = await this.challengeService.participateInChallenge(challengeId, userId);
+
             res.status(200).json({ success: true, message: 'Participation enregistrée', data: challenge });
         } catch (error) {
             res.status(400).json({ success: false, message: (error as Error).message });
@@ -104,6 +122,25 @@ export class ChallengeController {
         }
     }
 
+    async deleteChallenge(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user || !req.user._id || !req.user.role) {
+                res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+                return;
+            }
+
+            const challengeId = req.params.id;
+            const userId = req.user._id.toString();
+            const userRole = req.user.role;
+
+            await this.challengeService.deleteChallenge(challengeId, userId, userRole);
+            res.status(200).json({ success: true, message: 'Défi supprimé avec succès' });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
+
+
     async shareChallenge(req: Request, res: Response): Promise<void> {
         try {
             const challengeId = req.params.id;
@@ -131,6 +168,7 @@ export class ChallengeController {
         router.post('/:id/participate', this.participate.bind(this));
         router.patch('/:id/progress', this.updateProgress.bind(this));
         router.get('/:id/sessions', this.getMySessions.bind(this));
+        router.delete('/:id', this.deleteChallenge.bind(this));
         router.post('/:id/share', this.shareChallenge.bind(this));
 
         return router;

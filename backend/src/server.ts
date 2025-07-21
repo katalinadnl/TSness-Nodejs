@@ -2,8 +2,6 @@ import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import {connectDB} from './config/db';
-import gymRoutes from "./routes/gymRoutes";
-import participationRoutes from './routes/participationRoutes';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import {UserService} from "./services/userService";
@@ -15,7 +13,8 @@ import { BadgeController } from './controllers/badgeController';
 import { BadgeService } from './services/badgeService';
 import { ChallengeService } from './services/challengeService';
 import { ChallengeController } from './controllers/challengeController';
-
+import {GymController} from "./controllers/gymController";
+import { ParticipationController } from './controllers/participationController';
 
 dotenv.config();
 
@@ -31,11 +30,13 @@ app.use(express.json());
 
 //init des controllers
 const userController = new UserController(userService);
+const gymController = new GymController();
 const exerciseTypeController = new ExerciseTypeController();
 const trainingRoomController = new TrainingRoomController();
 const loginController = new LoginController();
 const badgeController = new BadgeController(badgeService);
 const challengeController = new ChallengeController(challengeService);
+const participationController = new ParticipationController();
 
 app.use('/api/challenges', challengeController.buildRoutes());
 
@@ -46,8 +47,8 @@ app.use('/api/training-rooms', trainingRoomController.buildRoutes());
 app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
 app.use('/api/badges', badgeController.buildRoutes());
 app.use('/api/challenges', challengeController.buildRoutes());
-app.use('/api/gyms', gymRoutes);
-app.use('/api/participations', participationRoutes);
+app.use('/api/gyms', gymController.buildRoutes());
+app.use('/api/participations', participationController.buildRoutes());
 app.use('/api/invitations', invitationRoutes);
 
 app.get('/', (_req: Request, res: Response) => {

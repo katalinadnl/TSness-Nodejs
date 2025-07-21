@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { Challenge } from '../models/Challenge';
 import { Gym } from '../models/Gym';
+import { TrainingRoom } from '../models/TrainingRoom';
 import { Participation } from '../models/Participation';
 
 export class ChallengeService {
@@ -18,21 +19,49 @@ export class ChallengeService {
             if (!gym.ownerId.equals(creatorId)) {
                 throw new Error("Vous n'êtes pas propriétaire de cette salle");
             }
+
+            const rooms = await TrainingRoom.find({ gymId: data.gymId });
+
+            if (data.equipment?.length > 0) {
+                const allEquipments = rooms.flatMap(r => r.equipment);
+                const allEquipmentsValid = data.equipment.every((eq: string) => allEquipments.includes(eq));
+                if (!allEquipmentsValid) {
+                    throw new Error("Certains équipements ne sont pas disponibles dans les salles de votre salle de sport.");
+                }
+            }
+
+            if (data.recommendedExerciseTypeIds?.length > 0) {
+                const validExerciseTypeIds = rooms
+                    .map(r => r.assignedExerciseTypeId?.toString())
+                    .filter(Boolean);
+
+                const allExerciseValid = data.recommendedExerciseTypeIds.every((id: string) =>
+                    validExerciseTypeIds.includes(id)
+                );
+
+                if (!allExerciseValid) {
+                    throw new Error("Certains types d'exercices ne sont pas liés aux salles de votre gym.");
+                }
+            }
         }
 
-        if (creatorRole === 'client' && data.gymId) {
-            throw new Error('Un client ne peut pas lier un défi à une salle');
+        if (creatorRole === 'client') {
+            if (data.gymId) {
+                throw new Error('Un client ne peut pas lier un défi à une salle');
+            }
+
+            data.gymId = null;
+            data.equipment = [];
+            data.recommendedExerciseTypeIds = [];
         }
 
         const challenge = new Challenge({
             ...data,
             creatorId: new Types.ObjectId(creatorId),
-            gymId: data.gymId || null
         });
 
         return await challenge.save();
     }
-
 
     async getChallengesByOwner(ownerId: string): Promise<any[]> {
         return await Challenge.find({ creatorId: ownerId })
@@ -51,44 +80,57 @@ export class ChallengeService {
             query.gymId = filters.gymId;
         }
 
+        if (filters.goals) {
+            query.goals = filters.goals;
+        }
+
+        if (filters.exerciseTypeId) {
+            query.recommendedExerciseTypeIds = filters.exerciseTypeId;
+        }
+
+        if (filters.minDuration || filters.maxDuration) {
+            query.duration = {};
+            if (filters.minDuration) query.duration.$gte = Number(filters.minDuration);
+            if (filters.maxDuration) query.duration.$lte = Number(filters.maxDuration);
+        }
+
         return await Challenge.find(query)
             .populate('gymId')
             .populate('recommendedExerciseTypeIds');
     }
 
 
-async participateInChallenge(challengeId: string, userId: string) {
-    const challenge = await Challenge.findById(challengeId);
-    if (!challenge) throw new Error('Défi non trouvé');
+    async participateInChallenge(challengeId: string, userId: string) {
+        const challenge = await Challenge.findById(challengeId);
+        if (!challenge) throw new Error('Défi non trouvé');
 
-    const objectUserId = new Types.ObjectId(userId);
+        const objectUserId = new Types.ObjectId(userId);
 
-    const already = challenge.participants.some(p => p.userId.equals(objectUserId));
-    if (already) throw new Error('Déjà inscrit à ce défi');
+        const already = challenge.participants.some(p => p.userId.equals(objectUserId));
+        if (already) throw new Error('Déjà inscrit à ce défi');
 
-    challenge.participants.push({
-        userId: objectUserId,
-        status: 'accepted',
-        progress: 0,
-        caloriesBurned: 0
-    });
+        challenge.participants.push({
+            userId: objectUserId,
+            status: 'accepted',
+            progress: 0,
+            caloriesBurned: 0
+        });
 
-    await challenge.save();
+        await challenge.save();
 
-    await Participation.create({
-        userId: objectUserId,
-        challengeId,
-        status: 'accepted',
-        progress: 0,
-        caloriesBurned: 0,
-        startedAt: new Date()
-    });
+        await Participation.create({
+            userId: objectUserId,
+            challengeId,
+            status: 'accepted',
+            progress: 0,
+            caloriesBurned: 0,
+            startedAt: new Date()
+        });
 
-    return challenge;
-}
+        return challenge;
+    }
 
-
-async updateProgress(challengeId: string, userId: string, data: { progress: number, caloriesBurned: number }) {
+    async updateProgress(challengeId: string, userId: string, data: { progress: number, caloriesBurned: number }) {
         const challenge = await Challenge.findById(challengeId);
         if (!challenge) throw new Error('Défi non trouvé');
 
@@ -112,7 +154,6 @@ async updateProgress(challengeId: string, userId: string, data: { progress: numb
         participation.progress += data.progress;
         participation.caloriesBurned += data.caloriesBurned;
 
-        // Ajout de la session
         participation.sessions.push({
             date: new Date(),
             progress: data.progress,
@@ -125,7 +166,6 @@ async updateProgress(challengeId: string, userId: string, data: { progress: numb
         }
 
         await participation.save();
-
 
         return challenge;
     }
@@ -142,6 +182,29 @@ async updateProgress(challengeId: string, userId: string, data: { progress: numb
             caloriesBurned: participation.caloriesBurned,
             sessions: participation.sessions
         };
+    }
+
+    async deleteChallenge(challengeId: string, userId: string, userRole: string): Promise<void> {
+        const challenge = await Challenge.findById(challengeId);
+        if (!challenge) throw new Error('Défi non trouvé');
+
+        if (userRole === 'super_admin') {
+            // peut tout supprimer
+        } else if (userRole === 'client') {
+            if (!challenge.creatorId.equals(userId)) {
+                throw new Error("Vous n'avez pas le droit de supprimer ce défi");
+            }
+        } else if (userRole === 'gym_owner') {
+            const gym = await Gym.findById(challenge.gymId);
+            if (!gym || !gym.ownerId.equals(userId)) {
+                throw new Error("Vous n'avez pas le droit de supprimer ce défi");
+            }
+        } else {
+            throw new Error("Rôle non autorisé");
+        }
+
+        await Challenge.findByIdAndDelete(challengeId);
+        await Participation.deleteMany({ challengeId });
     }
 
     async shareChallenge(challengeId: string, userIds: string[]): Promise<any> {

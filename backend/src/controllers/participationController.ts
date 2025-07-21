@@ -1,82 +1,100 @@
-import { Request, Response } from 'express';
-import { Participation } from '../models/Participation';
+import express, { Request, Response, Router } from 'express';
 import mongoose from 'mongoose';
+import { Participation } from '../models/Participation';
+import { Challenge } from '../models/Challenge';
+import { authenticateToken } from '../middleware/auth';
+import { JwtUser } from '../middleware/auth';
 
-export const createParticipation = async (req: Request, res: Response) => {
-    try {
-        const participation = new Participation(req.body);
-        const saved = await participation.save();
-        res.status(201).json(saved);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ message: 'Error creating participation', error });
+export class ParticipationController {
+    async getAll(req: Request, res: Response) {
+        try {
+            const user = req.user as JwtUser;
+            if (user.role !== 'super_admin') {
+                return res.status(403).json({ message: 'Accès refusé' });
+            }
+
+            const participations = await Participation.find()
+                .populate('userId', 'username email')
+                .populate('challengeId', 'title');
+
+            res.status(200).json({ success: true, count: participations.length, data: participations });
+        } catch (error) {
+            res.status(500).json({ message: 'Erreur serveur', error });
+        }
     }
-};
 
-export const getAllParticipations = async (_req: Request, res: Response) => {
-    try {
-        const participations = await Participation.find()
-            .populate('userId', 'username email')
-            .populate('challengeId', 'title');
-        res.status(200).json(participations);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching participations', error });
+    async getMine(req: Request, res: Response) {
+        try {
+            const user = req.user as JwtUser;
+            if (!user._id) return res.status(401).json({ message: 'Non authentifié' });
+
+            const participations = await Participation.find({ userId: user._id })
+                .populate('challengeId', 'title description duration');
+
+            res.status(200).json({ success: true, count: participations.length, data: participations });
+        } catch (error) {
+            res.status(500).json({ message: 'Erreur serveur', error });
+        }
     }
-};
 
-export const getParticipationById = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
+    async deleteMine(req: Request, res: Response) {
+        try {
+            const user = req.user as JwtUser;
+            const { id } = req.params;
 
-        const participation = await Participation.findById(id)
-            .populate('userId', 'username email')
-            .populate('challengeId', 'title');
-        if (!participation)
-            return res.status(404).json({ message: 'Participation not found' });
+            if (!mongoose.Types.ObjectId.isValid(id))
+                return res.status(400).json({ message: 'ID invalide' });
 
-        res.status(200).json(participation);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching participation', error });
+            const participation = await Participation.findById(id);
+            if (!participation)
+                return res.status(404).json({ message: 'Participation non trouvée' });
+
+            if (!participation.userId.equals(user._id)) {
+                return res.status(403).json({ message: 'Vous ne pouvez pas supprimer cette participation' });
+            }
+
+            await Challenge.findByIdAndUpdate(participation.challengeId, {
+                $pull: { participants: { userId: participation.userId } }
+            });
+
+            await Participation.findByIdAndDelete(id);
+
+            res.status(200).json({ success: true, message: 'Participation supprimée' });
+        } catch (error) {
+            res.status(500).json({ message: 'Erreur serveur', error });
+        }
     }
-};
 
-export const updateParticipation = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
+    async getForGymOwner(req: Request, res: Response) {
+        try {
+            const user = req.user as JwtUser;
+            if (user.role !== 'gym_owner') {
+                return res.status(403).json({ message: 'Accès refusé' });
+            }
 
-        const updated = await Participation.findByIdAndUpdate(id, req.body, {
-            new: true,
-            runValidators: true
-        });
-        if (!updated)
-            return res.status(404).json({ message: 'Participation not found' });
+            const challenges = await Challenge.find({ creatorId: user._id });
+            const challengeIds = challenges.map(c => c._id);
 
-        res.status(200).json(updated);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ message: 'Error updating participation', error });
+            const participations = await Participation.find({ challengeId: { $in: challengeIds } })
+                .populate('userId', 'username email')
+                .populate('challengeId', 'title');
+
+            res.status(200).json({ success: true, count: participations.length, data: participations });
+        } catch (error) {
+            res.status(500).json({ message: 'Erreur serveur', error });
+        }
     }
-};
 
-export const deleteParticipation = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id))
-            return res.status(400).json({ message: 'Invalid ID format' });
+    buildRoutes(): Router {
+        const router = express.Router();
 
-        const deleted = await Participation.findByIdAndDelete(id);
-        if (!deleted)
-            return res.status(404).json({ message: 'Participation not found' });
+        router.use(authenticateToken);
 
-        res.status(200).json({ message: 'Participation deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error deleting participation', error });
+        router.get('/', this.getAll.bind(this) as express.RequestHandler);
+        router.get('/me', this.getMine.bind(this) as express.RequestHandler);
+        router.delete('/:id', this.deleteMine.bind(this) as express.RequestHandler);
+        router.get('/gym-owner/mine', this.getForGymOwner.bind(this) as express.RequestHandler);
+
+        return router;
     }
-};
+}
