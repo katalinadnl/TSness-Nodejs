@@ -1,11 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
+import { User } from '../models/User';
+import { Types } from 'mongoose';
+
+export type JwtUser = {
+    _id: Types.ObjectId;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: 'client' | 'gym_owner' | 'super_admin';
+    isActive: boolean;
+    isDeleted: boolean;
+    deletedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 declare global {
     namespace Express {
         interface Request {
-            user?: IUser;
+            user?: JwtUser;
         }
     }
 }
@@ -33,6 +48,16 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         }
 
         const decoded = jwt.verify(token, jwtSecret) as { userId: string; role: string };
+        const validRoles = ['client', 'gym_owner', 'super_admin'] as const;
+
+        if (!validRoles.includes(decoded.role as any)) {
+            res.status(403).json({
+                success: false,
+                message: 'Rôle utilisateur invalide'
+            });
+            return;
+        }
+
         const user = await User.findById(decoded.userId).select('-password');
 
         if (!user) {
@@ -53,7 +78,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
         req.user = {
             ...user.toObject(),
-            role: decoded.role
+            role: decoded.role as typeof validRoles[number]
         };
 
         next();
