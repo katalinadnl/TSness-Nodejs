@@ -16,6 +16,7 @@ export interface ITrainingRoom {
   difficultyLevel: DifficultyLevel;
   assignedExerciseTypeId?: Types.ObjectId;
   gymId: Types.ObjectId;
+  owner: string | Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -37,6 +38,7 @@ export interface CreateTrainingRoomRequest {
   difficultyLevel: DifficultyLevel;
   assignedExerciseTypeId?: string;
   gymId: string;
+  owner: string | Types.ObjectId;
 }
 
 export interface UpdateTrainingRoomRequest {
@@ -46,6 +48,7 @@ export interface UpdateTrainingRoomRequest {
   features?: string[];
   difficultyLevel?: DifficultyLevel;
   assignedExerciseTypeId?: string;
+  owner?: string | Types.ObjectId;
 }
 
 export interface CreateExerciseTypeRequest {

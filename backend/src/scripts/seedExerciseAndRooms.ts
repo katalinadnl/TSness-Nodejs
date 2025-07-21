@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { ExerciseType } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
 import { Gym } from '../models/Gym';
+import { User } from '../models/User';
 import { DifficultyLevel } from '../types';
 
 dotenv.config();
@@ -37,18 +38,22 @@ const sampleExerciseTypes = [
 export const seedExercisesAndRooms = async () => {
     console.log('Seeding exercise types and training rooms...');
 
+    // Suppression des anciens documents
     await ExerciseType.deleteMany({});
     await TrainingRoom.deleteMany({});
 
-    const gyms = await Gym.find({});
-    if (gyms.length === 0) {
-        throw new Error('Aucun gym trouvé. Exécutez seedGyms en premier.');
-    }
-
-    const gymId = gyms[0]._id;
-
+    // Création des nouveaux exercise types
     const createdExerciseTypes = await ExerciseType.insertMany(sampleExerciseTypes);
 
+    // Vérifie qu'il y a un gymOwner
+    const gymOwner = await User.findOne({ role: 'gym_owner' });
+    if (!gymOwner) throw new Error('Aucun gym_owner trouvé. Exécutez seedUsers d\'abord.');
+
+    // Récupère un gym existant
+    const gym = await Gym.findOne({ ownerId: gymOwner._id });
+    if (!gym) throw new Error('Aucune salle de sport trouvée. Exécutez seedGyms d\'abord.');
+
+    // Salles d'entraînement
     const sampleTrainingRooms = [
         {
             name: 'Salle de Musculation Pro',
@@ -57,8 +62,9 @@ export const seedExercisesAndRooms = async () => {
             features: ['climatisation', 'miroirs', 'sol renforcé', 'musique'],
             isApproved: true,
             difficultyLevel: DifficultyLevel.ADVANCED,
-            gymId,
-            assignedExerciseTypeId: createdExerciseTypes[0]._id
+            assignedExerciseTypeId: createdExerciseTypes[0]._id,
+            gymId: gym._id,
+            owner: gymOwner._id
         },
         {
             name: 'Studio Cardio',
@@ -67,8 +73,9 @@ export const seedExercisesAndRooms = async () => {
             features: ['climatisation', 'écrans TV', 'sol amortissant'],
             isApproved: true,
             difficultyLevel: DifficultyLevel.BEGINNER,
-            gymId,
-            assignedExerciseTypeId: createdExerciseTypes[1]._id
+            assignedExerciseTypeId: createdExerciseTypes[1]._id,
+            gymId: gym._id,
+            owner: gymOwner._id
         },
         {
             name: 'Salle CrossFit',
@@ -77,8 +84,9 @@ export const seedExercisesAndRooms = async () => {
             features: ['sol renforcé', 'hauteur sous plafond', 'ventilation'],
             isApproved: false,
             difficultyLevel: DifficultyLevel.ADVANCED,
-            gymId,
-            assignedExerciseTypeId: createdExerciseTypes[4]._id
+            assignedExerciseTypeId: createdExerciseTypes[4]._id,
+            gymId: gym._id,
+            owner: gymOwner._id
         },
         {
             name: 'Studio Yoga',
@@ -87,13 +95,14 @@ export const seedExercisesAndRooms = async () => {
             features: ['éclairage tamisé', 'sol chauffant', 'musique douce'],
             isApproved: true,
             difficultyLevel: DifficultyLevel.BEGINNER,
-            gymId,
-            assignedExerciseTypeId: createdExerciseTypes[3]._id
+            assignedExerciseTypeId: createdExerciseTypes[3]._id,
+            gymId: gym._id,
+            owner: gymOwner._id
         }
     ];
 
     const createdRooms = await TrainingRoom.insertMany(sampleTrainingRooms);
 
-    console.log(`${createdExerciseTypes.length} exercise types created`);
-    console.log(`${createdRooms.length} training rooms created`);
+    console.log(`✅ ${createdExerciseTypes.length} types d'exercices créés`);
+    console.log(`✅ ${createdRooms.length} salles d'entraînement créées`);
 };

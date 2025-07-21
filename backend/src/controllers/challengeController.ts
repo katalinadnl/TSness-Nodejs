@@ -51,7 +51,6 @@ export class ChallengeController {
         }
     }
 
-
     async getAll(req: Request, res: Response): Promise<void> {
         try {
             const filters = req.query;
@@ -66,7 +65,6 @@ export class ChallengeController {
             res.status(500).json({ success: false, message: (error as Error).message });
         }
     }
-
 
     async participate(req: Request, res: Response): Promise<void> {
         try {
@@ -91,7 +89,6 @@ export class ChallengeController {
             res.status(400).json({ success: false, message: (error as Error).message });
         }
     }
-
 
     async updateProgress(req: Request, res: Response): Promise<void> {
         try {
@@ -144,6 +141,22 @@ export class ChallengeController {
     }
 
 
+    async shareChallenge(req: Request, res: Response): Promise<void> {
+        try {
+            const challengeId = req.params.id;
+            const { userIds } = req.body;
+            if (!Array.isArray(userIds) || userIds.length === 0) {
+                res.status(400).json({ success: false, message: 'Aucun utilisateur à inviter.' });
+                return;
+            }
+            const challenge = await this.challengeService.shareChallenge(challengeId, userIds);
+            res.status(200).json({ success: true, message: 'Défi partagé avec succès.', data: challenge });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
+
+
     buildRoutes(): Router {
         const router = express.Router();
 
@@ -156,6 +169,7 @@ export class ChallengeController {
         router.patch('/:id/progress', this.updateProgress.bind(this));
         router.get('/:id/sessions', this.getMySessions.bind(this));
         router.delete('/:id', this.deleteChallenge.bind(this));
+        router.post('/:id/share', this.shareChallenge.bind(this));
 
         return router;
     }
