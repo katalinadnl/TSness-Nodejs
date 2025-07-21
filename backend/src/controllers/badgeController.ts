@@ -129,6 +129,23 @@ export class BadgeController {
         }
     }
 
+    async getLeaderboard(req: Request, res: Response): Promise<void> {
+        try {
+            const leaderboard = await badgeService.getUsersLeaderboard();
+            res.status(200).json({ 
+                success: true, 
+                message: 'Classement récupéré avec succès', 
+                data: leaderboard 
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                success: false, 
+                message: 'Erreur lors de la récupération du classement', 
+                error: (error as Error).message 
+            });
+        }
+    }
+
     buildRoutes(): Router {
         const router = express.Router();
 
@@ -140,14 +157,14 @@ export class BadgeController {
         router.use(authenticateToken);
 
         router.get('/', this.getAllBadges.bind(this));
+        router.get('/leaderboard', this.getLeaderboard.bind(this));
+        router.get('/user/my-badges', this.getUserBadges.bind(this));
+        router.get('/user/all-with-status', this.getAllBadgesWithStatus.bind(this));
+        router.post('/user/evaluate', this.evaluateUserBadges.bind(this));
         router.get('/:id', this.getBadgeById.bind(this));
         router.post('/', requireSuperAdmin, this.createBadge.bind(this));
         router.put('/:id', requireSuperAdmin, this.updateBadge.bind(this));
         router.delete('/:id', requireSuperAdmin, this.deleteBadge.bind(this));
-
-        router.get('/user/my-badges', this.getUserBadges.bind(this));
-        router.get('/user/all-with-status', this.getAllBadgesWithStatus.bind(this));
-        router.post('/user/evaluate', this.evaluateUserBadges.bind(this));
 
         return router;
     }

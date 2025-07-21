@@ -104,14 +104,23 @@ class BadgeService {
     /**
      * Récupère tous les badges d'un utilisateur
      */
-    async getUserBadges(userId: string): Promise<IUserBadge[]> {
+    async getUserBadges(userId: string): Promise<any[]> {
         try {
             const userBadges = await UserBadge.find({ userId })
                 .populate('badgeId')
                 .sort({ earnedAt: -1 })
                 .lean();
             
-            return userBadges;
+            // Transformer la structure pour le frontend
+            return userBadges.map(userBadge => ({
+                _id: userBadge._id,
+                userId: userBadge.userId,
+                badgeId: userBadge.badgeId._id,
+                badge: userBadge.badgeId, // Le badge peuplé
+                earnedAt: userBadge.earnedAt,
+                createdAt: userBadge.createdAt,
+                updatedAt: userBadge.updatedAt
+            }));
         } catch (error) {
             console.error('Erreur lors de la récupération des badges utilisateur:', error);
             throw error;
@@ -139,6 +148,46 @@ class BadgeService {
             }));
         } catch (error) {
             console.error('Erreur lors de la récupération des badges avec statut:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Récupère le classement des utilisateurs par nombre de badges
+     */
+    async getUsersLeaderboard(): Promise<{ user: any; badgeCount: number; badges: any[] }[]> {
+        try {
+            const { User } = await import('./User');
+            
+            // Récupérer tous les clients
+            const users = await User.find({ role: 'client' }).lean();
+            console.log('DEBUG - Users found:', users.length);
+            
+            // Pour chaque utilisateur, compter ses badges
+            const leaderboard = [];
+            
+            for (const user of users) {
+                const userBadges = await this.getUserBadges(user._id.toString());
+                console.log(`DEBUG - User ${user.username} has ${userBadges.length} badges`);
+                
+                leaderboard.push({
+                    user: {
+                        _id: user._id,
+                        username: user.username,
+                        firstName: user.firstName,
+                        lastName: user.lastName
+                    },
+                    badgeCount: userBadges.length,
+                    badges: userBadges
+                });
+            }
+            
+            console.log('DEBUG - Final leaderboard:', leaderboard.length, 'entries');
+            
+            // Trier par nombre de badges (décroissant)
+            return leaderboard.sort((a, b) => b.badgeCount - a.badgeCount);
+        } catch (error) {
+            console.error('Erreur lors de la récupération du classement:', error);
             throw error;
         }
     }

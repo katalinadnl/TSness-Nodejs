@@ -4,6 +4,7 @@ import { seedGyms } from './seedGyms';
 import { seedUsers } from './seedUsers';
 import { seedBadges } from './seedBadges';
 import { seedExercisesAndRooms } from './seedExerciseAndRooms';
+import { seedChallengesAndBadges } from './seedChallengesAndBadges';
 
 dotenv.config();
 
@@ -28,6 +29,9 @@ dotenv.config();
 
         console.log('\n--- Seeding exercises and rooms ---');
         await seedExercisesAndRooms();
+
+        console.log('\n--- Seeding challenges and user badges ---');
+        await seedChallengesAndBadges();
 
         console.log('\n✅ All seeding completed successfully!');
     } catch (error) {
