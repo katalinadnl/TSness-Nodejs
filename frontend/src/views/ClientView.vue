@@ -460,7 +460,7 @@ onMounted(async () => {
         <div class="badges-section">
           <h3>Badges Obtenus</h3>
           <div class="items-grid">
-            <div v-for="userBadge in myBadges" :key="userBadge.badgeId || userBadge._id" class="item-card earned-badge">
+            <div v-for="userBadge in myBadges" :key="userBadge.badgeId" class="item-card earned-badge">
               <div class="item-info">
                 <div class="item-avatar badge-avatar earned">
                   <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" :alt="userBadge.badge?.name || 'Badge'" class="badge-icon" />
@@ -547,7 +547,7 @@ onMounted(async () => {
               <div class="badges-preview">
                 <div
                   v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)"
-                  :key="userBadge.badgeId || userBadge._id"
+                  :key="userBadge.badgeId"
                   class="badge-mini"
                 >
                   <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"

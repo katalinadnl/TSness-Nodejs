@@ -413,7 +413,7 @@ onMounted(() => {
               <div class="badges-preview">
                 <div 
                   v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)" 
-                  :key="userBadge.badgeId || userBadge._id" 
+                  :key="userBadge.badgeId" 
                   class="badge-mini"
                 >
                   <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" 
