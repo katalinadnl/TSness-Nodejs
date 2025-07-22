@@ -12,12 +12,74 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminView.vue'),
+      meta: { requiresAuth: true, requiresSuperAdmin: true }
+    },
+    {
+      path: '/gym-owner',
+      name: 'gym-owner',
+      component: () => import('../views/GymOwnerView.vue'),
+      meta: { requiresAuth: true, requiresGymOwner: true }
+    },
+    {
+      path: '/client',
+      name: 'client',
+      component: () => import('../views/ClientView.vue'),
+      meta: { requiresAuth: true, requiresClient: true }
+    },
+    {
+      path: '/client/challenges',
+      name: 'client-challenges',
+      component: () => import('../views/ClientChallengesView.vue'),
+      meta: { requiresAuth: true, requiresClient: true }
+    },
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  const user = localStorage.getItem('user')
+
+  if (to.meta.requiresAuth && !token) {
+    next('/login')
+    return
+  }
+
+  if (to.meta.requiresSuperAdmin && user) {
+    const userData = JSON.parse(user)
+    if (userData.role !== 'super_admin') {
+      next('/')
+      return
+    }
+  }
+
+  if (to.meta.requiresGymOwner && user) {
+    const userData = JSON.parse(user)
+    if (userData.role !== 'gym_owner') {
+      next('/')
+      return
+    }
+  }
+
+  if (to.meta.requiresClient && user) {
+    const userData = JSON.parse(user)
+    if (userData.role !== 'client') {
+      next('/')
+      return
+    }
+  }
+
+  next()
 })
 
 export default router
