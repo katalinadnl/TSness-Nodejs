@@ -1,4 +1,4 @@
-import { BadgeService } from '../models/badgeService';
+import { BadgeService } from '../services/badgeService';
 
 export type UserTheme = 'default' | 'debutant' | 'intermediaire' | 'avance' | 'champion';
 

@@ -17,10 +17,6 @@ export const seedParticipations = async () => {
     const participations = [];
 
     for (const challenge of challenges) {
-        const progress = Math.floor(Math.random() * 101);
-        const calories = Math.floor(Math.random() * 500);
-        const status = progress >= 100 ? 'completed' : progress > 0 ? 'accepted' : 'invited';
-
         const sessionCount = Math.floor(Math.random() * 4) + 1;
 
         const sessions = Array.from({ length: sessionCount }).map(() => ({
@@ -29,8 +25,25 @@ export const seedParticipations = async () => {
             caloriesBurned: Math.floor(Math.random() * 150) + 50
         }));
 
-        const totalProgress = sessions.reduce((acc, s) => acc + s.progress, 0);
-        const totalCalories = sessions.reduce((acc, s) => acc + s.caloriesBurned, 0);
+        let totalProgress = 0;
+        let totalCalories = 0;
+        const cappedSessions = [];
+
+        for (const session of sessions) {
+            const remaining = 100 - totalProgress;
+            const appliedProgress = Math.min(session.progress, remaining);
+            totalProgress += appliedProgress;
+            totalCalories += session.caloriesBurned;
+
+            cappedSessions.push({
+                ...session,
+                progress: appliedProgress
+            });
+
+            if (totalProgress >= 100) break; // stop si on a atteint 100
+        }
+
+        const status = totalProgress >= 100 ? 'completed' : totalProgress > 0 ? 'accepted' : 'invited';
 
         const participation = await Participation.create({
             userId: client._id,
@@ -38,9 +51,9 @@ export const seedParticipations = async () => {
             status,
             progress: totalProgress,
             caloriesBurned: totalCalories,
-            startedAt: sessions[0]?.date,
+            startedAt: cappedSessions[0]?.date,
             completedAt: totalProgress >= 100 ? new Date() : undefined,
-            sessions
+            sessions: cappedSessions
         });
 
         await Challenge.findByIdAndUpdate(challenge._id, {
