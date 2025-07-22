@@ -5,6 +5,74 @@ import { TrainingRoom } from '../models/TrainingRoom';
 import { Participation } from '../models/Participation';
 
 export class ChallengeService {
+    
+    /**
+     * Compte le nombre de défis complétés par un utilisateur
+     */
+    async getCompletedChallengesCount(userId: string): Promise<number> {
+        try {
+            const challenges = await Challenge.find({
+                'participants.userId': userId,
+                'participants.status': 'completed'
+            }).lean();
+
+            return challenges.length;
+        } catch (error) {
+            console.error('Erreur lors du comptage des défis complétés:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Récupère les statistiques d'un utilisateur pour les badges
+     */
+    async getUserStats(userId: string): Promise<{
+        completedChallenges: number;
+        totalCaloriesBurned: number;
+        activeChallenges: number;
+        averageProgress: number;
+    }> {
+        try {
+            const challenges = await Challenge.find({
+                'participants.userId': userId
+            }).lean();
+            
+            let totalCaloriesBurned = 0;
+            let totalProgress = 0;
+            let activeCount = 0;
+            let completedCount = 0;
+
+            challenges.forEach(challenge => {
+                const participant = challenge.participants.find(
+                    p => p.userId.toString() === userId
+                );
+                if (participant) {
+                    if (participant.status === 'completed') {
+                        completedCount++;
+                        totalCaloriesBurned += participant.caloriesBurned;
+                    } else if (participant.status === 'accepted') {
+                        totalProgress += participant.progress;
+                        activeCount++;
+                    }
+                }
+            });
+
+            return {
+                completedChallenges: completedCount,
+                totalCaloriesBurned,
+                activeChallenges: activeCount,
+                averageProgress: activeCount > 0 ? totalProgress / activeCount : 0
+            };
+        } catch (error) {
+            console.error('Erreur lors de la récupération des statistiques:', error);
+            return {
+                completedChallenges: 0,
+                totalCaloriesBurned: 0,
+                activeChallenges: 0,
+                averageProgress: 0
+            };
+        }
+    }
     async createChallenge(data: any, creatorId: string, creatorRole: string): Promise<any> {
         if (!Types.ObjectId.isValid(creatorId)) throw new Error('ID utilisateur invalide');
 

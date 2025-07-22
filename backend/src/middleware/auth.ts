@@ -91,26 +91,6 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     }
 };
 
-export const requireOwner = (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-        res.status(401).json({
-            success: false,
-            message: 'Authentication requise'
-        });
-        return;
-    }
-
-    if (req.user.role !== 'gym_owner') {
-        res.status(403).json({
-            success: false,
-            message: 'Accès réservé aux propriétaires de salle'
-        });
-        return;
-    }
-
-    next();
-};
-
 export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
         res.status(401).json({
