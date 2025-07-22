@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import {connectDB} from './config/db';
 import invitationRoutes from './routes/invitationRoutes';
+import { ChallengeSocialController } from './controllers/challengeSocialController';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import {UserService} from "./services/userService";
 import {UserController} from "./controllers/userController";
@@ -40,6 +41,7 @@ const badgeController = new BadgeController(badgeService);
 const challengeController = new ChallengeController(challengeService);
 const participationController = new ParticipationController();
 const themeController = new ThemeController();
+const challengeSocialController = new ChallengeSocialController();
 
 app.use('/api/challenges', challengeController.buildRoutes());
 
@@ -54,6 +56,7 @@ app.use('/api/themes', themeController.buildRoutes());
 app.use('/api/gyms', gymController.buildRoutes());
 app.use('/api/participations', participationController.buildRoutes());
 app.use('/api/invitations', invitationRoutes);
+app.use('/api/challenge-social', challengeSocialController.buildRoutes());
 
 app.get('/', (_req: Request, res: Response) => {
     res.json({
