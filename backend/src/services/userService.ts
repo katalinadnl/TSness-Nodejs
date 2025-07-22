@@ -1,14 +1,18 @@
-import {User} from '../models/User';
+import { User, IUser} from '../models/User';
 import mongoose, {Error} from 'mongoose';
 import bcrypt from "bcryptjs";
 
 export class UserService {
 
-// Récupérer tous les utilisateurs (avec pagination)
+    // Récupérer tous les utilisateurs (avec pagination)
     async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
         const skip = (page - 1) * limit;
 
         const query: any = {};
+
+        if (filters?.requestingRole !== 'super_admin') {
+            query.role = 'client';
+        }
 
         // Filtres optionnels
         if (filters?.role) {
@@ -219,31 +223,87 @@ export class UserService {
         };
     }
 
-    async createUser(username: string, email: string, password: string, firstname: string, lastname: string) {
+    async createClient(data: any): Promise<IUser> {
+        return this.createUserWithRole(data, 'client');
+    }
+
+    async createGymOwner(data: any): Promise<IUser> {
+        return this.createUserWithRole(data, 'gym_owner');
+    }
+
+    async createSuperAdmin(data: any): Promise<IUser> {
+        return this.createUserWithRole(data, 'super_admin');
+    }
+
+    private async createUserWithRole(data: any, role: string): Promise<IUser> {
         const existingUser = await User.findOne({
-            $or: [
-                {email: email},
-                {username: username}
-            ]
+            $or: [{ email: data.email }, { username: data.username }]
         });
         if (existingUser) {
             throw new Error('Un utilisateur avec cet email ou ce nom d\'utilisateur existe déjà');
         }
 
-        const hashedPassword = bcrypt.hashSync(password, 10);
-
+        const hashedPassword = bcrypt.hashSync(data.password, 10);
         const user = new User({
-            username: username,
-            email: email,
+            ...data,
             password: hashedPassword,
-            firstName: firstname,
-            lastName: lastname,
-            role: 'client',
+            role,
             isActive: true,
             isDeleted: false
         });
 
-        return await user.save();
+        return user.save();
     }
+
+    async updateOwnProfile(userId: string, updates: Partial<IUser>) {
+        const user = await User.findById(userId);
+        if (!user) throw new Error('Utilisateur non trouvé');
+
+        const allowedFields = ['firstName', 'lastName', 'email', 'username', 'password'];
+
+        for (const field of allowedFields) {
+            if ((updates as any)[field] !== undefined) {
+                if (field === 'password') {
+                    user.password = bcrypt.hashSync((updates as any)[field], 10);
+                } else {
+                    (user as any)[field] = (updates as any)[field];
+                }
+            }
+        }
+
+        await user.save();
+        return user;
+    }
+
+    async updateUserByAdmin(userId: string, updates: Partial<IUser>, adminId: string): Promise<IUser> {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new Error('ID utilisateur invalide');
+        }
+
+        if (userId === adminId) {
+            throw new Error('Vous ne pouvez pas modifier vos propres rôles ou statuts via cette route');
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('Utilisateur non trouvé');
+        }
+
+        const allowedFields = ['username', 'email', 'firstName', 'lastName', 'role', 'isActive'];
+
+        for (const key of allowedFields) {
+            if ((updates as any)[key] !== undefined) {
+                (user as any)[key] = (updates as any)[key];
+            }
+        }
+
+        if (updates.password) {
+            user.password = bcrypt.hashSync(updates.password, 10);
+        }
+
+        await user.save();
+        return user;
+    }
+
 
 }

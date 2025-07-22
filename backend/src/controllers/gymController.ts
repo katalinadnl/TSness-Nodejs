@@ -1,31 +1,58 @@
 import express, { Request, Response, Router } from 'express';
 import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
 import { Gym } from '../models/Gym';
+import { User } from '../models/User';
 import { TrainingRoom } from '../models/TrainingRoom';
 import mongoose from 'mongoose';
 
 export class GymController {
     async getAllGyms(req: Request, res: Response): Promise<void> {
         try {
-            const gyms = await Gym.find();
-            res.status(200).json({ success: true, message: 'Salles de sport récupérées', data: gyms });
+            const userRole = req.user?.role;
+            const userId = req.user?._id;
+
+            let gyms;
+
+            if (userRole === 'super_admin') {
+                gyms = await Gym.find();
+            } else if (userRole === 'gym_owner') {
+                gyms = await Gym.find({ ownerId: userId });
+            } else {
+                res.status(403).json({ success: false, message: 'Accès non autorisé' });
+                return;
+            }
+
+            res.status(200).json({ success: true, message: 'Salles récupérées', data: gyms });
         } catch (error) {
             res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
         }
     }
 
+
     async getGymById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
+            const userRole = req.user?.role;
+            const userId = req.user?._id;
+
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 res.status(400).json({ success: false, message: 'ID invalide' });
                 return;
             }
+
             const gym = await Gym.findById(id);
             if (!gym) {
-                res.status(404).json({ success: false, message: 'Salle de sport non trouvée' });
+                res.status(404).json({ success: false, message: 'Salle non trouvée' });
                 return;
             }
+
+            if (userRole === 'gym_owner') {
+                if (!userId || gym.ownerId.toString() !== userId.toString()) {
+                    res.status(403).json({ success: false, message: 'Accès non autorisé à cette salle' });
+                    return;
+                }
+            }
+
             res.status(200).json({ success: true, message: 'Salle récupérée', data: gym });
         } catch (error) {
             res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
@@ -34,6 +61,19 @@ export class GymController {
 
     async createGym(req: Request, res: Response): Promise<void> {
         try {
+            const { ownerId } = req.body;
+
+            if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+                res.status(400).json({ success: false, message: 'ownerId invalide' });
+                return;
+            }
+
+            const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
+            if (!owner) {
+                res.status(400).json({ success: false, message: 'Propriétaire introuvable ou rôle incorrect' });
+                return;
+            }
+
             const gym = new Gym(req.body);
             const saved = await gym.save();
             res.status(201).json({ success: true, message: 'Salle de sport créée', data: saved });
@@ -45,20 +85,33 @@ export class GymController {
     async updateGym(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
+            const { ownerId } = req.body;
+
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 res.status(400).json({ success: false, message: 'ID invalide' });
                 return;
             }
+
+            if (ownerId && mongoose.Types.ObjectId.isValid(ownerId)) {
+                const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
+                if (!owner) {
+                    res.status(400).json({ success: false, message: 'Propriétaire introuvable ou rôle incorrect' });
+                    return;
+                }
+            }
+
             const updated = await Gym.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
             if (!updated) {
                 res.status(404).json({ success: false, message: 'Salle non trouvée' });
                 return;
             }
+
             res.status(200).json({ success: true, message: 'Salle mise à jour', data: updated });
         } catch (error) {
             res.status(400).json({ success: false, message: 'Erreur lors de la mise à jour', error: (error as Error).message });
         }
     }
+
 
     async deleteGym(req: Request, res: Response): Promise<void> {
         try {
@@ -80,7 +133,18 @@ export class GymController {
 
     async getGymsWithRooms(req: Request, res: Response): Promise<void> {
         try {
-            const gyms = await Gym.find();
+            const userRole = req.user?.role;
+            const userId = req.user?._id;
+
+            let gyms;
+            if (userRole === 'super_admin') {
+                gyms = await Gym.find();
+            } else if (userRole === 'gym_owner') {
+                gyms = await Gym.find({ ownerId: userId });
+            } else {
+                res.status(403).json({ success: false, message: 'Accès non autorisé' });
+                return;
+            }
 
             const fullGyms = await Promise.all(
                 gyms.map(async (gym) => {
@@ -95,9 +159,13 @@ export class GymController {
         }
     }
 
+
     async getGymWithRoomsById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
+            const userRole = req.user?.role;
+            const userId = req.user?._id;
+
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 res.status(400).json({ success: false, message: 'ID invalide' });
                 return;
@@ -107,6 +175,13 @@ export class GymController {
             if (!gym) {
                 res.status(404).json({ success: false, message: 'Salle non trouvée' });
                 return;
+            }
+
+            if (userRole === 'gym_owner') {
+                if (!userId || gym.ownerId.toString() !== userId.toString()) {
+                    res.status(403).json({ success: false, message: 'Accès non autorisé à cette salle' });
+                    return;
+                }
             }
 
             const rooms = await TrainingRoom.find({ gymId: id }).populate('assignedExerciseTypeId');
