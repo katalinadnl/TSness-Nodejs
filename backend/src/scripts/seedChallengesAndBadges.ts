@@ -17,17 +17,24 @@ export const seedChallengesAndBadges = async () => {
     await Challenge.deleteMany({});
     await UserBadge.deleteMany({});
 
+    const allowedGoals = [
+        'lose_weight',
+        'gain_muscle',
+        'stay_healthy',
+        'improve_endurance'
+    ];
+
     for (const client of clients) {
-        let numChallenges = 1;
-        
-        if (client.username === 'clientuser2') {
-            numChallenges = 5;
-        } else if (client.username === 'marie_durant') {
-            numChallenges = 10;
-        } else if (client.username === 'clientuser') {
+        let numChallenges = 0;
+
+        if (client.username === 'clientuser') {
             numChallenges = 1;
+        } else if (client.username === 'clientuser2') {
+            numChallenges = 2;
+        } else if (client.username === 'marie_durant') {
+            numChallenges = 3;
         }
-        
+
         console.log(`Création de ${numChallenges} défis pour ${client.username}`);
 
         for (let j = 0; j < numChallenges; j++) {
@@ -37,7 +44,7 @@ export const seedChallengesAndBadges = async () => {
                 creatorId: client._id,
                 duration: 30 + (j * 10),
                 difficultyLevel: ['beginner', 'intermediate', 'advanced'][j % 3],
-                goals: `Objectif du défi ${j + 1}`,
+                goals: allowedGoals[j % allowedGoals.length],
                 participants: [{
                     userId: client._id,
                     status: 'completed',
@@ -45,16 +52,16 @@ export const seedChallengesAndBadges = async () => {
                     caloriesBurned: 200 + (j * 50)
                 }]
             });
-            
+
             await challenge.save();
         }
 
         const earnedBadges = [];
-        
+
         for (const badge of badges) {
             const rule = badge.rule;
             const match = rule.match(/completedChallenges >= (\d+)/);
-            
+
             if (match) {
                 const requiredChallenges = parseInt(match[1]);
                 if (numChallenges >= requiredChallenges) {
@@ -69,23 +76,23 @@ export const seedChallengesAndBadges = async () => {
                 badgeId: badge._id,
                 earnedAt: new Date()
             });
-            
+
             await userBadge.save();
             console.log(`Badge "${badge.name}" attribué à ${client.username}`);
         }
     }
 
     console.log('Challenges et badges seedés avec succès!');
-    
+
     const summary = await Promise.all(clients.map(async (client) => {
-        const challengeCount = await Challenge.countDocuments({ 
+        const challengeCount = await Challenge.countDocuments({
             'participants.userId': client._id,
-            'participants.status': 'completed' 
+            'participants.status': 'completed'
         });
         const badgeCount = await UserBadge.countDocuments({ userId: client._id.toString() });
         return `   - ${client.username}: ${challengeCount} défis, ${badgeCount} badges`;
     }));
-    
+
     console.log('Résumé:');
     summary.forEach(line => console.log(line));
 };

@@ -51,7 +51,6 @@ app.use('/api/exercise-types', exerciseTypeController.buildRoutes());
 app.use('/api/badges', badgeController.buildRoutes());
 app.use('/api/challenges', challengeController.buildRoutes());
 app.use('/api/themes', themeController.buildRoutes());
-app.use('/api/gyms', gymRoutes);
 app.use('/api/gyms', gymController.buildRoutes());
 app.use('/api/participations', participationController.buildRoutes());
 app.use('/api/invitations', invitationRoutes);
