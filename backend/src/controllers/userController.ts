@@ -16,7 +16,8 @@ export class UserController {
             const filters = {
                 role: req.query.role as string,
                 isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
-                search: req.query.search as string
+                search: req.query.search as string,
+                requestingRole: req.user?.role
             };
 
             const result = await this.userService.getAllUsers(page, limit, filters);
@@ -193,41 +194,65 @@ export class UserController {
         }
     }
 
-    async createUser(req: Request, res: Response): Promise<void> {
+    async createClient(req: Request, res: Response) {
+        try {
+            const user = await this.userService.createClient(req.body);
+            res.status(201).json({ success: true, message: 'Client créé', data: { user } });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
 
-        const user = {
-            username: req.body.username,
-            email: req.body.email,
-            password: req.body.password,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname,
-        };
-        console.log('Creating user with data:', user);
+    async createGymOwner(req: Request, res: Response) {
+        try {
+            const user = await this.userService.createGymOwner(req.body);
+            res.status(201).json({ success: true, message: 'Propriétaire de salle créé', data: { user } });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
 
-        const createdUser = await this.userService.createUser(
-            user.username,
-            user.email,
-            user.password,
-            user.firstname,
-            user.lastname
-        );
+    async createSuperAdmin(req: Request, res: Response) {
+        try {
+            const user = await this.userService.createSuperAdmin(req.body);
+            res.status(201).json({ success: true, message: 'Admin créé', data: { user } });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
 
-        res.status(201).json({
-            success: true,
-            message: 'Utilisateur créé avec succès',
-            data: {
-                user: {
-                    id: createdUser._id,
-                    username: createdUser.username,
-                    email: createdUser.email,
-                    firstName: createdUser.firstName,
-                    lastName: createdUser.lastName,
-                    role: createdUser.role,
-                    isActive: createdUser.isActive
-                }
-            }
-        });
+    async updateOwnProfile(req: Request, res: Response) {
+        try {
+            const updated = await this.userService.updateOwnProfile(req.user!._id.toString(), req.body);
+            res.status(200).json({ success: true, message: 'Profil mis à jour', data: { user: updated } });
+        } catch (error) {
+            res.status(400).json({ success: false, message: (error as Error).message });
+        }
+    }
 
+    async updateUser(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.params.id;
+            const adminId = req.user!._id.toString();
+            const updates = req.body;
+
+            const updatedUser = await this.userService.updateUserByAdmin(userId, updates, adminId);
+
+            res.status(200).json({
+                success: true,
+                message: 'Utilisateur mis à jour avec succès',
+                data: { user: updatedUser }
+            });
+        } catch (error) {
+            const statusCode = (error as Error).message.includes('invalide') ||
+            (error as Error).message.includes('non trouvé') ? 404 :
+                (error as Error).message.includes('Vous ne pouvez pas') ? 403 : 500;
+
+            res.status(statusCode).json({
+                success: false,
+                message: (error as Error).message
+            });
+        }
     }
 
 
@@ -243,7 +268,12 @@ export class UserController {
         router.put('/:id/deactivate', requireSuperAdmin, this.deactivateUser.bind(this));
         router.put('/:id/activate', requireSuperAdmin, this.activateUser.bind(this));
         router.delete('/:id', requireSuperAdmin, this.deleteUser.bind(this));
-        router.post('/', requireSuperAdmin, this.createUser.bind(this));
+        router.post('/create-client', requireSuperAdmin, this.createClient.bind(this));
+        router.post('/create-gym-owner', requireSuperAdmin, this.createGymOwner.bind(this));
+        router.post('/create-admin', requireSuperAdmin, this.createSuperAdmin.bind(this));
+        router.put('/me', authenticateToken, this.updateOwnProfile.bind(this));
+        router.put('/:id', requireSuperAdmin, this.updateUser.bind(this));
+
 
         return router;
     }

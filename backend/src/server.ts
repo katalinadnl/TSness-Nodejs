@@ -1,19 +1,19 @@
 import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import {connectDB} from './config/db';
+import { connectDB } from './config/db';
 import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
-import {UserService} from "./services/userService";
-import {UserController} from "./controllers/userController";
-import {ExerciseTypeController} from "./controllers/exerciseTypeController";
-import {TrainingRoomController} from "./controllers/trainingRoomController";
-import {LoginController} from "./controllers/loginController";
+import { UserService } from "./services/userService";
+import { UserController } from "./controllers/userController";
+import { ExerciseTypeController } from "./controllers/exerciseTypeController";
+import { TrainingRoomController } from "./controllers/trainingRoomController";
+import { LoginController } from "./controllers/loginController";
 import { BadgeController } from './controllers/badgeController';
 import { BadgeService } from './services/badgeService';
 import { ChallengeService } from './services/challengeService';
 import { ChallengeController } from './controllers/challengeController';
-import {GymController} from "./controllers/gymController";
+import { GymController } from "./controllers/gymController";
 import { ParticipationController } from './controllers/participationController';
 import { ThemeController } from './controllers/themeController';
 
