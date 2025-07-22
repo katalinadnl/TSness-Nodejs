@@ -18,8 +18,6 @@ export const seedGyms = async () => {
             contactEmail: 'contact@downtownfitness.com',
             contactPhone: '123-456-7890',
             description: 'Spacious gym with modern equipment and classes.',
-            equipment: ['Treadmills', 'Free Weights', 'Squat Racks', 'Ellipticals'],
-            activities: ['Yoga', 'HIIT', 'CrossFit', 'Bodybuilding'],
             ownerId: gymOwner._id,
             isApproved: true
         },
@@ -29,8 +27,6 @@ export const seedGyms = async () => {
             contactEmail: 'info@elitegymclub.com',
             contactPhone: '987-654-3210',
             description: 'Premium training facilities with personal coaching.',
-            equipment: ['Rowing Machines', 'Kettlebells', 'Pull-up Bars'],
-            activities: ['Strength Training', 'Pilates', 'Cardio Workouts'],
             ownerId: gymOwner._id,
             isApproved: true
         }
