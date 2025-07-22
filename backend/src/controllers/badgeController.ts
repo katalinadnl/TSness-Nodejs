@@ -1,6 +1,5 @@
 import express, { Request, Response, Router } from 'express';
 import { BadgeService } from '../services/badgeService';
-import badgeService from '../models/badgeService';
 import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
 import { Error } from 'mongoose';
 
@@ -66,17 +65,17 @@ export class BadgeController {
                 return;
             }
 
-            const badges = await badgeService.getUserBadges(userId);
-            res.status(200).json({ 
-                success: true, 
-                message: 'Badges utilisateur récupérés', 
-                data: badges 
+            const badges = await this.badgeService.getUserBadges(userId);
+            res.status(200).json({
+                success: true,
+                message: 'Badges utilisateur récupérés',
+                data: badges
             });
         } catch (error) {
-            res.status(500).json({ 
-                success: false, 
-                message: 'Erreur lors de la récupération des badges utilisateur', 
-                error: (error as Error).message 
+            res.status(500).json({
+                success: false,
+                message: 'Erreur lors de la récupération des badges utilisateur',
+                error: (error as Error).message
             });
         }
     }
@@ -89,59 +88,57 @@ export class BadgeController {
                 return;
             }
 
-            const badgesWithStatus = await badgeService.getAllBadgesWithStatus(userId);
-            res.status(200).json({ 
-                success: true, 
-                message: 'Badges avec statut récupérés', 
-                data: badgesWithStatus 
+            const badgesWithStatus = await this.badgeService.getAllBadgesWithStatus(userId);
+            res.status(200).json({
+                success: true,
+                message: 'Badges avec statut récupérés',
+                data: badgesWithStatus
             });
         } catch (error) {
-            res.status(500).json({ 
-                success: false, 
-                message: 'Erreur lors de la récupération des badges avec statut', 
-                error: (error as Error).message 
+            res.status(500).json({
+                success: false,
+                message: 'Erreur lors de la récupération des badges avec statut',
+                error: (error as Error).message
             });
         }
     }
 
     async evaluateUserBadges(req: Request, res: Response): Promise<void> {
         try {
-            console.log('DEBUG - req.user:', (req as any).user);
             const userId = (req as any).user?._id?.toString();
-            console.log('DEBUG - userId extracted:', userId);
             if (!userId) {
                 res.status(400).json({ success: false, message: 'ID utilisateur requis' });
                 return;
             }
 
-            const newBadges = await badgeService.evaluateAndAwardBadges(userId);
-            res.status(200).json({ 
-                success: true, 
-                message: `${newBadges.length} nouveaux badges attribués`, 
-                data: newBadges 
+            const newBadges = await this.badgeService.evaluateAndAwardBadges(userId);
+            res.status(200).json({
+                success: true,
+                message: `${newBadges.length} nouveaux badges attribués`,
+                data: newBadges
             });
         } catch (error) {
-            res.status(500).json({ 
-                success: false, 
-                message: 'Erreur lors de l\'évaluation des badges', 
-                error: (error as Error).message 
+            res.status(500).json({
+                success: false,
+                message: 'Erreur lors de l\'évaluation des badges',
+                error: (error as Error).message
             });
         }
     }
 
     async getLeaderboard(req: Request, res: Response): Promise<void> {
         try {
-            const leaderboard = await badgeService.getUsersLeaderboard();
-            res.status(200).json({ 
-                success: true, 
-                message: 'Classement récupéré avec succès', 
-                data: leaderboard 
+            const leaderboard = await this.badgeService.getUsersLeaderboard();
+            res.status(200).json({
+                success: true,
+                message: 'Classement récupéré avec succès',
+                data: leaderboard
             });
         } catch (error) {
-            res.status(500).json({ 
-                success: false, 
-                message: 'Erreur lors de la récupération du classement', 
-                error: (error as Error).message 
+            res.status(500).json({
+                success: false,
+                message: 'Erreur lors de la récupération du classement',
+                error: (error as Error).message
             });
         }
     }

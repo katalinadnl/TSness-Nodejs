@@ -13,21 +13,21 @@ const sampleBadges = [
     },
     {
         name: 'Intermédiaire',
-        description: 'Attribué après avoir complété 5 défis.',
+        description: 'Attribué après avoir complété 3 défis.',
         iconUrl: 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/qualite.png',
-        rule: 'completedChallenges >= 5'
+        rule: 'completedChallenges >= 3'
     },
     {
         name: 'Avancé',
-        description: 'Attribué après avoir complété 10 défis.',
+        description: 'Attribué après avoir complété 7 défis.',
         iconUrl: 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png',
-        rule: 'completedChallenges >= 10'
+        rule: 'completedChallenges >= 7'
     },
     {
         name: 'Champion',
-        description: 'Attribué après 20 défis réussis.',
+        description: 'Attribué après 15 défis réussis.',
         iconUrl: 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/football.png',
-        rule: 'completedChallenges >= 20'
+        rule: 'completedChallenges >= 15'
     }
 ];
 

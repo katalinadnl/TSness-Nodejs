@@ -3,12 +3,11 @@ import { Challenge } from '../models/Challenge';
 import { Gym } from '../models/Gym';
 import { TrainingRoom } from '../models/TrainingRoom';
 import { Participation } from '../models/Participation';
+import badgeService from './badgeService';
 
 export class ChallengeService {
     
-    /**
-     * Compte le nombre de défis complétés par un utilisateur
-     */
+
     async getCompletedChallengesCount(userId: string): Promise<number> {
         try {
             const challenges = await Challenge.find({
@@ -23,9 +22,6 @@ export class ChallengeService {
         }
     }
 
-    /**
-     * Récupère les statistiques d'un utilisateur pour les badges
-     */
     async getUserStats(userId: string): Promise<{
         completedChallenges: number;
         totalCaloriesBurned: number;
@@ -73,6 +69,7 @@ export class ChallengeService {
             };
         }
     }
+
     async createChallenge(data: any, creatorId: string, creatorRole: string): Promise<any> {
         if (!Types.ObjectId.isValid(creatorId)) throw new Error('ID utilisateur invalide');
 
@@ -167,7 +164,6 @@ export class ChallengeService {
             .populate('recommendedExerciseTypeIds');
     }
 
-
     async participateInChallenge(challengeId: string, userId: string) {
         const challenge = await Challenge.findById(challengeId);
         if (!challenge) throw new Error('Défi non trouvé');
@@ -198,45 +194,64 @@ export class ChallengeService {
         return challenge;
     }
 
-    async updateProgress(challengeId: string, userId: string, data: { progress: number, caloriesBurned: number }) {
+    async updateProgress(
+        challengeId: string,
+        userId: string,
+        data: { progress: number; caloriesBurned: number }
+    ) {
         const challenge = await Challenge.findById(challengeId);
         if (!challenge) throw new Error('Défi non trouvé');
 
-        const participant = challenge.participants.find(p => p.userId.equals(userId));
+        const participant = challenge.participants.find(p =>
+            p.userId.equals(userId)
+        );
         if (!participant) throw new Error('Vous ne participez pas à ce défi');
 
-        // Ajout cumulatif
-        participant.progress += data.progress;
+        // Progression cumulée côté Challenge
+        const challengeRemaining = 100 - participant.progress;
+        const addedProgress = Math.min(data.progress, challengeRemaining);
+        participant.progress += addedProgress;
         participant.caloriesBurned += data.caloriesBurned;
 
+        let justCompleted = false;
         if (participant.progress >= 100 && participant.status !== 'completed') {
             participant.status = 'completed';
+            justCompleted = true;
         }
 
         await challenge.save();
 
-        // Mise à jour de Participation
+        // Progression côté Participation
         const participation = await Participation.findOne({ userId, challengeId });
         if (!participation) throw new Error('Participation introuvable');
 
-        participation.progress += data.progress;
+        const participationRemaining = 100 - participation.progress;
+        const addedProgressPart = Math.min(data.progress, participationRemaining);
+        participation.progress += addedProgressPart;
         participation.caloriesBurned += data.caloriesBurned;
 
         participation.sessions.push({
             date: new Date(),
-            progress: data.progress,
+            progress: addedProgressPart,
             caloriesBurned: data.caloriesBurned
         });
 
         if (participation.progress >= 100 && participation.status !== 'completed') {
             participation.status = 'completed';
             participation.completedAt = new Date();
+            justCompleted = true;
         }
 
         await participation.save();
 
+        // Attribution de badges si le défi vient d’être complété
+        if (justCompleted) {
+            await badgeService.evaluateAndAwardBadges(userId.toString());
+        }
+
         return challenge;
     }
+
 
     async getMySessions(challengeId: string, userId: string) {
         const participation = await Participation.findOne({ challengeId, userId });
