@@ -28,7 +28,6 @@ export class UserService {
 
         const users = await User.find(query)
             .select('-password')
-            .populate('gymId', 'name address')
             .sort({createdAt: -1})
             .skip(skip)
             .limit(limit);
@@ -55,7 +54,6 @@ export class UserService {
 
         const user = await User.findById(userId)
             .select('-password')
-            .populate('gymId', 'name address');
 
         if (!user) {
             throw new Error('Utilisateur non trouvé');

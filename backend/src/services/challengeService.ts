@@ -4,6 +4,7 @@ import { Gym } from '../models/Gym';
 import { TrainingRoom } from '../models/TrainingRoom';
 import { Participation } from '../models/Participation';
 import badgeService from './badgeService';
+import { User } from '../models/User';
 
 export class ChallengeService {
     
@@ -247,6 +248,10 @@ export class ChallengeService {
         // Attribution de badges si le défi vient d’être complété
         if (justCompleted) {
             await badgeService.evaluateAndAwardBadges(userId.toString());
+
+            await User.findByIdAndUpdate(userId, {
+                $inc: { score: participation.caloriesBurned }
+            });
         }
 
         return challenge;

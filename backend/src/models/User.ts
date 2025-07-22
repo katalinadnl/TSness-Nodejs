@@ -13,6 +13,7 @@ export interface IUser extends Document {
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;
+    score: number;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -64,7 +65,12 @@ const UserSchema = new Schema<IUser>({
     deletedAt: {
         type: Date,
         default: null
-    }
+    },
+    score: {
+        type: Number,
+        default: 0
+    },
+
 }, {
     timestamps: true
 });
