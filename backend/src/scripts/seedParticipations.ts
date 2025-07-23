@@ -3,6 +3,7 @@ import { Challenge } from "../models/Challenge";
 import { User } from "../models/User";
 import { UserBadge } from "../models/UserBadge";
 import { Badge } from "../models/Badge";
+import { UserRole } from "../models/common/enums";
 
 export const seedParticipations = async () => {
 	console.log("Seeding participations...");
@@ -10,12 +11,13 @@ export const seedParticipations = async () => {
 	await Participation.deleteMany({});
 	await UserBadge.deleteMany({});
 
-	const client = await User.findOne({ email: "client@example.com" });
-	const client2 = await User.findOne({ email: "client2@example.com" });
-
+	const clients = await User.find({ role: UserRole.CLIENT });
 	const allChallenges = await Challenge.find({});
 
-	if (!client || !client2 || allChallenges.length === 0) {
+	console.log(`Nombre de clients trouvés : ${clients.length}`);
+	console.log(`Nombre de challenges trouvés : ${allChallenges.length}`);
+
+	if (!clients.length || !allChallenges.length) {
 		throw new Error(
 			"Clients or challenges not found. Make sure to seed users and challenges first.",
 		);
@@ -23,43 +25,69 @@ export const seedParticipations = async () => {
 
 	await Challenge.updateMany({}, { $set: { participants: [] } });
 
-	const generateParticipation = async (user: any, challengeSubset: any[]) => {
-		for (const challenge of challengeSubset) {
+	// Génère des participations pour chaque client sur plusieurs challenges
+	let totalParticipations = 0;
+	for (const client of clients) {
+		// Chaque client participe à 5 challenges différents
+		for (let i = 0; i < 5; i++) {
+			const challenge =
+				allChallenges[
+					(client._id.toString().charCodeAt(0) + i) % allChallenges.length
+				];
+			const status = i % 2 === 0 ? "completed" : "accepted";
+			const progress =
+				status === "completed" ? 100 : Math.floor(Math.random() * 80);
+			const caloriesBurned = 100 + Math.floor(Math.random() * 400);
 			const sessions = [
 				{
 					date: new Date(),
-					progress: 100,
-					caloriesBurned: 200,
+					progress,
+					caloriesBurned,
 				},
 			];
-
-			await Participation.create({
-				userId: user._id,
+			const alreadyExists = await Participation.findOne({
+				userId: client._id,
 				challengeId: challenge._id,
-				status: "completed",
-				progress: 100,
-				caloriesBurned: 200,
-				startedAt: new Date(),
-				completedAt: new Date(),
-				sessions,
 			});
-
+			if (!alreadyExists) {
+				await Participation.create({
+					userId: client._id,
+					challengeId: challenge._id,
+					status,
+					progress,
+					caloriesBurned,
+					startedAt: new Date(),
+					completedAt: status === "completed" ? new Date() : null,
+					sessions,
+				});
+				await Challenge.findByIdAndUpdate(challenge._id, {
+					$push: {
+						participants: {
+							userId: client._id,
+							status,
+							progress,
+							caloriesBurned,
+						},
+					},
+				});
+				totalParticipations++;
+			}
 			await Challenge.findByIdAndUpdate(challenge._id, {
 				$push: {
 					participants: {
-						userId: user._id,
-						status: "completed",
-						progress: 100,
-						caloriesBurned: 200,
+						userId: client._id,
+						status,
+						progress,
+						caloriesBurned,
 					},
 				},
 			});
+			totalParticipations++;
 		}
-	};
-
-	await generateParticipation(client, allChallenges.slice(0, 1));
-
-	await generateParticipation(client2, allChallenges.slice(0, 5));
+	}
+	console.log(
+		`Seeded ${totalParticipations} participations pour ${clients.length} clients.`,
+	);
 
 	const allBadges = await Badge.find();
 
@@ -68,14 +96,12 @@ export const seedParticipations = async () => {
 			userId: user._id,
 			status: "completed",
 		});
-
 		for (const badge of allBadges) {
 			const condition = badge.rule.replace(
 				/completedChallenges/g,
 				completedCount.toString(),
 			);
 			const isEarned = eval(condition);
-
 			if (isEarned) {
 				const alreadyHas = await UserBadge.findOne({
 					userId: user._id,
@@ -92,8 +118,9 @@ export const seedParticipations = async () => {
 		}
 	};
 
-	await assignBadges(client);
-	await assignBadges(client2);
+	for (const client of clients) {
+		await assignBadges(client);
+	}
 
 	console.log("Participations et badges attribués dynamiquement");
 };

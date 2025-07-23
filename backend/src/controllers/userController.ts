@@ -18,11 +18,18 @@ export class UserController {
 
 			const filters = {
 				role: req.query.role as string,
-				isActive: req.query.isActive ? req.query.isActive === "true" : undefined,
+				isActive: req.query.isActive
+					? req.query.isActive === "true"
+					: undefined,
 				search: req.query.search as string,
 			};
 
-			const result = await this.userService.getAllUsers(page, limit, requestingRole, filters);
+			const result = await this.userService.getAllUsers(
+				page,
+				limit,
+				requestingRole,
+				filters,
+			);
 
 			res.status(200).json({
 				success: true,
@@ -66,7 +73,6 @@ export class UserController {
 			});
 		}
 	}
-
 
 	async deactivateUser(req: Request, res: Response): Promise<void> {
 		try {
@@ -306,8 +312,16 @@ export class UserController {
 			requireRole([UserRole.SUPER_ADMIN]),
 			this.permanentDeleteUser.bind(this),
 		);
-		router.get("/", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getAllUsers.bind(this));
-		router.get("/:id", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getUserById.bind(this));
+		router.get(
+			"/",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getAllUsers.bind(this),
+		);
+		router.get(
+			"/:id",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getUserById.bind(this),
+		);
 
 		router.put(
 			"/:id/deactivate",
