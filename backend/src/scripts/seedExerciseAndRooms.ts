@@ -59,61 +59,62 @@ export const seedExercisesAndRooms = async () => {
 			"Aucune salle de sport trouvée. Exécutez seedGyms d'abord.",
 		);
 
-	// Salles d'entraînement
-	const sampleTrainingRooms = [
-		{
-			name: "Salle de Musculation Pro",
-			capacity: 25,
-			equipment: [
-				"bancs de musculation",
-				"haltères",
-				"barres",
-				"machines guidées",
-			],
-			features: ["climatisation", "miroirs", "sol renforcé", "musique"],
-			isApproved: true,
-			difficultyLevel: DifficultyLevel.ADVANCED,
-			assignedExerciseTypeId: createdExerciseTypes[0]._id,
-			gymId: gym._id,
-			owner: gymOwner._id,
-		},
-		{
-			name: "Studio Cardio",
-			capacity: 20,
-			equipment: ["tapis de course", "vélos elliptiques", "rameurs"],
-			features: ["climatisation", "écrans TV", "sol amortissant"],
-			isApproved: true,
-			difficultyLevel: DifficultyLevel.BEGINNER,
-			assignedExerciseTypeId: createdExerciseTypes[1]._id,
-			gymId: gym._id,
-			owner: gymOwner._id,
-		},
-		{
-			name: "Salle CrossFit",
-			capacity: 15,
-			equipment: ["kettlebells", "cordes", "pneus", "barres olympiques"],
-			features: ["sol renforcé", "hauteur sous plafond", "ventilation"],
-			isApproved: false,
-			difficultyLevel: DifficultyLevel.ADVANCED,
-			assignedExerciseTypeId: createdExerciseTypes[4]._id,
-			gymId: gym._id,
-			owner: gymOwner._id,
-		},
-		{
-			name: "Studio Yoga",
-			capacity: 12,
-			equipment: ["tapis de yoga", "blocs", "sangles", "coussins"],
-			features: ["éclairage tamisé", "sol chauffant", "musique douce"],
-			isApproved: true,
-			difficultyLevel: DifficultyLevel.BEGINNER,
-			assignedExerciseTypeId: createdExerciseTypes[3]._id,
-			gymId: gym._id,
-			owner: gymOwner._id,
-		},
-	];
-
-	const createdRooms = await TrainingRoom.insertMany(sampleTrainingRooms);
-
+	// Génère des training rooms pour chaque gym
+	const gyms = await Gym.find({});
+	let totalRooms = 0;
+	for (const gym of gyms) {
+		const rooms = [
+			{
+				name: `Salle de Musculation Pro - ${gym.name}`,
+				capacity: 25,
+				equipment: [
+					"bancs de musculation",
+					"haltères",
+					"barres",
+					"machines guidées",
+				],
+				features: ["climatisation", "miroirs", "sol renforcé", "musique"],
+				isApproved: true,
+				difficultyLevel: DifficultyLevel.ADVANCED,
+				assignedExerciseTypeId: createdExerciseTypes[0]._id,
+				gymId: gym._id,
+			},
+			{
+				name: `Studio Cardio - ${gym.name}`,
+				capacity: 20,
+				equipment: ["tapis de course", "vélos elliptiques", "rameurs"],
+				features: ["climatisation", "écrans TV", "sol amortissant"],
+				isApproved: true,
+				difficultyLevel: DifficultyLevel.BEGINNER,
+				assignedExerciseTypeId: createdExerciseTypes[1]._id,
+				gymId: gym._id,
+			},
+			{
+				name: `Salle CrossFit - ${gym.name}`,
+				capacity: 15,
+				equipment: ["kettlebells", "cordes", "pneus", "barres olympiques"],
+				features: ["sol renforcé", "hauteur sous plafond", "ventilation"],
+				isApproved: false,
+				difficultyLevel: DifficultyLevel.ADVANCED,
+				assignedExerciseTypeId: createdExerciseTypes[4]._id,
+				gymId: gym._id,
+			},
+			{
+				name: `Studio Yoga - ${gym.name}`,
+				capacity: 12,
+				equipment: ["tapis de yoga", "blocs", "sangles", "coussins"],
+				features: ["éclairage tamisé", "sol chauffant", "musique douce"],
+				isApproved: true,
+				difficultyLevel: DifficultyLevel.BEGINNER,
+				assignedExerciseTypeId: createdExerciseTypes[3]._id,
+				gymId: gym._id,
+			},
+		];
+		await TrainingRoom.insertMany(rooms);
+		totalRooms += rooms.length;
+	}
 	console.log(`✅ ${createdExerciseTypes.length} types d'exercices créés`);
-	console.log(`✅ ${createdRooms.length} salles d'entraînement créées`);
+	console.log(
+		`✅ ${totalRooms} salles d'entraînement créées pour ${gyms.length} gyms.`,
+	);
 };

@@ -76,13 +76,11 @@ export class ChallengeController {
 				userId,
 			);
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "participation saved",
-					data: challenge,
-				});
+			res.status(200).json({
+				success: true,
+				message: "participation saved",
+				data: challenge,
+			});
 		} catch (error) {
 			res
 				.status(400)
@@ -99,13 +97,11 @@ export class ChallengeController {
 				userId,
 				req.body,
 			);
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "Progression updated",
-					data: challenge,
-				});
+			res.status(200).json({
+				success: true,
+				message: "Progression updated",
+				data: challenge,
+			});
 		} catch (error) {
 			res
 				.status(400)
@@ -162,13 +158,11 @@ export class ChallengeController {
 				challengeId,
 				userIds,
 			);
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "Challenge shared successfully.",
-					data: challenge,
-				});
+			res.status(200).json({
+				success: true,
+				message: "Challenge shared successfully.",
+				data: challenge,
+			});
 		} catch (error) {
 			res
 				.status(400)

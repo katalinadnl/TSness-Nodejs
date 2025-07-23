@@ -69,7 +69,7 @@ export class TrainingRoomController {
 				equipment,
 				features,
 				difficultyLevel,
-				owner,
+				gymId,
 			}: CreateTrainingRoomRequest = req.body;
 
 			if (
@@ -78,7 +78,7 @@ export class TrainingRoomController {
 				!equipment ||
 				!features ||
 				!difficultyLevel ||
-				!owner
+				!gymId
 			) {
 				res.status(400).json({
 					success: false,
@@ -96,7 +96,7 @@ export class TrainingRoomController {
 				return;
 			}
 
-			const user = await require("../models/User").User.findById(owner);
+			const user = await require("../models/User").User.findById(gymId);
 			if (!user) {
 				res.status(404).json({
 					success: false,
@@ -111,7 +111,7 @@ export class TrainingRoomController {
 				equipment,
 				features,
 				difficultyLevel,
-				owner,
+				gymId,
 				createdBy: req.user?._id || "system",
 			});
 
@@ -139,7 +139,7 @@ export class TrainingRoomController {
 				features,
 				difficultyLevel,
 				assignedExerciseTypeId,
-				owner,
+				gymId,
 			}: UpdateTrainingRoomRequest = req.body;
 
 			if (
@@ -149,7 +149,7 @@ export class TrainingRoomController {
 				!features &&
 				!difficultyLevel &&
 				!assignedExerciseTypeId &&
-				!owner
+				!gymId
 			) {
 				res.status(400).json({
 					success: false,
@@ -191,8 +191,8 @@ export class TrainingRoomController {
 				}
 			}
 
-			if (owner) {
-				const user = await require("../models/User").User.findById(owner);
+			if (gymId) {
+				const user = await require("../models/User").User.findById(gymId);
 				if (!user) {
 					res.status(404).json({
 						success: false,
@@ -210,14 +210,14 @@ export class TrainingRoomController {
 			if (difficultyLevel) updateData.difficultyLevel = difficultyLevel;
 			if (assignedExerciseTypeId)
 				updateData.assignedExerciseTypeId = assignedExerciseTypeId;
-			if (owner) updateData.owner = owner;
+			if (gymId) updateData.gymId = gymId;
 
 			const updatedRoom = await TrainingRoom.findByIdAndUpdate(id, updateData, {
 				new: true,
 				runValidators: true,
 			})
 				.populate("assignedExerciseTypeId", "name description targetedMuscles")
-				.populate("owner", "username email");
+				.populate("gymId", "name location");
 
 			res.status(200).json({
 				success: true,
@@ -235,21 +235,21 @@ export class TrainingRoomController {
 	async changeOwner(req: Request, res: Response): Promise<void> {
 		try {
 			const { id } = req.params;
-			const { owner } = req.body;
+			const { gymId } = req.body;
 
-			if (!owner) {
+			if (!gymId) {
 				res.status(400).json({
 					success: false,
-					message: "Owner (userId) is required",
+					message: "Gym ID is required",
 				});
 				return;
 			}
 
-			const user = await require("../models/User").User.findById(owner);
-			if (!user) {
+			const gym = await require("../models/Gym").Gym.findById(gymId);
+			if (!gym) {
 				res.status(404).json({
 					success: false,
-					message: "Owner (user) not found",
+					message: "Gym not found",
 				});
 				return;
 			}
@@ -263,18 +263,18 @@ export class TrainingRoomController {
 				return;
 			}
 
-			room.owner = owner;
+			room.gymId = gym._id;
 			await room.save();
 
 			res.status(200).json({
 				success: true,
-				message: "Owner changed successfully",
+				message: "Gym changed successfully",
 				data: room,
 			});
 		} catch (error) {
 			res.status(500).json({
 				success: false,
-				message: "Error changing owner",
+				message: "Error changing gym",
 				error: (error as Error).message,
 			});
 		}
