@@ -57,26 +57,36 @@ export class ThemeService {
 				}
 			}
 
-            if (associatedThemes.length > 0) {
-                const themeHierarchy = ['champion', 'avance', 'intermediaire', 'debutant'];
+			if (associatedThemes.length > 0) {
+				const themeHierarchy = [
+					"champion",
+					"avance",
+					"intermediaire",
+					"debutant",
+				];
 
-                for (const level of themeHierarchy) {
-                    const matchingTheme = associatedThemes.find(theme =>
-                        theme.slug.toLowerCase().includes(level)
-                    );
-                    if (matchingTheme) {
-                        console.log(`[DEBUG] Theme selected for the user ${userId}: ${matchingTheme.name} (${matchingTheme.slug})`);
-                        return matchingTheme.slug as UserTheme;
-                    }
-                }
+				for (const level of themeHierarchy) {
+					const matchingTheme = associatedThemes.find((theme) =>
+						theme.slug.toLowerCase().includes(level),
+					);
+					if (matchingTheme) {
+						console.log(
+							`[DEBUG] Theme selected for the user ${userId}: ${matchingTheme.name} (${matchingTheme.slug})`,
+						);
+						return matchingTheme.slug as UserTheme;
+					}
+				}
 
-                const latestTheme = associatedThemes.sort((a, b) =>
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                )[0];
+				const latestTheme = associatedThemes.sort(
+					(a, b) =>
+						new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+				)[0];
 
-                console.log(`[DEBUG] No theme in hierarchy, use most recent: ${latestTheme.name} (${latestTheme.slug})`);
-                return latestTheme.slug as UserTheme;
-            }
+				console.log(
+					`[DEBUG] No theme in hierarchy, use most recent: ${latestTheme.name} (${latestTheme.slug})`,
+				);
+				return latestTheme.slug as UserTheme;
+			}
 
 			console.log(`[DEBUG] No custom theme active, revert to default theme`);
 			return "default";

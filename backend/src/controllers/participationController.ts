@@ -13,13 +13,11 @@ export class ParticipationController {
 				.populate("userId", "username email")
 				.populate("challengeId", "title");
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					count: participations.length,
-					data: participations,
-				});
+			res.status(200).json({
+				success: true,
+				count: participations.length,
+				data: participations,
+			});
 		} catch (error) {
 			res.status(500).json({ message: "server error", error });
 		}
@@ -33,13 +31,11 @@ export class ParticipationController {
 				userId: user._id,
 			}).populate("challengeId", "title description duration");
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					count: participations.length,
-					data: participations,
-				});
+			res.status(200).json({
+				success: true,
+				count: participations.length,
+				data: participations,
+			});
 		} catch (error) {
 			res.status(500).json({ message: "Server error", error });
 		}
@@ -88,13 +84,11 @@ export class ParticipationController {
 				.populate("userId", "username email")
 				.populate("challengeId", "title");
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					count: participations.length,
-					data: participations,
-				});
+			res.status(200).json({
+				success: true,
+				count: participations.length,
+				data: participations,
+			});
 		} catch (error) {
 			res.status(500).json({ message: "server error", error });
 		}

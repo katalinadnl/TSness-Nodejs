@@ -18,11 +18,18 @@ export class UserController {
 
 			const filters = {
 				role: req.query.role as string,
-				isActive: req.query.isActive ? req.query.isActive === "true" : undefined,
+				isActive: req.query.isActive
+					? req.query.isActive === "true"
+					: undefined,
 				search: req.query.search as string,
 			};
 
-			const result = await this.userService.getAllUsers(page, limit, requestingRole, filters);
+			const result = await this.userService.getAllUsers(
+				page,
+				limit,
+				requestingRole,
+				filters,
+			);
 
 			res.status(200).json({
 				success: true,
@@ -66,7 +73,6 @@ export class UserController {
 			});
 		}
 	}
-
 
 	async deactivateUser(req: Request, res: Response): Promise<void> {
 		try {
@@ -258,26 +264,6 @@ export class UserController {
 		}
 	}
 
-	async updateOwnProfile(req: Request, res: Response) {
-		try {
-			const updated = await this.userService.updateOwnProfile(
-				req.user!._id.toString(),
-				req.body,
-			);
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "update profile",
-					data: { user: updated },
-				});
-		} catch (error) {
-			res
-				.status(400)
-				.json({ success: false, message: (error as Error).message });
-		}
-	}
-
 	async updateUser(req: Request, res: Response): Promise<void> {
 		try {
 			const userId = req.params.id;
@@ -326,8 +312,16 @@ export class UserController {
 			requireRole([UserRole.SUPER_ADMIN]),
 			this.permanentDeleteUser.bind(this),
 		);
-		router.get("/", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getAllUsers.bind(this));
-		router.get("/:id", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getUserById.bind(this));
+		router.get(
+			"/",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getAllUsers.bind(this),
+		);
+		router.get(
+			"/:id",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getUserById.bind(this),
+		);
 
 		router.put(
 			"/:id/deactivate",
@@ -364,7 +358,6 @@ export class UserController {
 			requireRole([UserRole.SUPER_ADMIN]),
 			this.updateUser.bind(this),
 		);
-		router.put("/me", this.updateOwnProfile.bind(this));
 
 		return router;
 	}

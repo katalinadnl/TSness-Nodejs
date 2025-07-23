@@ -20,30 +20,24 @@ export class GymController {
 			} else if (userRole === UserRole.GYM_OWNER) {
 				gyms = await Gym.find({ ownerId: userId });
 			} else {
-				res
-					.status(403)
-					.json({
-						success: false,
-						message: "You have not the right to be here",
-					});
+				res.status(403).json({
+					success: false,
+					message: "You have not the right to be here",
+				});
 				return;
 			}
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "Gym fetched successfully",
-					data: gyms,
-				});
+			res.status(200).json({
+				success: true,
+				message: "Gym fetched successfully",
+				data: gyms,
+			});
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "Internal error",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "Internal error",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -66,31 +60,25 @@ export class GymController {
 
 			if (userRole === UserRole.GYM_OWNER) {
 				if (!userId || gym.ownerId.toString() !== userId.toString()) {
-					res
-						.status(403)
-						.json({
-							success: false,
-							message: "access not authorized at this gym ",
-						});
+					res.status(403).json({
+						success: false,
+						message: "access not authorized at this gym ",
+					});
 					return;
 				}
 			}
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "Gyms fetched successfully",
-					data: gym,
-				});
+			res.status(200).json({
+				success: true,
+				message: "Gyms fetched successfully",
+				data: gym,
+			});
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "Internal error",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "Internal error",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -108,12 +96,10 @@ export class GymController {
 				role: UserRole.GYM_OWNER,
 			});
 			if (!owner) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						message: "Owner of this gym is not found or doesn't exist",
-					});
+				res.status(400).json({
+					success: false,
+					message: "Owner of this gym is not found or doesn't exist",
+				});
 				return;
 			}
 
@@ -123,13 +109,11 @@ export class GymController {
 				.status(201)
 				.json({ success: true, message: "Gym created", data: saved });
 		} catch (error) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "error while creating the gym",
-					error: (error as Error).message,
-				});
+			res.status(400).json({
+				success: false,
+				message: "error while creating the gym",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -149,12 +133,10 @@ export class GymController {
 					role: UserRole.GYM_OWNER,
 				});
 				if (!owner) {
-					res
-						.status(400)
-						.json({
-							success: false,
-							message: "owner not found or incorrect role",
-						});
+					res.status(400).json({
+						success: false,
+						message: "owner not found or incorrect role",
+					});
 					return;
 				}
 			}
@@ -172,13 +154,11 @@ export class GymController {
 				.status(200)
 				.json({ success: true, message: "gym updated", data: updated });
 		} catch (error) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "error while updating the gym",
-					error: (error as Error).message,
-				});
+			res.status(400).json({
+				success: false,
+				message: "error while updating the gym",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -198,13 +178,11 @@ export class GymController {
 				.status(200)
 				.json({ success: true, message: "gym deleted ! all gooooood !" });
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "Internal error",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "Internal error",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -234,21 +212,17 @@ export class GymController {
 				}),
 			);
 
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "gyms with details fetched",
-					data: fullGyms,
-				});
+			res.status(200).json({
+				success: true,
+				message: "gyms with details fetched",
+				data: fullGyms,
+			});
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "Internal error",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "Internal error",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -279,21 +253,17 @@ export class GymController {
 			const rooms = await TrainingRoom.find({ gymId: id }).populate(
 				"assignedExerciseTypeId",
 			);
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "gym with details ok",
-					data: { ...gym.toObject(), trainingRooms: rooms },
-				});
+			res.status(200).json({
+				success: true,
+				message: "gym with details ok",
+				data: { ...gym.toObject(), trainingRooms: rooms },
+			});
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "internal error",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "internal error",
+				error: (error as Error).message,
+			});
 		}
 	}
 

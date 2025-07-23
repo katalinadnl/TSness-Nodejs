@@ -11,21 +11,17 @@ export class BadgeController {
 	async getAllBadges(req: Request, res: Response): Promise<void> {
 		try {
 			const badges = await this.badgeService.getAllBadges();
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "All badges fetched successfully",
-					data: badges,
-				});
+			res.status(200).json({
+				success: true,
+				message: "All badges fetched successfully",
+				data: badges,
+			});
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					message: "Intern Error ! Check you code :)",
-					error: (error as Error).message,
-				});
+			res.status(500).json({
+				success: false,
+				message: "Intern Error ! Check you code :)",
+				error: (error as Error).message,
+			});
 		}
 	}
 
@@ -33,13 +29,11 @@ export class BadgeController {
 		try {
 			const { id } = req.params;
 			const badge = await this.badgeService.getBadgeById(id);
-			res
-				.status(200)
-				.json({
-					success: true,
-					message: "The only badge fetched successully",
-					data: badge,
-				});
+			res.status(200).json({
+				success: true,
+				message: "The only badge fetched successully",
+				data: badge,
+			});
 		} catch (error) {
 			const statusCode =
 				(error as Error).message.includes("not found") ||
@@ -59,13 +53,11 @@ export class BadgeController {
 				.status(201)
 				.json({ success: true, message: "Badge created", data: badge });
 		} catch (error) {
-			res
-				.status(400)
-				.json({
-					success: false,
-					message: "Creation error",
-					error: (error as Error).message,
-				});
+			res.status(400).json({
+				success: false,
+				message: "Creation error",
+				error: (error as Error).message,
+			});
 		}
 	}
 

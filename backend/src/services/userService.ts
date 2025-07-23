@@ -8,7 +8,7 @@ export class UserService {
 		page: number = 1,
 		limit: number = 10,
 		requestingRole: UserRole,
-		filters?: any
+		filters?: any,
 	) {
 		const skip = (page - 1) * limit;
 		const query: any = {};
@@ -21,7 +21,10 @@ export class UserService {
 			query.role = UserRole.CLIENT;
 		}
 
-		if (requestingRole === UserRole.SUPER_ADMIN && filters?.isActive !== undefined) {
+		if (
+			requestingRole === UserRole.SUPER_ADMIN &&
+			filters?.isActive !== undefined
+		) {
 			query.isActive = filters.isActive;
 		}
 
@@ -54,7 +57,6 @@ export class UserService {
 		};
 	}
 
-
 	async getUserById(userId: string, requestingRole: UserRole) {
 		if (!mongoose.Types.ObjectId.isValid(userId)) {
 			throw new Error("invalid user ID");
@@ -66,13 +68,15 @@ export class UserService {
 			throw new Error("User not found");
 		}
 
-		if (requestingRole !== UserRole.SUPER_ADMIN && user.role !== UserRole.CLIENT) {
+		if (
+			requestingRole !== UserRole.SUPER_ADMIN &&
+			user.role !== UserRole.CLIENT
+		) {
 			throw new Error("Access denied");
 		}
 
 		return user;
 	}
-
 
 	async deactivateUser(userId: string, adminId: string) {
 		if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -258,32 +262,6 @@ export class UserService {
 		});
 
 		return user.save();
-	}
-
-	async updateOwnProfile(userId: string, updates: Partial<IUser>) {
-		const user = await User.findById(userId);
-		if (!user) throw new Error("user not found");
-
-		const allowedFields = [
-			"firstName",
-			"lastName",
-			"email",
-			"username",
-			"password",
-		];
-
-		for (const field of allowedFields) {
-			if ((updates as any)[field] !== undefined) {
-				if (field === "password") {
-					user.password = bcrypt.hashSync((updates as any)[field], 10);
-				} else {
-					(user as any)[field] = (updates as any)[field];
-				}
-			}
-		}
-
-		await user.save();
-		return user;
 	}
 
 	async updateUserByAdmin(
