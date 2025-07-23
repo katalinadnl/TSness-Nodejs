@@ -4,7 +4,7 @@ import { Theme } from '../models/Theme';
 
 dotenv.config();
 
-const seedThemes = async () => {
+export const seedThemes = async () => {
   try {
     await connectDB();
     await Theme.deleteMany({});

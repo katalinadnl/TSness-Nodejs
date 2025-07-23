@@ -6,6 +6,7 @@ import { seedBadges } from './seedBadges';
 import { seedExercisesAndRooms } from './seedExerciseAndRooms';
 import { seedChallenges } from './seedChallenges';
 import { seedParticipations } from './seedParticipations';
+import { seedThemes } from './seedThemes';
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ dotenv.config();
 
         console.log('\n--- Seeding participations and sessions ---');
         await seedParticipations();
+
+        console.log('\n--- Seeding themes ---');
+        await seedThemes();
 
         console.log('\n✅ All seeding completed successfully!');
     } catch (error) {
