@@ -1,17 +1,19 @@
-FROM node:20 AS base
+FROM node:20 AS builder
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm install
+
 COPY . .
+RUN npm run build
 
-ARG MODE=dev
+FROM node:20-alpine
+WORKDIR /app
 
-RUN if [ "$MODE" = "prod" ]; then npm run build; fi
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
 
-FROM base AS prod
+RUN npm install --omit=dev
+
 EXPOSE 5000
 CMD ["node", "dist/server.js"]
-
-FROM base AS dev
-EXPOSE 5000
-CMD ["npm", "run", "dev"]
