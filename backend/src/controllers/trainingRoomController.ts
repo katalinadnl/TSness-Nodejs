@@ -1,12 +1,8 @@
 import { Request, Response } from 'express';
 import express from 'express';
-import { TrainingRoom } from '../models/TrainingRoom';
+import { TrainingRoom, CreateTrainingRoomRequest, UpdateTrainingRoomRequest,  } from '../models/TrainingRoom';
 import { ExerciseType } from '../models/ExerciseType';
-import { 
-  CreateTrainingRoomRequest, 
-  UpdateTrainingRoomRequest, 
-  DifficultyLevel 
-} from '../types';
+import { DifficultyLevel } from '../models/common/enums';
 import { authenticateToken, requireSuperAdmin, requireAdmin } from '../middleware/auth';
 
 export class TrainingRoomController {

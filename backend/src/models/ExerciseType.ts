@@ -1,7 +1,28 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IExerciseType } from '../types';
 
-export interface ExerciseTypeDocument extends Omit<IExerciseType, 'id'>, Document {}
+export interface ExerciseType {
+  id: string;
+  name: string;
+  description: string;
+  targetedMuscles: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateExerciseTypeRequest {
+  name: string;
+  description: string;
+  targetedMuscles: string[];
+}
+
+export interface UpdateExerciseTypeRequest {
+  name?: string;
+  description?: string;
+  targetedMuscles?: string[];
+}
+
+
+export interface ExerciseTypeDocument extends Omit<ExerciseType, 'id'>, Document {}
 
 const exerciseTypeSchema = new Schema<ExerciseTypeDocument>(
   {
