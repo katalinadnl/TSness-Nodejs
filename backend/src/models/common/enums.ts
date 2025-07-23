@@ -11,8 +11,20 @@ export enum ChallengeGoal {
     STAY_HEALTHY = 'stay_healthy'
 }
 
+export enum ChallengeAndParticipationStatus {
+    ACCEPTED = 'accepted',
+    INVITED = 'invited',
+    COMPLETED = 'completed',
+}
+
 export enum UserRole {
     CLIENT = 'client',
     GYM_OWNER = 'gym_owner',
     SUPER_ADMIN = 'super_admin'
+}
+
+export enum InvitationStatus {
+    PENDING = 'pending',
+    ACCEPTED = 'accepted',
+    DECLINED = 'declined'
 }

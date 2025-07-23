@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { InvitationStatus } from "./common/enums";
 
 export interface IInvitation extends Document {
     senderId: mongoose.Types.ObjectId;
     receiverId: mongoose.Types.ObjectId;
     challengeId: mongoose.Types.ObjectId;
-    status: 'pending' | 'accepted' | 'declined';
+    status: InvitationStatus;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,8 +29,8 @@ const InvitationSchema = new Schema<IInvitation>(
         },
         status: {
             type: String,
-            enum: ['pending', 'accepted', 'declined'],
-            default: 'pending'
+            enum: Object.values(InvitationStatus),
+            default: InvitationStatus.PENDING,
         }
     },
     {

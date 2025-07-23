@@ -1,9 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { DifficultyLevel, ChallengeGoal } from './common/enums';
+import { DifficultyLevel, ChallengeGoal, ChallengeAndParticipationStatus } from './common/enums';
 
 export interface IChallengeParticipant {
     userId: mongoose.Types.ObjectId;
-    status: 'invited' | 'accepted' | 'completed';
+    status: ChallengeAndParticipationStatus;
     progress: number;
     caloriesBurned: number;
 }
@@ -24,14 +24,24 @@ export interface IChallenge extends Document {
 
 const ChallengeParticipantSchema = new Schema<IChallengeParticipant>(
     {
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
         status: {
             type: String,
-            enum: ['invited', 'accepted', 'completed'],
-            default: 'invited'
+            enum: Object.values(ChallengeAndParticipationStatus),
+            default: ChallengeAndParticipationStatus.INVITED,
         },
-        progress: { type: Number, default: 0 },
-        caloriesBurned: { type: Number, default: 0 }
+        progress: {
+            type: Number,
+            default: 0
+        },
+        caloriesBurned: {
+            type: Number,
+            default: 0
+        }
     },
     { _id: false }
 );

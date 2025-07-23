@@ -67,10 +67,6 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 
-app.get('/users', (_req: Request, res: Response) => {
-    res.send('ici ya des users');
-});
-
 // init des middleware
 app.use(notFoundHandler);
 app.use(errorHandler);

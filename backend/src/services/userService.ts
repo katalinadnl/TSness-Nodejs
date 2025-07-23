@@ -53,14 +53,14 @@ export class UserService {
     // Récupérer un utilisateur par ID
     async getUserById(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         const user = await User.findById(userId)
             .select('-password')
 
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('User not found');
         }
 
         return user;
@@ -69,27 +69,27 @@ export class UserService {
     // Désactiver un utilisateur
     async deactivateUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('User not found');
         }
 
         if (user.role === 'super_admin') {
-            throw new Error('Impossible de désactiver un super administrateur');
+            throw new Error('Is not possible to deactivate a super admin');
         }
 
         if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous désactiver vous-même');
+            throw new Error('You cannot deactivate yourself');
         }
 
         user.isActive = false;
         await user.save();
 
         return {
-            message: 'Utilisateur désactivé avec succès',
+            message: 'User deactivated successfully',
             user: {
                 id: user._id,
                 username: user.username,
@@ -102,19 +102,19 @@ export class UserService {
     // Réactiver un utilisateur
     async activateUser(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('User not found');
         }
 
         user.isActive = true;
         await user.save();
 
         return {
-            message: 'Utilisateur réactivé avec succès',
+            message: 'User activated successfully',
             user: {
                 id: user._id,
                 username: user.username,
@@ -127,20 +127,20 @@ export class UserService {
     // Supprimer un utilisateur (soft delete)
     async deleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('User not found');
         }
 
         if (user.role === 'super_admin') {
-            throw new Error('Impossible de supprimer un super administrateur');
+            throw new Error('Is not possible to delete a super admin');
         }
 
         if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous supprimer vous-même');
+            throw new Error('Is not possible to delete yourself');
         }
 
         user.isDeleted = true;
@@ -149,7 +149,7 @@ export class UserService {
         await user.save();
 
         return {
-            message: 'Utilisateur supprimé avec succès',
+            message: 'User deleted successfully',
             user: {
                 id: user._id,
                 username: user.username,
@@ -163,26 +163,26 @@ export class UserService {
     // Supprimer définitivement un utilisateur (hard delete)
     async permanentDeleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('User not found');
         }
 
         if (user.role === 'super_admin') {
-            throw new Error('Impossible de supprimer définitivement un super administrateur');
+            throw new Error('Is not possible to permanently delete a super admin');
         }
 
         if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous supprimer vous-même');
+            throw new Error('You cannot permanently delete yourself');
         }
 
         await User.findByIdAndDelete(userId);
 
         return {
-            message: 'Utilisateur supprimé définitivement',
+            message: 'User permanently deleted',
             userId: userId
         };
     }
@@ -240,7 +240,7 @@ export class UserService {
             $or: [{ email: data.email }, { username: data.username }]
         });
         if (existingUser) {
-            throw new Error('Un utilisateur avec cet email ou ce nom d\'utilisateur existe déjà');
+            throw new Error('User with this email or username already exists');
         }
 
         const hashedPassword = bcrypt.hashSync(data.password, 10);
@@ -257,7 +257,7 @@ export class UserService {
 
     async updateOwnProfile(userId: string, updates: Partial<IUser>) {
         const user = await User.findById(userId);
-        if (!user) throw new Error('Utilisateur non trouvé');
+        if (!user) throw new Error('user not found');
 
         const allowedFields = ['firstName', 'lastName', 'email', 'username', 'password'];
 
@@ -277,16 +277,16 @@ export class UserService {
 
     async updateUserByAdmin(userId: string, updates: Partial<IUser>, adminId: string): Promise<IUser> {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
+            throw new Error('invalid user ID');
         }
 
         if (userId === adminId) {
-            throw new Error('Vous ne pouvez pas modifier vos propres rôles ou statuts via cette route');
+            throw new Error('You cannot update your own profile from here');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            throw new Error('Utilisateur non trouvé');
+            throw new Error('user not found');
         }
 
         const allowedFields = ['username', 'email', 'firstName', 'lastName', 'role', 'isActive'];

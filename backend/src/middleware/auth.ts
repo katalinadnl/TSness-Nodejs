@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { UserRole} from "../models/common/enums";
 import { Types } from 'mongoose';
 
 export type JwtUser = {
@@ -9,7 +10,7 @@ export type JwtUser = {
     email: string;
     firstName: string;
     lastName: string;
-    role: 'client' | 'gym_owner' | 'super_admin';
+    role: UserRole;
     isActive: boolean;
     isDeleted: boolean;
     deletedAt?: Date;
@@ -33,7 +34,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         if (!token) {
             res.status(401).json({
                 success: false,
-                message: 'Token d\'accès requis'
+                message: 'the token is required'
             });
             return;
         }
@@ -42,18 +43,18 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         if (!jwtSecret) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur de configuration du serveur'
+                message: 'Error of server: JWT'
             });
             return;
         }
 
         const decoded = jwt.verify(token, jwtSecret) as { userId: string; role: string };
-        const validRoles = ['client', 'gym_owner', 'super_admin'] as const;
+        const validRoles = Object.values(UserRole);
 
-        if (!validRoles.includes(decoded.role as any)) {
+        if (!validRoles.includes(decoded.role as UserRole)) {
             res.status(403).json({
                 success: false,
-                message: 'Rôle utilisateur invalide'
+                message: 'User role is not valid'
             });
             return;
         }
@@ -63,7 +64,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         if (!user) {
             res.status(401).json({
                 success: false,
-                message: 'Utilisateur non trouvé'
+                message: 'User not found'
             });
             return;
         }
@@ -71,14 +72,14 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         if (!user.isActive) {
             res.status(401).json({
                 success: false,
-                message: 'Compte désactivé'
+                message: 'User is not active, the account is disabled'
             });
             return;
         }
 
         req.user = {
             ...user.toObject(),
-            role: decoded.role as typeof validRoles[number]
+            role: decoded.role as UserRole
         };
 
         next();
@@ -86,7 +87,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     } catch (error) {
         res.status(403).json({
             success: false,
-            message: 'Token invalide'
+            message: 'invalid token',
         });
     }
 };
@@ -95,15 +96,15 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
     if (!req.user) {
         res.status(401).json({
             success: false,
-            message: 'Authentication requise'
+            message: 'login required'
         });
         return;
     }
 
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== UserRole.SUPER_ADMIN) {
         res.status(403).json({
             success: false,
-            message: 'Accès réservé aux super administrateurs'
+            message: 'Access reserved for super administrators'
         });
         return;
     }
@@ -115,15 +116,15 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction): v
     if (!req.user) {
         res.status(401).json({
             success: false,
-            message: 'Authentication requise'
+            message: 'login required'
         });
         return;
     }
 
-    if (!['super_admin', 'gym_owner'].includes(req.user.role)) {
+    if (![UserRole.SUPER_ADMIN, UserRole.GYM_OWNER].includes(req.user.role)) {
         res.status(403).json({
             success: false,
-            message: 'Accès réservé aux administrateurs'
+            message: 'Access reserved for administrators'
         });
         return;
     }
@@ -136,7 +137,7 @@ export const requireRoles = (roles: string[]) => {
         if (!req.user) {
             res.status(401).json({
                 success: false,
-                message: 'Authentication requise'
+                message: 'login required'
             });
             return;
         }
@@ -144,7 +145,7 @@ export const requireRoles = (roles: string[]) => {
         if (!roles.includes(req.user.role)) {
             res.status(403).json({
                 success: false,
-                message: 'Permissions insuffisantes'
+                message: 'you do not have the permission to access this resource'
             });
             return;
         }
