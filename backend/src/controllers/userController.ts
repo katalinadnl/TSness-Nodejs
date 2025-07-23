@@ -14,16 +14,15 @@ export class UserController {
 		try {
 			const page = parseInt(req.query.page as string) || 1;
 			const limit = parseInt(req.query.limit as string) || 10;
+			const requestingRole = req.user?.role || UserRole.CLIENT;
+
 			const filters = {
 				role: req.query.role as string,
-				isActive: req.query.isActive
-					? req.query.isActive === "true"
-					: undefined,
+				isActive: req.query.isActive ? req.query.isActive === "true" : undefined,
 				search: req.query.search as string,
-				requestingRole: req.user?.role,
 			};
 
-			const result = await this.userService.getAllUsers(page, limit, filters);
+			const result = await this.userService.getAllUsers(page, limit, requestingRole, filters);
 
 			res.status(200).json({
 				success: true,
@@ -43,7 +42,9 @@ export class UserController {
 	async getUserById(req: Request, res: Response): Promise<void> {
 		try {
 			const { id } = req.params;
-			const user = await this.userService.getUserById(id);
+			const requestingRole = req.user?.role || UserRole.CLIENT;
+
+			const user = await this.userService.getUserById(id, requestingRole);
 
 			res.status(200).json({
 				success: true,
@@ -55,7 +56,9 @@ export class UserController {
 				(error as Error).message.includes("invalid") ||
 				(error as Error).message.includes("not found")
 					? 404
-					: 500;
+					: (error as Error).message.includes("Access denied")
+						? 403
+						: 500;
 
 			res.status(statusCode).json({
 				success: false,
@@ -63,6 +66,7 @@ export class UserController {
 			});
 		}
 	}
+
 
 	async deactivateUser(req: Request, res: Response): Promise<void> {
 		try {
@@ -322,16 +326,9 @@ export class UserController {
 			requireRole([UserRole.SUPER_ADMIN]),
 			this.permanentDeleteUser.bind(this),
 		);
-		router.get(
-			"/",
-			requireRole([UserRole.SUPER_ADMIN]),
-			this.getAllUsers.bind(this),
-		);
-		router.get(
-			"/:id",
-			requireRole([UserRole.SUPER_ADMIN]),
-			this.getUserById.bind(this),
-		);
+		router.get("/", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getAllUsers.bind(this));
+		router.get("/:id", requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]), this.getUserById.bind(this));
+
 		router.put(
 			"/:id/deactivate",
 			requireRole([UserRole.SUPER_ADMIN]),
