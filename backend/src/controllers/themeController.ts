@@ -15,7 +15,7 @@ export class ThemeController {
             if (!req.user) {
                 res.status(401).json({
                     success: false,
-                    message: 'Utilisateur non authentifié'
+                    message: 'user not authenticated'
                 });
                 return;
             }
@@ -24,13 +24,13 @@ export class ThemeController {
 
             res.status(200).json({
                 success: true,
-                message: 'Thème récupéré avec succès',
+                message: 'theme retrieved successfully',
                 data: themeInfo
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la récupération du thème',
+                message: 'Error retrieving theme',
                 error: (error as Error).message
             });
         }
@@ -43,7 +43,7 @@ export class ThemeController {
             if (!userId) {
                 res.status(400).json({
                     success: false,
-                    message: 'ID utilisateur requis'
+                    message: 'userId is required'
                 });
                 return;
             }
@@ -52,13 +52,13 @@ export class ThemeController {
 
             res.status(200).json({
                 success: true,
-                message: 'Thème récupéré avec succès',
+                message: 'theme retrieved successfully',
                 data: themeInfo
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la récupération du thème',
+                message: 'Error retrieving theme for user',
                 error: (error as Error).message
             });
         }

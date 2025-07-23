@@ -1,11 +1,7 @@
 import { Request, Response } from 'express';
 import express from 'express';
-import { ExerciseType } from '../models/ExerciseType';
+import { ExerciseType, CreateExerciseTypeRequest, UpdateExerciseTypeRequest } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
-import { 
-  CreateExerciseTypeRequest, 
-  UpdateExerciseTypeRequest 
-} from '../types';
 import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
 
 export class ExerciseTypeController {

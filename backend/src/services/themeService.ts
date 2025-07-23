@@ -1,3 +1,4 @@
+import { BadgeService } from './badgeService';
 import { BadgeService } from '../services/badgeService';
 import { Theme, ITheme } from '../models/Theme';
 import { Types } from 'mongoose';
@@ -18,7 +19,7 @@ export class ThemeService {
                 badgeName: ub.badge?.name,
                 themeId: ub.badge?.themeId
             })));
-            
+
             if (userBadges.length === 0) {
                 console.log(`[DEBUG] Aucun badge pour l'utilisateur ${userId}, retour au thème par défaut`);
                 return 'default';
@@ -41,26 +42,26 @@ export class ThemeService {
             }
 
             if (associatedThemes.length > 0) {
-                const latestTheme = associatedThemes.sort((a, b) => 
+                const latestTheme = associatedThemes.sort((a, b) =>
                     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 )[0];
-                
+
                 return latestTheme.slug as UserTheme;
             }
 
             console.log(`[DEBUG] Aucun thème personnalisé actif, retour au thème par défaut`);
             return 'default';
         } catch (error) {
-            console.error('Erreur lors de la récupération du thème utilisateur:', error);
+            console.error('error in retrieving the user theme:', error);
             return 'default';
         }
     }
 
     async getUserThemeInfo(userId: string) {
         const themeIdentifier = await this.getUserTheme(userId);
-        
+
         const predefinedThemes = ['default', 'debutant', 'intermediaire', 'avance', 'champion'];
-        
+
         if (!predefinedThemes.includes(themeIdentifier)) {
             try {
                 const customTheme = await Theme.findOne({ slug: themeIdentifier, isActive: true });
@@ -228,11 +229,11 @@ export class ThemeService {
         }
 
         const theme = await Theme.findByIdAndUpdate(
-            id, 
-            { isActive: true }, 
+            id,
+            { isActive: true },
             { new: true }
         );
-        
+
         if (!theme) {
             throw new Error('Thème non trouvé');
         }
@@ -246,11 +247,11 @@ export class ThemeService {
         }
 
         const theme = await Theme.findByIdAndUpdate(
-            id, 
-            { isActive: false }, 
+            id,
+            { isActive: false },
             { new: true }
         );
-        
+
         if (!theme) {
             throw new Error('Thème non trouvé');
         }

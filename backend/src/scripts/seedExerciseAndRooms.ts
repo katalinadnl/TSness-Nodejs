@@ -3,7 +3,7 @@ import { ExerciseType } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
 import { Gym } from '../models/Gym';
 import { User } from '../models/User';
-import { DifficultyLevel } from '../types';
+import { DifficultyLevel } from '../models/common/enums';
 
 dotenv.config();
 

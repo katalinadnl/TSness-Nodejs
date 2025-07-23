@@ -2,7 +2,7 @@ import { Challenge } from '../models/Challenge';
 import { User } from '../models/User';
 import { Gym } from '../models/Gym';
 import { ExerciseType } from '../models/ExerciseType';
-import { DifficultyLevel, ChallengeGoal } from '../types/challengeEnum';
+import { DifficultyLevel, ChallengeGoal } from '../models/common/enums';
 
 export const seedChallenges = async () => {
     console.log('Seeding challenges...');

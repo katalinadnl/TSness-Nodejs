@@ -10,7 +10,7 @@ export class ParticipationController {
         try {
             const user = req.user as JwtUser;
             if (user.role !== 'super_admin') {
-                return res.status(403).json({ message: 'Accès refusé' });
+                return res.status(403).json({ message: 'access refused' });
             }
 
             const participations = await Participation.find()
@@ -19,21 +19,21 @@ export class ParticipationController {
 
             res.status(200).json({ success: true, count: participations.length, data: participations });
         } catch (error) {
-            res.status(500).json({ message: 'Erreur serveur', error });
+            res.status(500).json({ message: 'server error', error });
         }
     }
 
     async getMine(req: Request, res: Response) {
         try {
             const user = req.user as JwtUser;
-            if (!user._id) return res.status(401).json({ message: 'Non authentifié' });
+            if (!user._id) return res.status(401).json({ message: 'not signed in' });
 
             const participations = await Participation.find({ userId: user._id })
                 .populate('challengeId', 'title description duration');
 
             res.status(200).json({ success: true, count: participations.length, data: participations });
         } catch (error) {
-            res.status(500).json({ message: 'Erreur serveur', error });
+            res.status(500).json({ message: 'Server error', error });
         }
     }
 
@@ -43,14 +43,14 @@ export class ParticipationController {
             const { id } = req.params;
 
             if (!mongoose.Types.ObjectId.isValid(id))
-                return res.status(400).json({ message: 'ID invalide' });
+                return res.status(400).json({ message: 'invalid id' });
 
             const participation = await Participation.findById(id);
             if (!participation)
-                return res.status(404).json({ message: 'Participation non trouvée' });
+                return res.status(404).json({ message: 'Participation not found' });
 
             if (!participation.userId.equals(user._id)) {
-                return res.status(403).json({ message: 'Vous ne pouvez pas supprimer cette participation' });
+                return res.status(403).json({ message: 'You can\'t delete this participation' });
             }
 
             await Challenge.findByIdAndUpdate(participation.challengeId, {
@@ -59,9 +59,9 @@ export class ParticipationController {
 
             await Participation.findByIdAndDelete(id);
 
-            res.status(200).json({ success: true, message: 'Participation supprimée' });
+            res.status(200).json({ success: true, message: 'Participation deleted' });
         } catch (error) {
-            res.status(500).json({ message: 'Erreur serveur', error });
+            res.status(500).json({ message: 'server error', error });
         }
     }
 
@@ -69,7 +69,7 @@ export class ParticipationController {
         try {
             const user = req.user as JwtUser;
             if (user.role !== 'gym_owner') {
-                return res.status(403).json({ message: 'Accès refusé' });
+                return res.status(403).json({ message: 'you do not have access' });
             }
 
             const challenges = await Challenge.find({ creatorId: user._id });
@@ -81,7 +81,7 @@ export class ParticipationController {
 
             res.status(200).json({ success: true, count: participations.length, data: participations });
         } catch (error) {
-            res.status(500).json({ message: 'Erreur serveur', error });
+            res.status(500).json({ message: 'server error', error });
         }
     }
 

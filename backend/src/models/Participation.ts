@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { ChallengeAndParticipationStatus} from "./common/enums";
 
 export interface ISession {
     date: Date;
@@ -9,7 +10,7 @@ export interface ISession {
 export interface IParticipation extends Document {
     userId: mongoose.Types.ObjectId;
     challengeId: mongoose.Types.ObjectId;
-    status: 'invited' | 'accepted' | 'completed';
+    status: ChallengeAndParticipationStatus;
     progress: number;
     caloriesBurned: number;
     startedAt?: Date;
@@ -34,8 +35,8 @@ const ParticipationSchema = new Schema<IParticipation>(
         },
         status: {
             type: String,
-            enum: ['invited', 'accepted', 'completed'],
-            default: 'invited'
+            enum: Object.values(ChallengeAndParticipationStatus),
+            default: ChallengeAndParticipationStatus.INVITED,
         },
         progress: {
             type: Number,
