@@ -7,13 +7,11 @@ export const seedGyms = async () => {
 
 	await Gym.deleteMany({});
 
-	// Récupère tous les gymowners
 	const gymowners = await User.find({ role: UserRole.GYM_OWNER });
 	if (!gymowners || gymowners.length === 0) {
 		throw new Error("No gymowners found. Please run seedUsers first.");
 	}
 
-	// Génère 10 gyms répartis entre les gymowners
 	const gymsData = [];
 	for (let i = 1; i <= 5; i++) {
 		const owner = gymowners[(i - 1) % gymowners.length];
@@ -28,8 +26,5 @@ export const seedGyms = async () => {
 		});
 	}
 	const gyms = await Gym.insertMany(gymsData);
-	console.log(
-		`Seeded ${gyms.length} gyms répartis entre ${gymowners.length} gymowners.`,
-	);
 	return gyms;
 };

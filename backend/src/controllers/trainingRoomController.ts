@@ -96,11 +96,11 @@ export class TrainingRoomController {
 				return;
 			}
 
-			const user = await require("../models/User").User.findById(gymId);
-			if (!user) {
+			const gym = await require("../models/Gym").Gym.findById(gymId);
+			if (!gym) {
 				res.status(404).json({
 					success: false,
-					message: "Owner (user) not found",
+					message: "Gym not found",
 				});
 				return;
 			}
@@ -192,11 +192,11 @@ export class TrainingRoomController {
 			}
 
 			if (gymId) {
-				const user = await require("../models/User").User.findById(gymId);
-				if (!user) {
+				const gym = await require("../models/Gym").Gym.findById(gymId);
+				if (!gym) {
 					res.status(404).json({
 						success: false,
-						message: "Owner (user) not found",
+						message: "Gym not found",
 					});
 					return;
 				}

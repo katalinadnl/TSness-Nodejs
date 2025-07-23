@@ -4,7 +4,6 @@ import { Challenge } from "../models/Challenge";
 import { InvitationStatus } from "../models/common/enums";
 
 export const seedInvitations = async () => {
-	console.log("Seeding invitations...");
 	await Invitation.deleteMany({});
 
 	const users = await User.find({});
@@ -12,7 +11,6 @@ export const seedInvitations = async () => {
 	if (users.length < 2 || challenges.length === 0) return;
 
 	let invitations = [];
-	// Génère 20 invitations entre utilisateurs sur différents challenges
 	for (let i = 0; i < 15; i++) {
 		const sender = users[i % users.length];
 		const receiver = users[(i + 1) % users.length];
@@ -30,5 +28,4 @@ export const seedInvitations = async () => {
 		});
 	}
 	await Invitation.insertMany(invitations);
-	console.log(`Seeded ${invitations.length} invitations.`);
 };

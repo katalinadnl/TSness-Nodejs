@@ -9,32 +9,22 @@ export const seedParticipations = async () => {
 	console.log("Seeding participations...");
 
 	await Participation.deleteMany({});
-	await UserBadge.deleteMany({});
-
 	const clients = await User.find({ role: UserRole.CLIENT });
 	const allChallenges = await Challenge.find({});
-
-	console.log(`Nombre de clients trouvés : ${clients.length}`);
-	console.log(`Nombre de challenges trouvés : ${allChallenges.length}`);
-
-	if (!clients.length || !allChallenges.length) {
-		throw new Error(
-			"Clients or challenges not found. Make sure to seed users and challenges first.",
-		);
-	}
-
-	await Challenge.updateMany({}, { $set: { participants: [] } });
-
-	// Génère des participations pour chaque client sur plusieurs challenges
 	let totalParticipations = 0;
 	for (const client of clients) {
-		// Chaque client participe à 5 challenges différents
+		let completedCount = 0;
 		for (let i = 0; i < 5; i++) {
 			const challenge =
 				allChallenges[
 					(client._id.toString().charCodeAt(0) + i) % allChallenges.length
 				];
-			const status = i % 2 === 0 ? "completed" : "accepted";
+
+			let status = i % 2 === 0 ? "completed" : "accepted";
+			if (client.username === "client1" && completedCount < 3) {
+				status = "completed";
+				completedCount++;
+			}
 			const progress =
 				status === "completed" ? 100 : Math.floor(Math.random() * 80);
 			const caloriesBurned = 100 + Math.floor(Math.random() * 400);
@@ -72,17 +62,6 @@ export const seedParticipations = async () => {
 				});
 				totalParticipations++;
 			}
-			await Challenge.findByIdAndUpdate(challenge._id, {
-				$push: {
-					participants: {
-						userId: client._id,
-						status,
-						progress,
-						caloriesBurned,
-					},
-				},
-			});
-			totalParticipations++;
 		}
 	}
 	console.log(

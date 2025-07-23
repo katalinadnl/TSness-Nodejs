@@ -18,7 +18,7 @@ dotenv.config();
 
 		console.log("Connecting to MongoDB...");
 		await mongoose.connect(mongoUri);
-		console.log("✅ Connected to MongoDB");
+		console.log("Connected to MongoDB");
 
 		console.log("\n--- Seeding users ---");
 		await seedUsers();
@@ -47,12 +47,12 @@ dotenv.config();
 		console.log("\n--- Seeding themes ---");
 		await seedThemes();
 
-		console.log("\n✅ All seeding completed successfully!");
+		console.log("\n All seeding completed successfully!");
 	} catch (error) {
-		console.error("❌ Error during seeding:", error);
+		console.error("Error during seeding:", error);
 	} finally {
 		await mongoose.disconnect();
-		console.log("🔌 Disconnected from MongoDB");
+		console.log("Disconnected from MongoDB");
 		process.exit(0);
 	}
 })();
