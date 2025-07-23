@@ -4,21 +4,27 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "../models/common/enums";
 
 export class UserService {
-	async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
+	async getAllUsers(
+		page: number = 1,
+		limit: number = 10,
+		requestingRole: UserRole,
+		filters?: any
+	) {
 		const skip = (page - 1) * limit;
-
 		const query: any = {};
 
-		if (filters?.requestingRole !== UserRole.SUPER_ADMIN) {
+		if (requestingRole === UserRole.SUPER_ADMIN) {
+			if (filters?.role) {
+				query.role = filters.role;
+			}
+		} else {
 			query.role = UserRole.CLIENT;
 		}
 
-		if (filters?.role) {
-			query.role = filters.role;
-		}
-		if (filters?.isActive !== undefined) {
+		if (requestingRole === UserRole.SUPER_ADMIN && filters?.isActive !== undefined) {
 			query.isActive = filters.isActive;
 		}
+
 		if (filters?.search) {
 			query.$or = [
 				{ username: { $regex: filters.search, $options: "i" } },
@@ -48,7 +54,8 @@ export class UserService {
 		};
 	}
 
-	async getUserById(userId: string) {
+
+	async getUserById(userId: string, requestingRole: UserRole) {
 		if (!mongoose.Types.ObjectId.isValid(userId)) {
 			throw new Error("invalid user ID");
 		}
@@ -59,8 +66,13 @@ export class UserService {
 			throw new Error("User not found");
 		}
 
+		if (requestingRole !== UserRole.SUPER_ADMIN && user.role !== UserRole.CLIENT) {
+			throw new Error("Access denied");
+		}
+
 		return user;
 	}
+
 
 	async deactivateUser(userId: string, adminId: string) {
 		if (!mongoose.Types.ObjectId.isValid(userId)) {
