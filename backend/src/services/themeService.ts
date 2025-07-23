@@ -1,5 +1,4 @@
 import { BadgeService } from './badgeService';
-import { BadgeService } from '../services/badgeService';
 import { Theme, ITheme } from '../models/Theme';
 import { Types } from 'mongoose';
 
@@ -15,13 +14,13 @@ export class ThemeService {
     async getUserTheme(userId: string): Promise<UserTheme> {
         try {
             const userBadges = await this.badgeService.getUserBadges(userId);
-            console.log(`[DEBUG] Badges utilisateur ${userId}:`, userBadges.map(ub => ({
+            console.log(`[DEBUG] User badges ${userId}:`, userBadges.map(ub => ({
                 badgeName: ub.badge?.name,
                 themeId: ub.badge?.themeId
             })));
 
             if (userBadges.length === 0) {
-                console.log(`[DEBUG] Aucun badge pour l'utilisateur ${userId}, retour au thème par défaut`);
+                console.log(`[DEBUG] No badge for the user ${userId}, return to default theme`);
                 return 'default';
             }
 
@@ -33,10 +32,10 @@ export class ThemeService {
                         if (theme && theme.isActive === true) {
                             associatedThemes.push(theme);
                         } else if (theme && theme.isActive === false) {
-                            console.log(`Thème ${theme.name} (${theme.slug}) désactivé pour le badge ${userBadge.badge.name}, passage au thème par défaut`);
+                            console.log(`Theme ${theme.name} (${theme.slug}) disabled for badge ${userBadge.badge.name}, switch to default theme`);
                         }
                     } catch (err) {
-                        console.warn(`Thème ${userBadge.badge.themeId} non trouvé pour le badge ${userBadge.badge.name}`);
+                        console.warn(`Theme ${userBadge.badge.themeId} not found for badge ${userBadge.badge.name}`);
                     }
                 }
             }
@@ -49,7 +48,7 @@ export class ThemeService {
                 return latestTheme.slug as UserTheme;
             }
 
-            console.log(`[DEBUG] Aucun thème personnalisé actif, retour au thème par défaut`);
+            console.log(`[DEBUG] No custom theme active, revert to default theme`);
             return 'default';
         } catch (error) {
             console.error('error in retrieving the user theme:', error);
@@ -74,7 +73,7 @@ export class ThemeService {
                     };
                 }
             } catch (error) {
-                console.error('Erreur lors de la récupération du thème personnalisé:', error);
+                console.error('Error while retrieving custom theme:', error);
             }
         }
         
@@ -182,7 +181,7 @@ export class ThemeService {
 
         const theme = await Theme.findById(id);
         if (!theme) {
-            throw new Error('Thème non trouvé');
+            throw new Error('Theme not found');
         }
 
         return theme;
@@ -219,7 +218,7 @@ export class ThemeService {
 
         const theme = await Theme.findByIdAndDelete(id);
         if (!theme) {
-            throw new Error('Thème non trouvé');
+            throw new Error('Theme not found');
         }
     }
 
@@ -235,7 +234,7 @@ export class ThemeService {
         );
 
         if (!theme) {
-            throw new Error('Thème non trouvé');
+            throw new Error('Theme not found');
         }
 
         return theme;
@@ -253,7 +252,7 @@ export class ThemeService {
         );
 
         if (!theme) {
-            throw new Error('Thème non trouvé');
+            throw new Error('Theme not found');
         }
 
         return theme;
