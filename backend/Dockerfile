@@ -7,7 +7,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:20-alpine AS prod
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
