@@ -1,5 +1,40 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { ITrainingRoom, DifficultyLevel } from '../types';
+import mongoose, { Schema, Document, Types } from 'mongoose';
+import { DifficultyLevel } from './common/enums';
+
+export interface CreateTrainingRoomRequest {
+  name: string;
+  capacity: number;
+  equipment: string[];
+  features: string[];
+  difficultyLevel: DifficultyLevel;
+  assignedExerciseTypeId?: string;
+  gymId: string;
+  owner: string | Types.ObjectId;
+}
+
+export interface UpdateTrainingRoomRequest {
+  name?: string;
+  capacity?: number;
+  equipment?: string[];
+  features?: string[];
+  difficultyLevel?: DifficultyLevel;
+  assignedExerciseTypeId?: string;
+  owner?: string | Types.ObjectId;
+}
+export interface ITrainingRoom {
+  id: string;
+  name: string;
+  capacity: number;
+  equipment: string[];
+  features: string[];
+  isApproved: boolean;
+  difficultyLevel: DifficultyLevel;
+  assignedExerciseTypeId?: Types.ObjectId;
+  gymId: Types.ObjectId;
+  owner: string | Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export interface TrainingRoomDocument extends Omit<ITrainingRoom, 'id'>, Document {}
 

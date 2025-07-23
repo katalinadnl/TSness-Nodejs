@@ -2,7 +2,6 @@ import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { connectDB } from './config/db';
-import invitationRoutes from './routes/invitationRoutes';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import { UserService } from "./services/userService";
 import { UserController } from "./controllers/userController";
@@ -16,21 +15,18 @@ import { ChallengeController } from './controllers/challengeController';
 import { GymController } from "./controllers/gymController";
 import { ParticipationController } from './controllers/participationController';
 import { ThemeController } from './controllers/themeController';
-
+import { InvitationController } from './controllers/invitationController';
 
 dotenv.config();
 
-// init des dépendances (services)
 const userService = new UserService();
 const badgeService = new BadgeService();
 const challengeService = new ChallengeService();
 
-// conf express
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-//init des controllers
 const userController = new UserController(userService);
 const gymController = new GymController();
 const exerciseTypeController = new ExerciseTypeController();
@@ -40,8 +36,8 @@ const badgeController = new BadgeController(badgeService);
 const challengeController = new ChallengeController(challengeService);
 const participationController = new ParticipationController();
 const themeController = new ThemeController();
+const invitationController = new InvitationController();
 
-app.use('/api/challenges', challengeController.buildRoutes());
 
 // init des routes
 app.use('/api/users', userController.buildRoutes());
@@ -53,7 +49,7 @@ app.use('/api/challenges', challengeController.buildRoutes());
 app.use('/api/themes', themeController.buildRoutes());
 app.use('/api/gyms', gymController.buildRoutes());
 app.use('/api/participations', participationController.buildRoutes());
-app.use('/api/invitations', invitationRoutes);
+app.use('/api/invitations', invitationController.buildRoutes());
 
 app.get('/', (_req: Request, res: Response) => {
     res.json({
