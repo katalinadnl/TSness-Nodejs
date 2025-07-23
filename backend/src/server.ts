@@ -37,6 +37,7 @@ const badgeController = new BadgeController(badgeService);
 const challengeController = new ChallengeController(challengeService);
 const participationController = new ParticipationController();
 const themeController = new ThemeController();
+
 const invitationController = new InvitationController();
 
 // init des routes
