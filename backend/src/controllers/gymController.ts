@@ -18,13 +18,13 @@ export class GymController {
             } else if (userRole === 'gym_owner') {
                 gyms = await Gym.find({ ownerId: userId });
             } else {
-                res.status(403).json({ success: false, message: 'Accès non autorisé' });
+                res.status(403).json({ success: false, message: 'You have not the right to be here' });
                 return;
             }
 
-            res.status(200).json({ success: true, message: 'Salles récupérées', data: gyms });
+            res.status(200).json({ success: true, message: 'Gym fetched successfully', data: gyms });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'Internal error', error: (error as Error).message });
         }
     }
 
@@ -36,26 +36,26 @@ export class GymController {
             const userId = req.user?._id;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ success: false, message: 'ID invalide' });
+                res.status(400).json({ success: false, message: 'invalid ID' });
                 return;
             }
 
             const gym = await Gym.findById(id);
             if (!gym) {
-                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                res.status(404).json({ success: false, message: 'Gym not found' });
                 return;
             }
 
             if (userRole === 'gym_owner') {
                 if (!userId || gym.ownerId.toString() !== userId.toString()) {
-                    res.status(403).json({ success: false, message: 'Accès non autorisé à cette salle' });
+                    res.status(403).json({ success: false, message: 'access not authorized at this gym ' });
                     return;
                 }
             }
 
-            res.status(200).json({ success: true, message: 'Salle récupérée', data: gym });
+            res.status(200).json({ success: true, message: 'Gyms fetched successfully', data: gym });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'Internal error', error: (error as Error).message });
         }
     }
 
@@ -64,21 +64,21 @@ export class GymController {
             const { ownerId } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(ownerId)) {
-                res.status(400).json({ success: false, message: 'ownerId invalide' });
+                res.status(400).json({ success: false, message: 'ownerId invalid' });
                 return;
             }
 
             const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
             if (!owner) {
-                res.status(400).json({ success: false, message: 'Propriétaire introuvable ou rôle incorrect' });
+                res.status(400).json({ success: false, message: 'Owner of this gym is not found or doesn\'t exist' });
                 return;
             }
 
             const gym = new Gym(req.body);
             const saved = await gym.save();
-            res.status(201).json({ success: true, message: 'Salle de sport créée', data: saved });
+            res.status(201).json({ success: true, message: 'Gym created', data: saved });
         } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de la création', error: (error as Error).message });
+            res.status(400).json({ success: false, message: 'error while creating the gym', error: (error as Error).message });
         }
     }
 
@@ -88,27 +88,27 @@ export class GymController {
             const { ownerId } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ success: false, message: 'ID invalide' });
+                res.status(400).json({ success: false, message: 'invalid id' });
                 return;
             }
 
             if (ownerId && mongoose.Types.ObjectId.isValid(ownerId)) {
                 const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
                 if (!owner) {
-                    res.status(400).json({ success: false, message: 'Propriétaire introuvable ou rôle incorrect' });
+                    res.status(400).json({ success: false, message: 'owner not found or incorrect role' });
                     return;
                 }
             }
 
             const updated = await Gym.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
             if (!updated) {
-                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                res.status(404).json({ success: false, message: 'gym not found' });
                 return;
             }
 
-            res.status(200).json({ success: true, message: 'Salle mise à jour', data: updated });
+            res.status(200).json({ success: true, message: 'gym updated', data: updated });
         } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de la mise à jour', error: (error as Error).message });
+            res.status(400).json({ success: false, message: 'error while updating the gym', error: (error as Error).message });
         }
     }
 
@@ -117,17 +117,17 @@ export class GymController {
         try {
             const { id } = req.params;
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ success: false, message: 'ID invalide' });
+                res.status(400).json({ success: false, message: 'invalid id' });
                 return;
             }
             const deleted = await Gym.findByIdAndDelete(id);
             if (!deleted) {
-                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                res.status(404).json({ success: false, message: 'gym not found' });
                 return;
             }
-            res.status(200).json({ success: true, message: 'Salle supprimée avec succès' });
+            res.status(200).json({ success: true, message: 'gym deleted ! all gooooood !' });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'Internal error', error: (error as Error).message });
         }
     }
 
@@ -142,7 +142,7 @@ export class GymController {
             } else if (userRole === 'gym_owner') {
                 gyms = await Gym.find({ ownerId: userId });
             } else {
-                res.status(403).json({ success: false, message: 'Accès non autorisé' });
+                res.status(403).json({ success: false, message: 'Access not authorized' });
                 return;
             }
 
@@ -153,9 +153,9 @@ export class GymController {
                 })
             );
 
-            res.status(200).json({ success: true, message: 'Salles avec détails récupérées', data: fullGyms });
+            res.status(200).json({ success: true, message: 'gyms with details fetched', data: fullGyms });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'Internal error', error: (error as Error).message });
         }
     }
 
@@ -167,30 +167,29 @@ export class GymController {
             const userId = req.user?._id;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ success: false, message: 'ID invalide' });
+                res.status(400).json({ success: false, message: 'invalid ID' });
                 return;
             }
 
             const gym = await Gym.findById(id);
             if (!gym) {
-                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                res.status(404).json({ success: false, message: 'gym not found' });
                 return;
             }
 
             if (userRole === 'gym_owner') {
                 if (!userId || gym.ownerId.toString() !== userId.toString()) {
-                    res.status(403).json({ success: false, message: 'Accès non autorisé à cette salle' });
+                    res.status(403).json({ success: false, message: 'not authorized' });
                     return;
                 }
             }
 
             const rooms = await TrainingRoom.find({ gymId: id }).populate('assignedExerciseTypeId');
-            res.status(200).json({ success: true, message: 'Salle avec détails récupérée', data: { ...gym.toObject(), trainingRooms: rooms } });
+            res.status(200).json({ success: true, message: 'gym with details ok', data: { ...gym.toObject(), trainingRooms: rooms } });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'internal error', error: (error as Error).message });
         }
     }
-
 
     buildRoutes(): Router {
         const router = express.Router();

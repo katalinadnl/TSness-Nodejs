@@ -1,4 +1,4 @@
-import { BadgeService } from '../services/badgeService';
+import { BadgeService } from './badgeService';
 
 export type UserTheme = 'default' | 'debutant' | 'intermediaire' | 'avance' | 'champion';
 
@@ -9,9 +9,6 @@ export class ThemeService {
         this.badgeService = new BadgeService();
     }
 
-    /**
-     * Détermine le thème d'un utilisateur basé sur ses badges
-     */
     async getUserTheme(userId: string): Promise<UserTheme> {
         try {
             const userBadges = await this.badgeService.getUserBadges(userId);
@@ -34,14 +31,11 @@ export class ThemeService {
 
             return 'default';
         } catch (error) {
-            console.error('Erreur lors de la récupération du thème utilisateur:', error);
+            console.error('error in retrieving the user theme:', error);
             return 'default';
         }
     }
 
-    /**
-     * Récupère les informations de thème pour un utilisateur
-     */
     async getUserThemeInfo(userId: string) {
         const theme = await this.getUserTheme(userId);
         

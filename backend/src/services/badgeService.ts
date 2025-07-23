@@ -1,6 +1,6 @@
 import { Badge, IBadge } from '../models/Badge';
 import { Types } from 'mongoose';
-import {ChallengeService} from "./challengeService";
+import { ChallengeService } from "./challengeService";
 import { UserBadge, IUserBadge } from '../models/UserBadge';
 
 const challengeService = new ChallengeService();
@@ -19,12 +19,12 @@ export class BadgeService {
 
     async getBadgeById(id: string): Promise<IBadge> {
         if (!Types.ObjectId.isValid(id)) {
-            throw new Error('ID invalide');
+            throw new Error('invalid ID');
         }
 
         const badge = await Badge.findById(id);
         if (!badge) {
-            throw new Error('Badge non trouvé');
+            throw new Error('Badge not found');
         }
 
         return badge;
@@ -37,7 +37,7 @@ export class BadgeService {
 
     async updateBadge(id: string, data: any): Promise<IBadge> {
         if (!Types.ObjectId.isValid(id)) {
-            throw new Error('ID invalide');
+            throw new Error('Invalid ID');
         }
 
         const badge = await Badge.findByIdAndUpdate(id, data, {
@@ -46,7 +46,7 @@ export class BadgeService {
         });
 
         if (!badge) {
-            throw new Error('Badge non trouvé');
+            throw new Error('Badge not found');
         }
 
         return badge;
@@ -54,25 +54,22 @@ export class BadgeService {
 
     async deleteBadge(id: string): Promise<void> {
         if (!Types.ObjectId.isValid(id)) {
-            throw new Error('ID invalide');
+            throw new Error('Invalid ID');
         }
 
         const badge = await Badge.findByIdAndDelete(id);
         if (!badge) {
-            throw new Error('Badge non trouvé');
+            throw new Error('Badge not found');
         }
     }
 
-    /**
-     * Évalue si un utilisateur mérite un badge selon sa règle
-     */
     private evaluateRule(rule: string, userStats: UserStats): boolean {
         try {
             const ruleRegex = /(\w+)\s*(>=|<=|>|<|==)\s*(\d+)/;
             const match = rule.match(ruleRegex);
 
             if (!match) {
-                console.warn(`Règle de badge invalide: ${rule}`);
+                console.warn(`Rule of the badge invalid: ${rule}`);
                 return false;
             }
 
@@ -81,7 +78,7 @@ export class BadgeService {
             const userValue = userStats[statName as keyof UserStats];
 
             if (userValue === undefined) {
-                console.warn(`Statistique utilisateur inconnue: ${statName}`);
+                console.warn(`User statistics unknown: ${statName}`);
                 return false;
             }
 
@@ -94,21 +91,15 @@ export class BadgeService {
                 default: return false;
             }
         } catch (error) {
-            console.error('Erreur lors de l\'évaluation de la règle:', error);
+            console.error('Error in evaluating the rule:', error);
             return false;
         }
     }
 
-    /**
-     * Récupère les statistiques d'un utilisateur
-     */
     private async getUserStats(userId: string): Promise<UserStats> {
         return await challengeService.getUserStats(userId);
     }
 
-    /**
-     * Évalue et attribue automatiquement les badges pour un utilisateur
-     */
     async evaluateAndAwardBadges(userId: string): Promise<IUserBadge[]> {
         try {
             const allBadges = await Badge.find({}).lean();
@@ -136,10 +127,10 @@ export class BadgeService {
                         await newUserBadge.save();
                         const populatedBadge = await newUserBadge.populate('badgeId');
                         newBadges.push(populatedBadge);
-                        console.log(`Badge "${badge.name}" attribué à l'utilisateur ${userId}`);
+                        console.log(`Badge "${badge.name}" given to the userId ${userId}`);
                     } catch (saveError: any) {
                         if (saveError.code !== 11000) {
-                            console.error('Erreur lors de l\'attribution du badge:', saveError);
+                            console.error('Error in attribution of the badge:', saveError);
                         }
                     }
                 }
@@ -147,14 +138,10 @@ export class BadgeService {
 
             return newBadges;
         } catch (error) {
-            console.error('Erreur lors de l\'évaluation des badges:', error);
             throw error;
         }
     }
 
-    /**
-     * Récupère tous les badges d'un utilisateur
-     */
     async getUserBadges(userId: string): Promise<any[]> {
         try {
             const userBadges = await UserBadge.find({ userId })
@@ -172,14 +159,10 @@ export class BadgeService {
                 updatedAt: userBadge.updatedAt
             }));
         } catch (error) {
-            console.error('Erreur lors de la récupération des badges utilisateur:', error);
             throw error;
         }
     }
 
-    /**
-     * Récupère tous les badges disponibles avec leur statut pour un utilisateur
-     */
     async getAllBadgesWithStatus(userId: string): Promise<{ badge: IBadge; earned: boolean; earnedAt?: Date }[]> {
         try {
             await this.evaluateAndAwardBadges(userId);
@@ -197,14 +180,10 @@ export class BadgeService {
                 earnedAt: userBadgeMap.get(badge._id.toString())
             }));
         } catch (error) {
-            console.error('Erreur lors de la récupération des badges avec statut:', error);
             throw error;
         }
     }
 
-    /**
-     * Récupère le classement des utilisateurs par nombre de badges
-     */
     async getUsersLeaderboard(): Promise<{ user: any; badgeCount: number; badges: any[] }[]> {
         try {
             const { User } = await import('../models/User');
@@ -234,7 +213,7 @@ export class BadgeService {
 
             return leaderboard.sort((a, b) => b.badgeCount - a.badgeCount);
         } catch (error) {
-            console.error('Erreur lors de la récupération du classement:', error);
+            console.error('Error in leaderboard:', error);
             throw error;
         }
     }
