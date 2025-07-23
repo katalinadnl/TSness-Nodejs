@@ -5,6 +5,7 @@ export interface IBadge extends Document {
     description: string;
     iconUrl?: string;
     rule: string;
+    themeId?: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -32,12 +33,16 @@ const badgeSchema = new Schema<IBadge>({
         required: [true, 'Rule is required'],
         trim: true,
         maxlength: [1000, 'Rule cannot exceed 1000 characters']
+    },
+    themeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Theme',
+        required: false
     }
 }, {
     timestamps: true,
     versionKey: false
 });
 
-badgeSchema.index({ name: 1 });
 
 export const Badge = mongoose.model<IBadge>('Badge', badgeSchema);

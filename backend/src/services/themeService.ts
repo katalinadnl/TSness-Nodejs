@@ -1,6 +1,8 @@
 import { BadgeService } from '../services/badgeService';
+import { Theme, ITheme } from '../models/Theme';
+import { Types } from 'mongoose';
 
-export type UserTheme = 'default' | 'debutant' | 'intermediaire' | 'avance' | 'champion';
+export type UserTheme = 'default' | 'debutant' | 'intermediaire' | 'avance' | 'champion' | string;
 
 export class ThemeService {
     private badgeService: BadgeService;
@@ -9,29 +11,44 @@ export class ThemeService {
         this.badgeService = new BadgeService();
     }
 
-    /**
-     * Détermine le thème d'un utilisateur basé sur ses badges
-     */
     async getUserTheme(userId: string): Promise<UserTheme> {
         try {
             const userBadges = await this.badgeService.getUserBadges(userId);
+            console.log(`[DEBUG] Badges utilisateur ${userId}:`, userBadges.map(ub => ({
+                badgeName: ub.badge?.name,
+                themeId: ub.badge?.themeId
+            })));
             
             if (userBadges.length === 0) {
+                console.log(`[DEBUG] Aucun badge pour l'utilisateur ${userId}, retour au thème par défaut`);
                 return 'default';
             }
 
-            const badgeNames = userBadges.map(userBadge => userBadge.badge?.name?.toLowerCase());
-            
-            if (badgeNames.includes('champion')) {
-                return 'champion';
-            } else if (badgeNames.includes('avancé')) {
-                return 'avance';
-            } else if (badgeNames.includes('intermédiaire')) {
-                return 'intermediaire';
-            } else if (badgeNames.includes('débutant')) {
-                return 'debutant';
+            const associatedThemes = [];
+            for (const userBadge of userBadges) {
+                if (userBadge.badge?.themeId) {
+                    try {
+                        const theme = await this.getThemeById(userBadge.badge.themeId.toString());
+                        if (theme && theme.isActive === true) {
+                            associatedThemes.push(theme);
+                        } else if (theme && theme.isActive === false) {
+                            console.log(`Thème ${theme.name} (${theme.slug}) désactivé pour le badge ${userBadge.badge.name}, passage au thème par défaut`);
+                        }
+                    } catch (err) {
+                        console.warn(`Thème ${userBadge.badge.themeId} non trouvé pour le badge ${userBadge.badge.name}`);
+                    }
+                }
             }
 
+            if (associatedThemes.length > 0) {
+                const latestTheme = associatedThemes.sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                )[0];
+                
+                return latestTheme.slug as UserTheme;
+            }
+
+            console.log(`[DEBUG] Aucun thème personnalisé actif, retour au thème par défaut`);
             return 'default';
         } catch (error) {
             console.error('Erreur lors de la récupération du thème utilisateur:', error);
@@ -39,11 +56,26 @@ export class ThemeService {
         }
     }
 
-    /**
-     * Récupère les informations de thème pour un utilisateur
-     */
     async getUserThemeInfo(userId: string) {
-        const theme = await this.getUserTheme(userId);
+        const themeIdentifier = await this.getUserTheme(userId);
+        
+        const predefinedThemes = ['default', 'debutant', 'intermediaire', 'avance', 'champion'];
+        
+        if (!predefinedThemes.includes(themeIdentifier)) {
+            try {
+                const customTheme = await Theme.findOne({ slug: themeIdentifier, isActive: true });
+                if (customTheme) {
+                    return {
+                        theme: themeIdentifier,
+                        name: customTheme.name,
+                        description: customTheme.description,
+                        colors: customTheme.colors
+                    };
+                }
+            } catch (error) {
+                console.error('Erreur lors de la récupération du thème personnalisé:', error);
+            }
+        }
         
         const themeInfos = {
             default: {
@@ -114,8 +146,115 @@ export class ThemeService {
         };
 
         return {
-            theme,
-            ...themeInfos[theme]
+            theme: themeIdentifier,
+            ...themeInfos[themeIdentifier as keyof typeof themeInfos] || themeInfos.default
         };
+    }
+
+    async getAllThemes(): Promise<ITheme[]> {
+        return await Theme.find().sort({ createdAt: -1 });
+    }
+
+    async createTheme(data: any): Promise<ITheme> {
+        const slug = data.name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        const themeData = {
+            ...data,
+            slug: slug
+        };
+
+        const theme = new Theme(themeData);
+        return await theme.save();
+    }
+
+    async getThemeById(id: string): Promise<ITheme> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new Error('ID invalide');
+        }
+
+        const theme = await Theme.findById(id);
+        if (!theme) {
+            throw new Error('Thème non trouvé');
+        }
+
+        return theme;
+    }
+
+    async updateTheme(id: string, data: any): Promise<ITheme> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new Error('ID invalide');
+        }
+
+        if (data.name) {
+            data.slug = data.name
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+
+        const theme = await Theme.findByIdAndUpdate(id, data, { new: true });
+        if (!theme) {
+            throw new Error('Thème non trouvé');
+        }
+
+        return theme;
+    }
+
+    async deleteTheme(id: string): Promise<void> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new Error('ID invalide');
+        }
+
+        const theme = await Theme.findByIdAndDelete(id);
+        if (!theme) {
+            throw new Error('Thème non trouvé');
+        }
+    }
+
+    async activateTheme(id: string): Promise<ITheme> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new Error('ID invalide');
+        }
+
+        const theme = await Theme.findByIdAndUpdate(
+            id, 
+            { isActive: true }, 
+            { new: true }
+        );
+        
+        if (!theme) {
+            throw new Error('Thème non trouvé');
+        }
+
+        return theme;
+    }
+
+    async deactivateTheme(id: string): Promise<ITheme> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new Error('ID invalide');
+        }
+
+        const theme = await Theme.findByIdAndUpdate(
+            id, 
+            { isActive: false }, 
+            { new: true }
+        );
+        
+        if (!theme) {
+            throw new Error('Thème non trouvé');
+        }
+
+        return theme;
     }
 }

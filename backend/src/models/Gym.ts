@@ -57,7 +57,6 @@ const GymSchema = new Schema<IGym>(
     }
 );
 
-GymSchema.index({ name: 1 });
 GymSchema.index({ isApproved: 1 });
 
 export const Gym = mongoose.model<IGym>('Gym', GymSchema);
