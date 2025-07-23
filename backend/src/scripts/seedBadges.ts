@@ -11,7 +11,7 @@ export const seedBadges = async () => {
     await Badge.deleteMany({});
 
     const themeDebutant = await Theme.findOne({ slug: 'theme-debutant' });
-    const themeIntermediaire = await Theme.findOne({ slug: 'theme-intermediaire' });  
+    const themeIntermediaire = await Theme.findOne({ slug: 'theme-intermediaire' });
     const themeAvance = await Theme.findOne({ slug: 'theme-avance' });
     const themeChampion = await Theme.findOne({ slug: 'theme-champion' });
 

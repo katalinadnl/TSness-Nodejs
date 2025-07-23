@@ -1,13 +1,13 @@
-import dotenv from 'dotenv';
-import { connectDB } from '../config/db';
-import { Theme } from '../models/Theme';
+import dotenv from "dotenv";
+import { connectDB } from "../config/db";
+import { Theme } from "../models/Theme";
 
 dotenv.config();
 
 export const seedThemes = async () => {
-  try {
-    await connectDB();
-    await Theme.deleteMany({});
+	try {
+		await connectDB();
+		await Theme.deleteMany({});
 
     const themes = [
       {
@@ -92,13 +92,13 @@ export const seedThemes = async () => {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '');
 
-      const theme = new Theme({
-        ...themeData,
-        slug: slug
-      });
-      
-      await theme.save();
-    }
+			const theme = new Theme({
+				...themeData,
+				slug: slug,
+			});
+
+			await theme.save();
+		}
 
     console.log('Thèmes créés avec succès!');
     console.log(`${themes.length} thèmes ajoutés`);
