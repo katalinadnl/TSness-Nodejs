@@ -29,6 +29,9 @@ dotenv.config();
         console.log('\n--- Seeding exercises and rooms ---');
         await seedExercisesAndRooms();
 
+        console.log('\n--- Seeding themes ---');
+        await seedThemes();
+
         console.log('\n--- Seeding badges ---');
         await seedBadges();
 
@@ -37,9 +40,6 @@ dotenv.config();
 
         console.log('\n--- Seeding participations and sessions ---');
         await seedParticipations();
-
-        console.log('\n--- Seeding themes ---');
-        await seedThemes();
 
         console.log('\n✅ All seeding completed successfully!');
     } catch (error) {

@@ -11,8 +11,8 @@ export const seedThemes = async () => {
 
     const themes = [
       {
-        name: 'Thème Sombre',
-        description: 'Un thème sombre et élégant pour une expérience moderne',
+        name: 'Thème Champion',
+        description: 'Un thème couleur violet pour les champions',
         colors: {
           primary: '#6366f1',
           secondary: '#8b5cf6',
@@ -25,8 +25,8 @@ export const seedThemes = async () => {
         isActive: true
       },
       {
-        name: 'Thème Nature',
-        description: 'Des couleurs vertes inspirées de la nature',
+        name: 'Thème Intermédiaire',
+        description: 'Un thème couleur vert pour les utilisateurs intermédiaires',
         colors: {
           primary: '#22c55e',
           secondary: '#16a34a',
@@ -39,8 +39,8 @@ export const seedThemes = async () => {
         isActive: true
       },
       {
-        name: 'Thème Coucher de Soleil',
-        description: 'Des tons chauds orange et rouge',
+        name: 'Thème Avancé',
+        description: 'Un thème couleur orange vif pour les experts',
         colors: {
           primary: '#f97316',
           secondary: '#ea580c',
@@ -53,8 +53,8 @@ export const seedThemes = async () => {
         isActive: false
       },
       {
-        name: 'Thème Océan',
-        description: 'Des bleus profonds comme l\'océan',
+        name: 'Thème Débutant',
+        description: 'Thème bleu pour les nouveaux aventuriers',
         colors: {
           primary: '#0ea5e9',
           secondary: '#0284c7',
@@ -65,11 +65,24 @@ export const seedThemes = async () => {
           textMuted: '#0284c7'
         },
         isActive: true
+      },
+      {
+        name: 'Thème Sportif Extreme',
+        description: 'Thème pour les Super Sayens',
+        colors: {
+          primary: '#1fc0d0',
+          secondary: '#ff1b4c',
+          accent: '#fcf1c3',
+          background: '#000000',
+          backgroundSoft: '#1a1a1a',
+          text: '#ffffff',
+          textMuted: '#cccccc'
+        },
+        isActive: true
       }
     ];
 
     for (const themeData of themes) {
-      // Générer le slug
       const slug = themeData.name
         .toLowerCase()
         .normalize("NFD")
@@ -90,15 +103,19 @@ export const seedThemes = async () => {
     console.log('Thèmes créés avec succès!');
     console.log(`${themes.length} thèmes ajoutés`);
     
-    process.exit(0);
   } catch (error) {
     console.error('Erreur lors de la création des thèmes:', error);
-    process.exit(1);
+    throw error;
   }
 };
 
 if (require.main === module) {
-  seedThemes();
+  seedThemes()
+    .then(() => process.exit(0))
+    .catch(error => {
+      console.error('Erreur:', error);
+      process.exit(1);
+    });
 }
 
 export default seedThemes;
