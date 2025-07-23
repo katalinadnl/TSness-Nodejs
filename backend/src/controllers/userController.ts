@@ -19,10 +19,10 @@ export class UserController {
                 role: req.query.role as string,
                 isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
                 search: req.query.search as string,
-                requestingRole: req.user?.role
             };
 
-            const result = await this.userService.getAllUsers(page, limit, filters);
+            const requestingRole = req.user?.role || UserRole.CLIENT;
+            const result = await this.userService.getAllUsers(page, limit, requestingRole, filters);
 
             res.status(200).json({
                 success: true,
@@ -42,7 +42,8 @@ export class UserController {
     async getUserById(req: Request, res: Response): Promise<void> {
         try {
             const {id} = req.params;
-            const user = await this.userService.getUserById(id);
+            const requestingRole = req.user?.role || UserRole.CLIENT;
+            const user = await this.userService.getUserById(id, requestingRole);
 
             res.status(200).json({
                 success: true,
@@ -264,8 +265,8 @@ export class UserController {
 
         router.get('/stats', requireRole([UserRole.SUPER_ADMIN]), this.getUserStats.bind(this));
         router.delete('/:id/permanent', requireRole([UserRole.SUPER_ADMIN]), this.permanentDeleteUser.bind(this));
-        router.get('/', requireRole([UserRole.SUPER_ADMIN]), this.getAllUsers.bind(this));
-        router.get('/:id', requireRole([UserRole.SUPER_ADMIN]), this.getUserById.bind(this));
+        router.get('/', this.getAllUsers.bind(this));
+        router.get('/:id', this.getUserById.bind(this));
         router.put('/:id/deactivate', requireRole([UserRole.SUPER_ADMIN]), this.deactivateUser.bind(this));
         router.put('/:id/activate', requireRole([UserRole.SUPER_ADMIN]), this.activateUser.bind(this));
         router.delete('/:id', requireRole([UserRole.SUPER_ADMIN]), this.deleteUser.bind(this));

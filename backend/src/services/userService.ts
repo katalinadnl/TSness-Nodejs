@@ -5,33 +5,37 @@ import {UserRole} from "../models/common/enums";
 
 export class UserService {
 
-    async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
+    async getAllUsers(
+        page = 1,
+        limit = 10,
+        requestingRole: UserRole,
+        filters?: any
+    ) {
         const skip = (page - 1) * limit;
-
         const query: any = {};
 
-        if (filters?.requestingRole !== UserRole.SUPER_ADMIN) {
+        if (requestingRole === UserRole.SUPER_ADMIN && filters?.role) {
+            query.role = filters.role;
+        } else if (requestingRole !== UserRole.SUPER_ADMIN) {
             query.role = UserRole.CLIENT;
         }
 
-        if (filters?.role) {
-            query.role = filters.role;
-        }
-        if (filters?.isActive !== undefined) {
+        if (requestingRole === UserRole.SUPER_ADMIN && filters?.isActive !== undefined) {
             query.isActive = filters.isActive;
         }
+
         if (filters?.search) {
             query.$or = [
-                {username: {$regex: filters.search, $options: 'i'}},
-                {email: {$regex: filters.search, $options: 'i'}},
-                {firstName: {$regex: filters.search, $options: 'i'}},
-                {lastName: {$regex: filters.search, $options: 'i'}}
+                { username: { $regex: filters.search, $options: 'i' } },
+                { email: { $regex: filters.search, $options: 'i' } },
+                { firstName: { $regex: filters.search, $options: 'i' } },
+                { lastName: { $regex: filters.search, $options: 'i' } }
             ];
         }
 
         const users = await User.find(query)
             .select('-password')
-            .sort({createdAt: -1})
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
@@ -49,7 +53,7 @@ export class UserService {
         };
     }
 
-    async getUserById(userId: string) {
+    async getUserById(userId: string, requestingRole: UserRole) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
         }
@@ -59,6 +63,10 @@ export class UserService {
 
         if (!user) {
             throw new Error('User not found');
+        }
+
+        if (requestingRole !== UserRole.SUPER_ADMIN && user.role !== UserRole.CLIENT) {
+            throw new Error('Access denied');
         }
 
         return user;
