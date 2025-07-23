@@ -13,6 +13,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: dev
     container_name: backend
     restart: always
     ports:
@@ -24,18 +25,21 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-    command: npm run dev
 
   frontend:
     build:
       context: ./frontend
+      target: dev
     container_name: frontend
     ports:
-      - "3000:80"
+      - "5173:5173"
     depends_on:
       - backend
     volumes:
-      - ./frontend/dist:/usr/share/nginx/html
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_BACKEND_URL=http://backend:5000
 
 volumes:
   mongo_data:

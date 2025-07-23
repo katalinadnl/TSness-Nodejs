@@ -1,251 +1,307 @@
-import {User} from '../models/User';
-import mongoose, {Error} from 'mongoose';
+import { User, type IUser } from "../models/User";
+import mongoose, { Error } from "mongoose";
 import bcrypt from "bcryptjs";
+import { UserRole } from "../models/common/enums";
 
 export class UserService {
+	async getAllUsers(
+		page: number = 1,
+		limit: number = 10,
+		requestingRole: UserRole,
+		filters?: any,
+	) {
+		const skip = (page - 1) * limit;
+		const query: any = {};
 
-// Récupérer tous les utilisateurs (avec pagination)
-    async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
-        const skip = (page - 1) * limit;
+		if (requestingRole === UserRole.SUPER_ADMIN) {
+			if (filters?.role) {
+				query.role = filters.role;
+			}
+		} else {
+			query.role = UserRole.CLIENT;
+		}
 
-        const query: any = {};
+		if (
+			requestingRole === UserRole.SUPER_ADMIN &&
+			filters?.isActive !== undefined
+		) {
+			query.isActive = filters.isActive;
+		}
 
-        // Filtres optionnels
-        if (filters?.role) {
-            query.role = filters.role;
-        }
-        if (filters?.isActive !== undefined) {
-            query.isActive = filters.isActive;
-        }
-        if (filters?.search) {
-            query.$or = [
-                {username: {$regex: filters.search, $options: 'i'}},
-                {email: {$regex: filters.search, $options: 'i'}},
-                {firstName: {$regex: filters.search, $options: 'i'}},
-                {lastName: {$regex: filters.search, $options: 'i'}}
-            ];
-        }
+		if (filters?.search) {
+			query.$or = [
+				{ username: { $regex: filters.search, $options: "i" } },
+				{ email: { $regex: filters.search, $options: "i" } },
+				{ firstName: { $regex: filters.search, $options: "i" } },
+				{ lastName: { $regex: filters.search, $options: "i" } },
+			];
+		}
 
-        const users = await User.find(query)
-            .select('-password')
-            .populate('gymId', 'name address')
-            .sort({createdAt: -1})
-            .skip(skip)
-            .limit(limit);
+		const users = await User.find(query)
+			.select("-password")
+			.sort({ createdAt: -1 })
+			.skip(skip)
+			.limit(limit);
 
-        const total = await User.countDocuments(query);
+		const total = await User.countDocuments(query);
 
-        return {
-            users,
-            pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
-                totalUsers: total,
-                hasNext: page < Math.ceil(total / limit),
-                hasPrev: page > 1
-            }
-        };
-    }
+		return {
+			users,
+			pagination: {
+				currentPage: page,
+				totalPages: Math.ceil(total / limit),
+				totalUsers: total,
+				hasNext: page < Math.ceil(total / limit),
+				hasPrev: page > 1,
+			},
+		};
+	}
 
-    // Récupérer un utilisateur par ID
-    async getUserById(userId: string) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
-        }
+	async getUserById(userId: string, requestingRole: UserRole) {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
 
-        const user = await User.findById(userId)
-            .select('-password')
-            .populate('gymId', 'name address');
+		const user = await User.findById(userId).select("-password");
 
-        if (!user) {
-            throw new Error('Utilisateur non trouvé');
-        }
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-        return user;
-    }
+		if (
+			requestingRole !== UserRole.SUPER_ADMIN &&
+			user.role !== UserRole.CLIENT
+		) {
+			throw new Error("Access denied");
+		}
 
-    // Désactiver un utilisateur
-    async deactivateUser(userId: string, adminId: string) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
-        }
+		return user;
+	}
 
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('Utilisateur non trouvé');
-        }
+	async deactivateUser(userId: string, adminId: string) {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
 
-        if (user.role === 'super_admin') {
-            throw new Error('Impossible de désactiver un super administrateur');
-        }
+		const user = await User.findById(userId);
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-        if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous désactiver vous-même');
-        }
+		if (user.role === UserRole.SUPER_ADMIN) {
+			throw new Error("Is not possible to deactivate a super admin");
+		}
 
-        user.isActive = false;
-        await user.save();
+		if (user._id.toString() === adminId) {
+			throw new Error("You cannot deactivate yourself");
+		}
 
-        return {
-            message: 'Utilisateur désactivé avec succès',
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                isActive: user.isActive
-            }
-        };
-    }
+		user.isActive = false;
+		await user.save();
 
-    // Réactiver un utilisateur
-    async activateUser(userId: string) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
-        }
+		return {
+			message: "User deactivated successfully",
+			user: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				isActive: user.isActive,
+			},
+		};
+	}
 
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('Utilisateur non trouvé');
-        }
+	async activateUser(userId: string) {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
 
-        user.isActive = true;
-        await user.save();
+		const user = await User.findById(userId);
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-        return {
-            message: 'Utilisateur réactivé avec succès',
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                isActive: user.isActive
-            }
-        };
-    }
+		user.isActive = true;
+		await user.save();
 
-    // Supprimer un utilisateur (soft delete)
-    async deleteUser(userId: string, adminId: string) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
-        }
+		return {
+			message: "User activated successfully",
+			user: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				isActive: user.isActive,
+			},
+		};
+	}
 
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('Utilisateur non trouvé');
-        }
+	async deleteUser(userId: string, adminId: string) {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
 
-        if (user.role === 'super_admin') {
-            throw new Error('Impossible de supprimer un super administrateur');
-        }
+		const user = await User.findById(userId);
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-        if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous supprimer vous-même');
-        }
+		if (user.role === UserRole.SUPER_ADMIN) {
+			throw new Error("Is not possible to delete a super admin");
+		}
 
-        user.isDeleted = true;
-        user.isActive = false;
-        user.deletedAt = new Date();
-        await user.save();
+		if (user._id.toString() === adminId) {
+			throw new Error("Is not possible to delete yourself");
+		}
 
-        return {
-            message: 'Utilisateur supprimé avec succès',
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                isDeleted: user.isDeleted,
-                deletedAt: user.deletedAt
-            }
-        };
-    }
+		user.isDeleted = true;
+		user.isActive = false;
+		user.deletedAt = new Date();
+		await user.save();
 
-    // Supprimer définitivement un utilisateur (hard delete)
-    async permanentDeleteUser(userId: string, adminId: string) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            throw new Error('ID utilisateur invalide');
-        }
+		return {
+			message: "User deleted successfully",
+			user: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				isDeleted: user.isDeleted,
+				deletedAt: user.deletedAt,
+			},
+		};
+	}
 
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('Utilisateur non trouvé');
-        }
+	async permanentDeleteUser(userId: string, adminId: string) {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
 
-        if (user.role === 'super_admin') {
-            throw new Error('Impossible de supprimer définitivement un super administrateur');
-        }
+		const user = await User.findById(userId);
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-        if (user._id.toString() === adminId) {
-            throw new Error('Vous ne pouvez pas vous supprimer vous-même');
-        }
+		if (user.role === UserRole.SUPER_ADMIN) {
+			throw new Error("Is not possible to permanently delete a super admin");
+		}
 
-        await User.findByIdAndDelete(userId);
+		if (user._id.toString() === adminId) {
+			throw new Error("You cannot permanently delete yourself");
+		}
 
-        return {
-            message: 'Utilisateur supprimé définitivement',
-            userId: userId
-        };
-    }
+		await User.findByIdAndDelete(userId);
 
-    // Obtenir les statistiques des utilisateurs
-    async getUserStats() {
-        const stats = await User.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    totalUsers: {$sum: 1},
-                    activeUsers: {
-                        $sum: {$cond: [{$eq: ['$isActive', true]}, 1, 0]}
-                    },
-                    inactiveUsers: {
-                        $sum: {$cond: [{$eq: ['$isActive', false]}, 1, 0]}
-                    },
-                    clients: {
-                        $sum: {$cond: [{$eq: ['$role', 'client']}, 1, 0]}
-                    },
-                    gymOwners: {
-                        $sum: {$cond: [{$eq: ['$role', 'gym_owner']}, 1, 0]}
-                    },
-                    superAdmins: {
-                        $sum: {$cond: [{$eq: ['$role', 'super_admin']}, 1, 0]}
-                    }
-                }
-            }
-        ]);
+		return {
+			message: "User permanently deleted",
+			userId: userId,
+		};
+	}
 
-        return stats[0] || {
-            totalUsers: 0,
-            activeUsers: 0,
-            inactiveUsers: 0,
-            clients: 0,
-            gymOwners: 0,
-            superAdmins: 0
-        };
-    }
+	async getUserStats() {
+		const stats = await User.aggregate([
+			{
+				$group: {
+					_id: null,
+					totalUsers: { $sum: 1 },
+					activeUsers: {
+						$sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
+					},
+					inactiveUsers: {
+						$sum: { $cond: [{ $eq: ["$isActive", false] }, 1, 0] },
+					},
+					clients: {
+						$sum: { $cond: [{ $eq: ["$role", UserRole.CLIENT] }, 1, 0] },
+					},
+					gymOwners: {
+						$sum: { $cond: [{ $eq: ["$role", UserRole.GYM_OWNER] }, 1, 0] },
+					},
+					superAdmins: {
+						$sum: { $cond: [{ $eq: ["$role", UserRole.SUPER_ADMIN] }, 1, 0] },
+					},
+				},
+			},
+		]);
 
-    async createUser(username: string, email: string, password: string, firstname: string, lastname: string) {
-        const existingUser = await User.findOne({
-            $or: [
-                {email: email},
-                {username: username}
-            ]
-        });
-        if (existingUser) {
-            throw new Error('Un utilisateur avec cet email ou ce nom d\'utilisateur existe déjà');
-        }
+		return (
+			stats[0] || {
+				totalUsers: 0,
+				activeUsers: 0,
+				inactiveUsers: 0,
+				clients: 0,
+				gymOwners: 0,
+				superAdmins: 0,
+			}
+		);
+	}
 
-        const hashedPassword = bcrypt.hashSync(password, 10);
+	async createClient(data: any): Promise<IUser> {
+		return this.createUserWithRole(data, UserRole.CLIENT);
+	}
 
-        const user = new User({
-            username: username,
-            email: email,
-            password: hashedPassword,
-            firstName: firstname,
-            lastName: lastname,
-            role: 'client',
-            isActive: true,
-            isDeleted: false
-        });
+	async createGymOwner(data: any): Promise<IUser> {
+		return this.createUserWithRole(data, UserRole.GYM_OWNER);
+	}
 
-        return await user.save();
-    }
+	async createSuperAdmin(data: any): Promise<IUser> {
+		return this.createUserWithRole(data, UserRole.SUPER_ADMIN);
+	}
 
+	private async createUserWithRole(data: any, role: string): Promise<IUser> {
+		const existingUser = await User.findOne({
+			$or: [{ email: data.email }, { username: data.username }],
+		});
+		if (existingUser) {
+			throw new Error("User with this email or username already exists");
+		}
+
+		const hashedPassword = bcrypt.hashSync(data.password, 10);
+		const user = new User({
+			...data,
+			password: hashedPassword,
+			role,
+			isActive: true,
+			isDeleted: false,
+		});
+
+		return user.save();
+	}
+
+	async updateUserByAdmin(
+		userId: string,
+		updates: Partial<IUser>,
+		adminId: string,
+	): Promise<IUser> {
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			throw new Error("invalid user ID");
+		}
+
+		if (userId === adminId) {
+			throw new Error("You cannot update your own profile from here");
+		}
+
+		const user = await User.findById(userId);
+		if (!user) {
+			throw new Error("user not found");
+		}
+
+		const allowedFields = [
+			"username",
+			"email",
+			"firstName",
+			"lastName",
+			"role",
+			"isActive",
+		];
+
+		for (const key of allowedFields) {
+			if ((updates as any)[key] !== undefined) {
+				(user as any)[key] = (updates as any)[key];
+			}
+		}
+
+		if (updates.password) {
+			user.password = bcrypt.hashSync(updates.password, 10);
+		}
+
+		await user.save();
+		return user;
+	}
 }

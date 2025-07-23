@@ -1,70 +1,67 @@
-import bcrypt from 'bcryptjs';
-import { User } from '../models/User';
-import { Gym } from '../models/Gym';
+import bcrypt from "bcryptjs";
+import { User } from "../models/User";
+import { Gym } from "../models/Gym";
+import { UserRole } from "../models/common/enums";
 
 export const seedUsers = async () => {
-    console.log('Seeding users...');
+	await User.deleteMany({});
 
-    await User.deleteMany({});
+	const hashedSuperAdminPassword = await bcrypt.hash("superadmin123", 10);
+	const hashedAdminPassword = await bcrypt.hash("admin123", 10);
+	const hashedGymOwnerPassword = await bcrypt.hash("gymowner123", 10);
+	const hashedClientPassword = await bcrypt.hash("client123", 10);
 
-    const hashedSuperAdminPassword = await bcrypt.hash('superadmin123', 10);
-    const hashedGymOwnerPassword = await bcrypt.hash('gymowner123', 10);
-    const hashedClientPassword = await bcrypt.hash('client123', 10);
+	const superAdmin = {
+		username: "superadmin",
+		email: "superadmin@example.com",
+		password: hashedSuperAdminPassword,
+		firstName: "Super",
+		lastName: "Admin",
+		role: UserRole.SUPER_ADMIN,
+		isActive: true,
+	};
 
-    const superAdmin = await User.create({
-        username: 'superadmin',
-        email: 'superadmin@example.com',
-        password: hashedSuperAdminPassword,
-        firstName: 'Super',
-        lastName: 'Admin',
-        role: 'super_admin',
-        isActive: true
-    });
+	await User.insertMany(superAdmin);
 
-    const gymOwner = await User.create({
-        username: 'gymowner',
-        email: 'gymowner@example.com',
-        password: hashedGymOwnerPassword,
-        firstName: 'Gym',
-        lastName: 'Owner',
-        role: 'gym_owner',
-        isActive: true
-    });
+	const admins = [];
+	for (let i = 1; i <= 3; i++) {
+		admins.push({
+			username: `admin${i}`,
+			email: `admin${i}@example.com`,
+			password: hashedAdminPassword,
+			firstName: `Admin${i}`,
+			lastName: `Super${i}`,
+			role: UserRole.SUPER_ADMIN,
+			isActive: true,
+		});
+	}
+	await User.insertMany(admins);
 
-    const client = await User.create({
-        username: 'clientuser',
-        email: 'client@example.com',
-        password: hashedClientPassword,
-        firstName: 'Client',
-        lastName: 'User',
-        role: 'client',
-        isActive: true
-    });
+	const gymowners = [];
+	for (let i = 1; i <= 3; i++) {
+		gymowners.push({
+			username: `gymowner${i}`,
+			email: `gymowner${i}@example.com`,
+			password: hashedGymOwnerPassword,
+			firstName: `GymOwner${i}`,
+			lastName: `Pro${i}`,
+			role: UserRole.GYM_OWNER,
+			isActive: true,
+		});
+	}
+	await User.insertMany(gymowners);
 
-    const client2 = await User.create({
-        username: 'clientuser2',
-        email: 'client2@example.com',
-        password: hashedClientPassword,
-        firstName: 'Client2',
-        lastName: 'User2',
-        role: 'client',
-        isActive: true
-    });
-
-    const client3 = await User.create({
-        username: 'marie_durant',
-        email: 'marie@example.com',
-        password: hashedClientPassword,
-        firstName: 'Marie',
-        lastName: 'Durant',
-        role: 'client',
-        isActive: true
-    });
-
-    console.log('Users seeded:');
-    console.log(`   - SuperAdmin: ${superAdmin.username} (${superAdmin.email})`);
-    console.log(`   - GymOwner: ${gymOwner.username} (${gymOwner.email})`);
-    console.log(`   - Client: ${client.username} (${client.email})`);
-    console.log(`   - Client2: ${client2.username} (${client2.email}) - Password: client123`);
-    console.log(`   - Client3: ${client3.username} (${client3.email}) - Password: client123`);
+	const clients = [];
+	for (let i = 1; i <= 15; i++) {
+		clients.push({
+			username: `client${i}`,
+			email: `client${i}@example.com`,
+			password: hashedClientPassword,
+			firstName: `Client${i}`,
+			lastName: `User${i}`,
+			role: UserRole.CLIENT,
+			isActive: true,
+		});
+	}
+	await User.insertMany(clients);
 };

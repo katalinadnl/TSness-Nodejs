@@ -13,6 +13,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: prod
     container_name: backend
     restart: always
     ports:
@@ -25,6 +26,7 @@ services:
   frontend:
     build:
       context: ./frontend
+      target: prod
     container_name: frontend
     ports:
       - "3000:80"

@@ -1,94 +1,105 @@
-import { Participation } from '../models/Participation';
-import { Challenge } from '../models/Challenge';
-import { User } from '../models/User';
-import { UserBadge } from '../models/UserBadge';
-import { Badge } from '../models/Badge';
+import { Participation } from "../models/Participation";
+import { Challenge } from "../models/Challenge";
+import { User } from "../models/User";
+import { UserBadge } from "../models/UserBadge";
+import { Badge } from "../models/Badge";
+import { UserRole } from "../models/common/enums";
 
 export const seedParticipations = async () => {
-    console.log('Seeding participations...');
+	console.log("Seeding participations...");
 
-    await Participation.deleteMany({});
-    await UserBadge.deleteMany({});
+	await Participation.deleteMany({});
+	const clients = await User.find({ role: UserRole.CLIENT });
+	const allChallenges = await Challenge.find({});
+	let totalParticipations = 0;
+	for (const client of clients) {
+		let completedCount = 0;
+		for (let i = 0; i < 5; i++) {
+			const challenge =
+				allChallenges[
+					(client._id.toString().charCodeAt(0) + i) % allChallenges.length
+				];
 
-    const client = await User.findOne({ email: 'client@example.com' });
-    const client2 = await User.findOne({ email: 'client2@example.com' });
+			let status = i % 2 === 0 ? "completed" : "accepted";
+			if (client.username === "client1" && completedCount < 3) {
+				status = "completed";
+				completedCount++;
+			}
+			const progress =
+				status === "completed" ? 100 : Math.floor(Math.random() * 80);
+			const caloriesBurned = 100 + Math.floor(Math.random() * 400);
+			const sessions = [
+				{
+					date: new Date(),
+					progress,
+					caloriesBurned,
+				},
+			];
+			const alreadyExists = await Participation.findOne({
+				userId: client._id,
+				challengeId: challenge._id,
+			});
+			if (!alreadyExists) {
+				await Participation.create({
+					userId: client._id,
+					challengeId: challenge._id,
+					status,
+					progress,
+					caloriesBurned,
+					startedAt: new Date(),
+					completedAt: status === "completed" ? new Date() : null,
+					sessions,
+				});
+				await Challenge.findByIdAndUpdate(challenge._id, {
+					$push: {
+						participants: {
+							userId: client._id,
+							status,
+							progress,
+							caloriesBurned,
+						},
+					},
+				});
+				totalParticipations++;
+			}
+		}
+	}
+	console.log(
+		`Seeded ${totalParticipations} participations pour ${clients.length} clients.`,
+	);
 
-    const allChallenges = await Challenge.find({});
+	const allBadges = await Badge.find();
 
-    if (!client || !client2 || allChallenges.length === 0) {
-        throw new Error('Clients or challenges not found. Make sure to seed users and challenges first.');
-    }
+	const assignBadges = async (user: any) => {
+		const completedCount = await Participation.countDocuments({
+			userId: user._id,
+			status: "completed",
+		});
+		for (const badge of allBadges) {
+			const condition = badge.rule.replace(
+				/completedChallenges/g,
+				completedCount.toString(),
+			);
+			const isEarned = eval(condition);
+			if (isEarned) {
+				const alreadyHas = await UserBadge.findOne({
+					userId: user._id,
+					badgeId: badge._id,
+				});
+				if (!alreadyHas) {
+					await UserBadge.create({
+						userId: user._id,
+						badgeId: badge._id,
+						earnedAt: new Date(),
+					});
+				}
+			}
+		}
+	};
 
-    await Challenge.updateMany({}, { $set: { participants: [] } });
+	for (const client of clients) {
+		await assignBadges(client);
+	}
 
-    const generateParticipation = async (user: any, challengeSubset: any[]) => {
-        for (const challenge of challengeSubset) {
-            const sessions = [
-                {
-                    date: new Date(),
-                    progress: 100,
-                    caloriesBurned: 200
-                }
-            ];
-
-            await Participation.create({
-                userId: user._id,
-                challengeId: challenge._id,
-                status: 'completed',
-                progress: 100,
-                caloriesBurned: 200,
-                startedAt: new Date(),
-                completedAt: new Date(),
-                sessions
-            });
-
-            await Challenge.findByIdAndUpdate(challenge._id, {
-                $push: {
-                    participants: {
-                        userId: user._id,
-                        status: 'completed',
-                        progress: 100,
-                        caloriesBurned: 200
-                    }
-                }
-            });
-        }
-    };
-
-    await generateParticipation(client, allChallenges.slice(0, 1));
-
-    await generateParticipation(client2, allChallenges.slice(0, 5));
-
-    const allBadges = await Badge.find();
-
-    const assignBadges = async (user: any) => {
-        const completedCount = await Participation.countDocuments({
-            userId: user._id,
-            status: 'completed'
-        });
-
-        for (const badge of allBadges) {
-            const condition = badge.rule.replace(/completedChallenges/g, completedCount.toString());
-            const isEarned = eval(condition);
-
-            if (isEarned) {
-                const alreadyHas = await UserBadge.findOne({
-                    userId: user._id,
-                    badgeId: badge._id
-                });
-                if (!alreadyHas) {
-                    await UserBadge.create({
-                        userId: user._id,
-                        badgeId: badge._id,
-                        earnedAt: new Date()
-                    });
-                }
-            }
-        }
-    };
-
-    await assignBadges(client);
-    await assignBadges(client2);
-
-    console.log('Participations et badges attribués dynamiquement');
+	console.log("Participations et badges attribués dynamiquement");
 };

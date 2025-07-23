@@ -1,250 +1,364 @@
-import express, {Request, Response, Router} from 'express';
-import {UserService} from '../services/userService';
-import {Error} from "mongoose";
-import {authenticateToken, requireSuperAdmin} from "../middleware/auth";
+import express, { type Request, type Response, Router } from "express";
+import type { UserService } from "../services/userService";
+import type { Error } from "mongoose";
+import { authenticateToken } from "../middleware/auth";
+import { requireRole } from "../middleware/requireRole";
+import { UserRole } from "../models/common/enums";
 
 export class UserController {
+	constructor(readonly userService: UserService) {
+		this.userService = userService;
+	}
 
-    constructor(readonly userService: UserService) {
-        this.userService = userService;
-    }
+	async getAllUsers(req: Request, res: Response): Promise<void> {
+		try {
+			const page = parseInt(req.query.page as string) || 1;
+			const limit = parseInt(req.query.limit as string) || 10;
+			const requestingRole = req.user?.role || UserRole.CLIENT;
 
-    async getAllUsers(req: Request, res: Response): Promise<void> {
-        try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const filters = {
-                role: req.query.role as string,
-                isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
-                search: req.query.search as string
-            };
+			const filters = {
+				role: req.query.role as string,
+				isActive: req.query.isActive
+					? req.query.isActive === "true"
+					: undefined,
+				search: req.query.search as string,
+			};
 
-            const result = await this.userService.getAllUsers(page, limit, filters);
+			const result = await this.userService.getAllUsers(
+				page,
+				limit,
+				requestingRole,
+				filters,
+			);
 
-            res.status(200).json({
-                success: true,
-                message: 'Utilisateurs récupérés avec succès',
-                data: result
-            });
-        } catch (error) {
-            console.error('Erreur lors de la récupération des utilisateurs:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erreur interne du serveur',
-                error: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: "user retrieved successfully",
+				data: result,
+			});
+		} catch (error) {
+			console.error("error while fetching the users:", error);
+			res.status(500).json({
+				success: false,
+				message: "internal error",
+				error: (error as Error).message,
+			});
+		}
+	}
 
-    async getUserById(req: Request, res: Response): Promise<void> {
-        try {
-            const {id} = req.params;
-            const user = await this.userService.getUserById(id);
+	async getUserById(req: Request, res: Response): Promise<void> {
+		try {
+			const { id } = req.params;
+			const requestingRole = req.user?.role || UserRole.CLIENT;
 
-            res.status(200).json({
-                success: true,
-                message: 'Utilisateur récupéré avec succès',
-                data: {user}
-            });
-        } catch (error) {
-            const statusCode = (error as Error).message.includes('invalide') ||
-            (error as Error).message.includes('non trouvé') ? 404 : 500;
+			const user = await this.userService.getUserById(id, requestingRole);
 
-            res.status(statusCode).json({
-                success: false,
-                message: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: "user retrieved successfully",
+				data: { user },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: (error as Error).message.includes("Access denied")
+						? 403
+						: 500;
 
-    async deactivateUser(req: Request, res: Response): Promise<void> {
-        try {
-            const {id} = req.params;
-            const adminId = req.user?._id.toString();
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-            if (!adminId) {
-                res.status(401).json({
-                    success: false,
-                    message: 'Authentication requise'
-                });
-                return;
-            }
+	async deactivateUser(req: Request, res: Response): Promise<void> {
+		try {
+			const { id } = req.params;
+			const adminId = req.user?._id.toString();
 
-            const result = await this.userService.deactivateUser(id, adminId);
+			if (!adminId) {
+				res.status(401).json({
+					success: false,
+					message: "Auth required",
+				});
+				return;
+			}
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: {user: result.user}
-            });
-        } catch (error) {
-            const statusCode = (error as Error).message.includes('invalide') ||
-            (error as Error).message.includes('non trouvé') ? 404 :
-                (error as Error).message.includes('Impossible') ? 403 : 500;
+			const result = await this.userService.deactivateUser(id, adminId);
 
-            res.status(statusCode).json({
-                success: false,
-                message: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: result.message,
+				data: { user: result.user },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: (error as Error).message.includes("you cannot")
+						? 403
+						: 500;
 
-    async activateUser(req: Request, res: Response): Promise<void> {
-        try {
-            const {id} = req.params;
-            const result = await this.userService.activateUser(id);
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: {user: result.user}
-            });
-        } catch (error) {
-            const statusCode = (error as Error).message.includes('invalide') ||
-            (error as Error).message.includes('non trouvé') ? 404 : 500;
+	async activateUser(req: Request, res: Response): Promise<void> {
+		try {
+			const { id } = req.params;
+			const result = await this.userService.activateUser(id);
 
-            res.status(statusCode).json({
-                success: false,
-                message: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: result.message,
+				data: { user: result.user },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: 500;
 
-    async deleteUser(req: Request, res: Response): Promise<void> {
-        try {
-            const {id} = req.params;
-            const adminId = req.user?._id.toString();
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-            if (!adminId) {
-                res.status(401).json({
-                    success: false,
-                    message: 'Authentication requise'
-                });
-                return;
-            }
+	async deleteUser(req: Request, res: Response): Promise<void> {
+		try {
+			const { id } = req.params;
+			const adminId = req.user?._id.toString();
 
-            const result = await this.userService.deleteUser(id, adminId);
+			if (!adminId) {
+				res.status(401).json({
+					success: false,
+					message: "you must be authenticated",
+				});
+				return;
+			}
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: {user: result.user}
-            });
-        } catch (error) {
-            const statusCode = (error as Error).message.includes('invalide') ||
-            (error as Error).message.includes('non trouvé') ? 404 :
-                (error as Error).message.includes('Impossible') ? 403 : 500;
+			const result = await this.userService.deleteUser(id, adminId);
 
-            res.status(statusCode).json({
-                success: false,
-                message: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: result.message,
+				data: { user: result.user },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: (error as Error).message.includes("you cannot")
+						? 403
+						: 500;
 
-    async permanentDeleteUser(req: Request, res: Response): Promise<void> {
-        try {
-            const {id} = req.params;
-            const adminId = req.user?._id.toString();
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-            if (!adminId) {
-                res.status(401).json({
-                    success: false,
-                    message: 'Authentication requise'
-                });
-                return;
-            }
+	async permanentDeleteUser(req: Request, res: Response): Promise<void> {
+		try {
+			const { id } = req.params;
+			const adminId = req.user?._id.toString();
 
-            const result = await this.userService.permanentDeleteUser(id, adminId);
+			if (!adminId) {
+				res.status(401).json({
+					success: false,
+					message: "you must be authenticated",
+				});
+				return;
+			}
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: {userId: result.userId}
-            });
-        } catch (error) {
-            const statusCode = (error as Error).message.includes('invalide') ||
-            (error as Error).message.includes('non trouvé') ? 404 :
-                (error as Error).message.includes('Impossible') ? 403 : 500;
+			const result = await this.userService.permanentDeleteUser(id, adminId);
 
-            res.status(statusCode).json({
-                success: false,
-                message: (error as Error).message
-            });
-        }
-    }
+			res.status(200).json({
+				success: true,
+				message: result.message,
+				data: { userId: result.userId },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: (error as Error).message.includes("you cannot")
+						? 403
+						: 500;
 
-    async getUserStats(req: Request, res: Response): Promise<void> {
-        try {
-            const stats = await this.userService.getUserStats();
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-            res.status(200).json({
-                success: true,
-                message: 'Statistiques récupérées avec succès',
-                data: {stats}
-            });
-        } catch (error) {
-            console.error('Erreur lors de la récupération des statistiques:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erreur interne du serveur',
-                error: (error as Error).message
-            });
-        }
-    }
+	async getUserStats(req: Request, res: Response): Promise<void> {
+		try {
+			const stats = await this.userService.getUserStats();
 
-    async createUser(req: Request, res: Response): Promise<void> {
+			res.status(200).json({
+				success: true,
+				message: "statistics retrieved successfully",
+				data: { stats },
+			});
+		} catch (error) {
+			console.error("statistics not fetched:", error);
+			res.status(500).json({
+				success: false,
+				message: "internal error",
+				error: (error as Error).message,
+			});
+		}
+	}
 
-        const user = {
-            username: req.body.username,
-            email: req.body.email,
-            password: req.body.password,
-            firstname: req.body.firstname,
-            lastname: req.body.lastname,
-        };
-        console.log('Creating user with data:', user);
+	async createClient(req: Request, res: Response) {
+		try {
+			const user = await this.userService.createClient(req.body);
+			res
+				.status(201)
+				.json({ success: true, message: "Client created", data: { user } });
+		} catch (error) {
+			res
+				.status(400)
+				.json({ success: false, message: (error as Error).message });
+		}
+	}
 
-        const createdUser = await this.userService.createUser(
-            user.username,
-            user.email,
-            user.password,
-            user.firstname,
-            user.lastname
-        );
+	async createGymOwner(req: Request, res: Response) {
+		try {
+			const user = await this.userService.createGymOwner(req.body);
+			res
+				.status(201)
+				.json({ success: true, message: "owner gym created", data: { user } });
+		} catch (error) {
+			res
+				.status(400)
+				.json({ success: false, message: (error as Error).message });
+		}
+	}
 
-        res.status(201).json({
-            success: true,
-            message: 'Utilisateur créé avec succès',
-            data: {
-                user: {
-                    id: createdUser._id,
-                    username: createdUser.username,
-                    email: createdUser.email,
-                    firstName: createdUser.firstName,
-                    lastName: createdUser.lastName,
-                    role: createdUser.role,
-                    isActive: createdUser.isActive
-                }
-            }
-        });
+	async createSuperAdmin(req: Request, res: Response) {
+		try {
+			const user = await this.userService.createSuperAdmin(req.body);
+			res
+				.status(201)
+				.json({ success: true, message: "Admin created", data: { user } });
+		} catch (error) {
+			res
+				.status(400)
+				.json({ success: false, message: (error as Error).message });
+		}
+	}
 
-    }
+	async updateUser(req: Request, res: Response): Promise<void> {
+		try {
+			const userId = req.params.id;
+			const adminId = req.user!._id.toString();
+			const updates = req.body;
 
+			const updatedUser = await this.userService.updateUserByAdmin(
+				userId,
+				updates,
+				adminId,
+			);
 
-    buildRoutes() {
-        const router = express.Router();
+			res.status(200).json({
+				success: true,
+				message: "User updated successfully",
+				data: { user: updatedUser },
+			});
+		} catch (error) {
+			const statusCode =
+				(error as Error).message.includes("invalid") ||
+				(error as Error).message.includes("not found")
+					? 404
+					: (error as Error).message.includes("You cannot")
+						? 403
+						: 500;
 
-        router.use(authenticateToken);
+			res.status(statusCode).json({
+				success: false,
+				message: (error as Error).message,
+			});
+		}
+	}
 
-        router.get('/stats', requireSuperAdmin, this.getUserStats.bind(this));
-        router.delete('/:id/permanent', requireSuperAdmin, this.permanentDeleteUser.bind(this));
-        router.get('/', requireSuperAdmin, this.getAllUsers.bind(this));
-        router.get('/:id', requireSuperAdmin, this.getUserById.bind(this));
-        router.put('/:id/deactivate', requireSuperAdmin, this.deactivateUser.bind(this));
-        router.put('/:id/activate', requireSuperAdmin, this.activateUser.bind(this));
-        router.delete('/:id', requireSuperAdmin, this.deleteUser.bind(this));
-        router.post('/', requireSuperAdmin, this.createUser.bind(this));
+	buildRoutes() {
+		const router = express.Router();
 
-        return router;
-    }
+		router.use(authenticateToken);
+
+		router.get(
+			"/stats",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.getUserStats.bind(this),
+		);
+		router.delete(
+			"/:id/permanent",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.permanentDeleteUser.bind(this),
+		);
+		router.get(
+			"/",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getAllUsers.bind(this),
+		);
+		router.get(
+			"/:id",
+			requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER, UserRole.CLIENT]),
+			this.getUserById.bind(this),
+		);
+
+		router.put(
+			"/:id/deactivate",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.deactivateUser.bind(this),
+		);
+		router.put(
+			"/:id/activate",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.activateUser.bind(this),
+		);
+		router.delete(
+			"/:id",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.deleteUser.bind(this),
+		);
+		router.post(
+			"/create-client",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.createClient.bind(this),
+		);
+		router.post(
+			"/create-gym-owner",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.createGymOwner.bind(this),
+		);
+		router.post(
+			"/create-admin",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.createSuperAdmin.bind(this),
+		);
+		router.put(
+			"/:id",
+			requireRole([UserRole.SUPER_ADMIN]),
+			this.updateUser.bind(this),
+		);
+
+		return router;
+	}
 }
