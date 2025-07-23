@@ -1,7 +1,8 @@
-import express, { Request, Response, Router } from 'express';
-import { ChallengeService } from '../services/challengeService';
-import { authenticateToken } from '../middleware/auth';
-import { requireRole } from '../middleware/requireRole';
+import express, {Request, Response, Router} from 'express';
+import {ChallengeService} from '../services/challengeService';
+import {authenticateToken} from '../middleware/auth';
+import {requireRole} from '../middleware/requireRole';
+import {UserRole} from "../models/common/enums";
 
 export class ChallengeController {
     constructor(private readonly challengeService: ChallengeService) {}
@@ -165,9 +166,9 @@ export class ChallengeController {
         router.get('/', this.getAll.bind(this));
         router.post('/', this.createChallenge.bind(this));
         router.get('/mine', this.getMyChallenges.bind(this));
-        router.post('/:id/participate', requireRole(['client']), this.participate.bind(this));
-        router.patch('/:id/progress', requireRole(['client']), this.updateProgress.bind(this));
-        router.get('/:id/sessions', requireRole(['client']), this.getMySessions.bind(this));
+        router.post('/:id/participate', requireRole([UserRole.CLIENT]), this.participate.bind(this));
+        router.patch('/:id/progress', requireRole([UserRole.CLIENT]), this.updateProgress.bind(this));
+        router.get('/:id/sessions', requireRole([UserRole.CLIENT]), this.getMySessions.bind(this));
         router.delete('/:id', this.deleteChallenge.bind(this));
         router.post('/:id/share', this.shareChallenge.bind(this));
 
