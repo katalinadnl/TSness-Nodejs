@@ -10,3 +10,9 @@ export enum ChallengeGoal {
     IMPROVE_ENDURANCE = 'improve_endurance',
     STAY_HEALTHY = 'stay_healthy'
 }
+
+export enum UserRole {
+    CLIENT = 'client',
+    GYM_OWNER = 'gym_owner',
+    SUPER_ADMIN = 'super_admin'
+}

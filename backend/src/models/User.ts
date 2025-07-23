@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { UserRole } from './common/enums';
 
 export interface IUser extends Document {
     _id: mongoose.Types.ObjectId;
@@ -7,7 +8,7 @@ export interface IUser extends Document {
     password: string;
     firstName: string;
     lastName: string;
-    role: 'client' | 'gym_owner' | 'super_admin';
+    role: UserRole;
     isActive: boolean;
     isDeleted: boolean;
     createdAt: Date;
@@ -51,8 +52,8 @@ const UserSchema = new Schema<IUser>({
     },
     role: {
         type: String,
-        enum: ['client', 'gym_owner', 'super_admin'],
-        default: 'client'
+        enum: Object.values(UserRole),
+        default: UserRole.CLIENT
     },
     isActive: {
         type: Boolean,

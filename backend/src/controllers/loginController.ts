@@ -13,7 +13,7 @@ export class LoginController {
             if (!admin) {
                 res.status(404).json({
                     success: false,
-                    message: 'Aucun utilisateur trouvé en base'
+                    message: 'No user found'
                 });
                 return;
             }
@@ -22,7 +22,7 @@ export class LoginController {
             if (!jwtSecret) {
                 res.status(500).json({
                     success: false,
-                    message: 'JWT_SECRET non configuré'
+                    message: 'JWT_SECRET not configured'
                 });
                 return;
             }
@@ -34,7 +34,7 @@ export class LoginController {
             if (!result) {
                 res.status(401).json({
                     success: false,
-                    message: 'Mot de passe incorrect'
+                    message: 'Password incorrect'
                 });
                 return;
             }
@@ -51,7 +51,7 @@ export class LoginController {
             res.json({
                 success: true,
                 token: token,
-                message: "Token généré",
+                message: "Login successful",
                 admin: {
                     id: admin._id,
                     username: admin.username,
@@ -60,10 +60,10 @@ export class LoginController {
                 }
             });
         } catch (error) {
-            console.error('Erreur génération token:', error);
+            console.error('Error :', error);
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la génération du token',
+                message: 'Internal server error -> could not sign in and make a tocken',
                 error: (error as Error).message
             });
         }
@@ -76,7 +76,7 @@ export class LoginController {
         if (!token) {
             res.status(401).json({
                 success: false,
-                message: 'Token manquant'
+                message: 'Token missing or invalid'
             });
             return;
         }
@@ -86,7 +86,7 @@ export class LoginController {
             if (!jwtSecret) {
                 res.status(500).json({
                     success: false,
-                    message: 'JWT_SECRET non configuré'
+                    message: 'JWT_SECRET not configured'
                 });
                 return;
             }
@@ -94,13 +94,13 @@ export class LoginController {
             const decoded = jwt.verify(token, jwtSecret) as { userId: string, role: string };
             res.json({
                 success: true,
-                message: 'Token valide',
+                message: 'tocken is valid',
                 decoded: decoded
             });
         } catch (error) {
             res.status(403).json({
                 success: false,
-                message: 'Token invalide',
+                message: 'Token invalid or expired',
                 error: (error as Error).message
             });
         }

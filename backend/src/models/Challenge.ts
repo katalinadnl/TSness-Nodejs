@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { DifficultyLevel, ChallengeGoal } from '../types/challengeEnum';
+import { DifficultyLevel, ChallengeGoal } from './common/enums';
 
 export interface IChallengeParticipant {
     userId: mongoose.Types.ObjectId;

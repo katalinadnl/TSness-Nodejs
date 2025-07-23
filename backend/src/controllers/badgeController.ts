@@ -9,9 +9,9 @@ export class BadgeController {
     async getAllBadges(req: Request, res: Response): Promise<void> {
         try {
             const badges = await this.badgeService.getAllBadges();
-            res.status(200).json({ success: true, message: 'Badges récupérés avec succès', data: badges });
+            res.status(200).json({ success: true, message: 'All badges fetched successfully', data: badges });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur interne', error: (error as Error).message });
+            res.status(500).json({ success: false, message: 'Intern Error ! Check you code :)', error: (error as Error).message });
         }
     }
 
@@ -19,9 +19,9 @@ export class BadgeController {
         try {
             const { id } = req.params;
             const badge = await this.badgeService.getBadgeById(id);
-            res.status(200).json({ success: true, message: 'Badge récupéré', data: badge });
+            res.status(200).json({ success: true, message: 'The only badge fetched successully', data: badge });
         } catch (error) {
-            const statusCode = (error as Error).message.includes('non trouvé') || (error as Error).message.includes('ID invalide') ? 404 : 500;
+            const statusCode = (error as Error).message.includes('not found') || (error as Error).message.includes('invalid ID') ? 404 : 500;
             res.status(statusCode).json({ success: false, message: (error as Error).message });
         }
     }
@@ -29,9 +29,9 @@ export class BadgeController {
     async createBadge(req: Request, res: Response): Promise<void> {
         try {
             const badge = await this.badgeService.createBadge(req.body);
-            res.status(201).json({ success: true, message: 'Badge créé avec succès', data: badge });
+            res.status(201).json({ success: true, message: 'Badge created', data: badge });
         } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de la création', error: (error as Error).message });
+            res.status(400).json({ success: false, message: 'Creation error', error: (error as Error).message });
         }
     }
 
@@ -39,9 +39,9 @@ export class BadgeController {
         try {
             const { id } = req.params;
             const badge = await this.badgeService.updateBadge(id, req.body);
-            res.status(200).json({ success: true, message: 'Badge mis à jour', data: badge });
+            res.status(200).json({ success: true, message: 'badge updated', data: badge });
         } catch (error) {
-            const statusCode = (error as Error).message.includes('non trouvé') || (error as Error).message.includes('ID invalide') ? 404 : 400;
+            const statusCode = (error as Error).message.includes('not found') || (error as Error).message.includes('invalid ID') ? 404 : 400;
             res.status(statusCode).json({ success: false, message: (error as Error).message });
         }
     }
@@ -50,9 +50,9 @@ export class BadgeController {
         try {
             const { id } = req.params;
             await this.badgeService.deleteBadge(id);
-            res.status(200).json({ success: true, message: 'Badge supprimé avec succès' });
+            res.status(200).json({ success: true, message: 'Badge deleted' });
         } catch (error) {
-            const statusCode = (error as Error).message.includes('non trouvé') || (error as Error).message.includes('ID invalide') ? 404 : 500;
+            const statusCode = (error as Error).message.includes('not found') || (error as Error).message.includes('invalid ID') ? 404 : 500;
             res.status(statusCode).json({ success: false, message: (error as Error).message });
         }
     }
@@ -61,20 +61,20 @@ export class BadgeController {
         try {
             const userId = (req as any).user?._id || req.params.userId;
             if (!userId) {
-                res.status(400).json({ success: false, message: 'ID utilisateur requis' });
+                res.status(400).json({ success: false, message: 'user required' });
                 return;
             }
 
             const badges = await this.badgeService.getUserBadges(userId);
             res.status(200).json({
                 success: true,
-                message: 'Badges utilisateur récupérés',
+                message: 'user badges retrieved successfully',
                 data: badges
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la récupération des badges utilisateur',
+                message: 'Error retrieving user badges',
                 error: (error as Error).message
             });
         }
@@ -84,20 +84,20 @@ export class BadgeController {
         try {
             const userId = (req as any).user?._id;
             if (!userId) {
-                res.status(400).json({ success: false, message: 'ID utilisateur requis' });
+                res.status(400).json({ success: false, message: 'user required' });
                 return;
             }
 
             const badgesWithStatus = await this.badgeService.getAllBadgesWithStatus(userId);
             res.status(200).json({
                 success: true,
-                message: 'Badges avec statut récupérés',
+                message: 'badges with status retrieved successfully',
                 data: badgesWithStatus
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la récupération des badges avec statut',
+                message: 'Error retrieving badges with status',
                 error: (error as Error).message
             });
         }
@@ -107,20 +107,20 @@ export class BadgeController {
         try {
             const userId = (req as any).user?._id?.toString();
             if (!userId) {
-                res.status(400).json({ success: false, message: 'ID utilisateur requis' });
+                res.status(400).json({ success: false, message: 'user required' });
                 return;
             }
 
             const newBadges = await this.badgeService.evaluateAndAwardBadges(userId);
             res.status(200).json({
                 success: true,
-                message: `${newBadges.length} nouveaux badges attribués`,
+                message: `${newBadges.length} badges evaluated and awarded successfully`,
                 data: newBadges
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de l\'évaluation des badges',
+                message: 'Error evaluating and awarding badges',
                 error: (error as Error).message
             });
         }
@@ -131,13 +131,13 @@ export class BadgeController {
             const leaderboard = await this.badgeService.getUsersLeaderboard();
             res.status(200).json({
                 success: true,
-                message: 'Classement récupéré avec succès',
+                message: 'Leaderboard retrieved successfully',
                 data: leaderboard
             });
         } catch (error) {
             res.status(500).json({
                 success: false,
-                message: 'Erreur lors de la récupération du classement',
+                message: 'Error retrieving leaderboard',
                 error: (error as Error).message
             });
         }
