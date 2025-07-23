@@ -13,19 +13,7 @@ export class GymController {
 			const userRole = req.user?.role;
 			const userId = req.user?._id;
 
-			let gyms;
-
-			if (userRole === UserRole.SUPER_ADMIN) {
-				gyms = await Gym.find();
-			} else if (userRole === UserRole.GYM_OWNER) {
-				gyms = await Gym.find({ ownerId: userId });
-			} else {
-				res.status(403).json({
-					success: false,
-					message: "You have not the right to be here",
-				});
-				return;
-			}
+			let gyms = await Gym.find();
 
 			res.status(200).json({
 				success: true,
