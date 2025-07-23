@@ -98,6 +98,8 @@ const badges = ref<Badge[]>([])
 const leaderboard = ref<LeaderboardEntry[]>([])
 const themes = ref<Theme[]>([])
 
+const adminProfile = ref<User | null>(null)
+
 const showModal = ref(false)
 const modalType = ref('')
 const selectedItem = ref<any>(null)
@@ -885,8 +887,22 @@ const getThemePreviewStyle = (themeId: string) => {
   }
 }
 
+const fetchAdminProfile = async () => {
+  if (!checkAuth()) return
+
+  try {
+    const user = localStorage.getItem('user')
+    if (user) {
+      adminProfile.value = JSON.parse(user)
+    }
+  } catch (err) {
+    console.error('Error loading admin profile:', err)
+  }
+}
+
 onMounted(() => {
   if (checkAuth()) {
+    fetchAdminProfile()
     fetchUsers()
     fetchGyms()
     fetchTrainingRooms()
@@ -964,6 +980,13 @@ onMounted(() => {
         class="tab-button"
       >
         🎨 Thèmes
+      </button>
+      <button
+        @click="activeTab = 'profile'"
+        :class="{ active: activeTab === 'profile' }"
+        class="tab-button"
+      >
+        👤 Profil
       </button>
     </div>
 
@@ -1204,6 +1227,42 @@ onMounted(() => {
           </div>
         </div>
       </div>
+      <div v-if="activeTab === 'profile'" class="profile-content">
+        <div class="section-header">
+          <h2>Mon Profil</h2>
+        </div>
+
+        <div v-if="adminProfile" class="profile-section">
+          <div class="profile-details">
+            <div class="detail-card">
+              <h4>Informations personnelles</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <strong>Nom d'utilisateur:</strong>
+                  <span>{{ adminProfile.username }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Email:</strong>
+                  <span>{{ adminProfile.email }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Rôle:</strong>
+                  <span>{{ adminProfile.role === 'super_admin' ? 'Super Administrateur' : adminProfile.role }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Statut:</strong>
+                  <span class="status active">{{ adminProfile.isActive ? 'Actif' : 'Inactif' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="loading-message">
+          Chargement du profil...
+        </div>
+      </div>
+
       <div v-if="activeTab === 'themes'" class="themes-content">
         <div class="section-header">
           <h2>Thèmes</h2>
@@ -3178,6 +3237,101 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Styles pour le profil admin */
+.profile-content {
+  padding: 0;
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-card {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 2rem;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.profile-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.profile-username {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.profile-role {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  margin: 0;
+}
+
+.profile-details {
+  display: grid;
+  gap: 20px;
+}
+
+.detail-card {
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.detail-card h4 {
+  margin: 0 0 16px 0;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.loading-message {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  padding: 40px 20px;
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
 @media (max-width: 768px) {
   .colors-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -3209,6 +3363,22 @@ onMounted(() => {
   .badge-theme-info {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 1.8rem;
+  }
+
+  .profile-info h3 {
+    font-size: 1.3rem;
   }
 }
 </style>
