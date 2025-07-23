@@ -77,6 +77,8 @@ const myGym = ref<Gym | null>(null)
 const myTrainingRooms = ref<TrainingRoom[]>([])
 const leaderboard = ref<LeaderboardEntry[]>([])
 
+const ownerProfile = ref<User | null>(null)
+
 const showModal = ref(false)
 const modalType = ref('')
 const selectedItem = ref<any>(null)
@@ -176,8 +178,22 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const fetchOwnerProfile = async () => {
+  if (!checkAuth()) return
+
+  try {
+    const user = localStorage.getItem('user')
+    if (user) {
+      ownerProfile.value = JSON.parse(user)
+    }
+  } catch (err) {
+    console.error('Error loading owner profile:', err)
+  }
+}
+
 onMounted(() => {
   if (checkAuth()) {
+    fetchOwnerProfile()
     fetchMyGym()
     fetchMyTrainingRooms()
     fetchLeaderboard()
@@ -232,6 +248,13 @@ onMounted(() => {
         class="tab-button"
       >
         🥇 Classement
+      </button>
+      <button
+        @click="activeTab = 'profile'"
+        :class="{ active: activeTab === 'profile' }"
+        class="tab-button"
+      >
+        👤 Profil
       </button>
     </div>
 
@@ -290,7 +313,12 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="activeTab === 'gym' && myGym" class="gym-content">
+      <div v-if="activeTab === 'gym'" class="gym-content">
+        <div v-if="!myGym" class="no-gym-message">
+          <p>Aucune salle de sport trouvée. Veuillez vous assurer d'être assigné à une salle de sport.</p>
+        </div>
+        
+        <div v-else>
         <div class="section-header">
           <h2>Ma Salle de Sport</h2>
         </div>
@@ -339,6 +367,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        </div>
       </div>
 
       <div v-if="activeTab === 'rooms'" class="rooms-content">
@@ -373,13 +402,13 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      
+
       <div v-if="activeTab === 'leaderboard'" class="leaderboard-content">
         <div class="section-header">
           <h2>Classement des Badges</h2>
           <span class="count">{{ leaderboard.length }} client(s) classé(s)</span>
         </div>
-        
+
         <div class="leaderboard-grid">
           <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card">
             <div class="rank">
@@ -397,7 +426,7 @@ onMounted(() => {
                 <span v-else>🏅</span>
               </div>
             </div>
-            
+
             <div class="user-info">
               <div class="user-avatar">
                 {{ entry.user.firstName.charAt(0) }}{{ entry.user.lastName.charAt(0) }}
@@ -408,17 +437,17 @@ onMounted(() => {
                 <p class="badge-count">{{ entry.badgeCount }} badge(s)</p>
               </div>
             </div>
-            
+
             <div class="user-badges">
               <div class="badges-preview">
-                <div 
-                  v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)" 
-                  :key="userBadge.badgeId" 
+                <div
+                  v-for="(userBadge, badgeIndex) in entry.badges.slice(0, 3)"
+                  :key="userBadge.badgeId"
                   class="badge-mini"
                 >
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" 
-                       :alt="userBadge.badge?.name || 'Badge'" 
-                       class="badge-mini-icon" 
+                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
+                       :alt="userBadge.badge?.name || 'Badge'"
+                       class="badge-mini-icon"
                   />
                 </div>
                 <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
@@ -427,6 +456,97 @@ onMounted(() => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div v-if="activeTab === 'profile'" class="profile-content">
+        <div class="section-header">
+          <h2>Mon Profil</h2>
+        </div>
+
+        <div v-if="ownerProfile" class="profile-section">
+          <div class="profile-card">
+            <div class="profile-avatar">
+              {{ ownerProfile.firstName?.charAt(0) || '' }}{{ ownerProfile.lastName?.charAt(0) || '' }}
+            </div>
+          </div>
+
+          <div class="profile-details">
+            <div class="detail-card">
+              <h4>Informations personnelles</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <strong>Nom complet:</strong>
+                  <span>{{ ownerProfile.firstName }} {{ ownerProfile.lastName }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Nom d'utilisateur:</strong>
+                  <span>{{ ownerProfile.username }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Email:</strong>
+                  <span>{{ ownerProfile.email }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Rôle:</strong>
+                  <span>{{ ownerProfile.role === 'gym_owner' ? 'Gestionnaire de Salle' : ownerProfile.role }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Statut:</strong>
+                  <span class="status active">{{ ownerProfile.isActive ? 'Actif' : 'Inactif' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section Ma Salle de Sport -->
+            <div v-if="myGym" class="detail-card">
+              <h4>🏋️ Ma Salle de Sport</h4>
+              <div class="gym-profile-info">
+                <div class="gym-profile-header">
+                  <h5>{{ myGym.name }}</h5>
+                  <span class="status" :class="{ active: myGym.isApproved }">
+                    {{ myGym.isApproved ? 'Approuvé' : 'En attente' }}
+                  </span>
+                </div>
+                <div class="detail-grid">
+                  <div class="detail-item">
+                    <strong>Description:</strong>
+                    <span>{{ myGym.description }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Adresse:</strong>
+                    <span>📍 {{ myGym.address }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Contact:</strong>
+                    <span>📞 {{ myGym.contactPhone }} • ✉️ {{ myGym.contactEmail }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Équipements:</strong>
+                    <div class="equipment-tags">
+                      <span v-for="equipment in myGym.equipment" :key="equipment" class="equipment-tag">
+                        {{ equipment }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Activités:</strong>
+                    <div class="activity-tags">
+                      <span v-for="activity in myGym.activities" :key="activity" class="activity-tag">
+                        {{ activity }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section Salles d'Entraînement -->
+          </div>
+        </div>
+
+        <div v-else class="loading-message">
+          Chargement du profil...
         </div>
       </div>
     </div>
@@ -1064,21 +1184,30 @@ onMounted(() => {
   font-weight: 600;
 }
 
+.no-gym-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-muted);
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
 @media (max-width: 768px) {
   .leaderboard-card {
     grid-template-columns: 1fr;
     gap: 16px;
     text-align: center;
   }
-  
+
   .rank {
     justify-self: center;
   }
-  
+
   .user-info {
     justify-content: center;
   }
-  
+
   .user-badges {
     justify-self: center;
   }
