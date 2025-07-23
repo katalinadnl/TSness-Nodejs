@@ -260,32 +260,6 @@ export class UserService {
 		return user.save();
 	}
 
-	async updateOwnProfile(userId: string, updates: Partial<IUser>) {
-		const user = await User.findById(userId);
-		if (!user) throw new Error("user not found");
-
-		const allowedFields = [
-			"firstName",
-			"lastName",
-			"email",
-			"username",
-			"password",
-		];
-
-		for (const field of allowedFields) {
-			if ((updates as any)[field] !== undefined) {
-				if (field === "password") {
-					user.password = bcrypt.hashSync((updates as any)[field], 10);
-				} else {
-					(user as any)[field] = (updates as any)[field];
-				}
-			}
-		}
-
-		await user.save();
-		return user;
-	}
-
 	async updateUserByAdmin(
 		userId: string,
 		updates: Partial<IUser>,
