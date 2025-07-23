@@ -28,8 +28,11 @@ dotenv.config();
 		console.log("\n--- Seeding exercises and rooms ---");
 		await seedExercisesAndRooms();
 
-		console.log("\n--- Seeding badges ---");
-		await seedBadges();
+        console.log('\n--- Seeding themes ---');
+        await seedThemes();
+
+        console.log('\n--- Seeding badges ---');
+        await seedBadges();
 
 		console.log("\n--- Seeding challenges ---");
 		await seedChallenges();
@@ -37,15 +40,12 @@ dotenv.config();
 		console.log("\n--- Seeding participations and sessions ---");
 		await seedParticipations();
 
-		console.log("\n--- Seeding themes ---");
-		await seedThemes();
-
-		console.log("\n✅ All seeding completed successfully!");
-	} catch (error) {
-		console.error("❌ Error during seeding:", error);
-	} finally {
-		await mongoose.disconnect();
-		console.log("🔌 Disconnected from MongoDB");
-		process.exit(0);
-	}
+        console.log('\n✅ All seeding completed successfully!');
+    } catch (error) {
+        console.error('❌ Error during seeding:', error);
+    } finally {
+        await mongoose.disconnect();
+        console.log('🔌 Disconnected from MongoDB');
+        process.exit(0);
+    }
 })();
