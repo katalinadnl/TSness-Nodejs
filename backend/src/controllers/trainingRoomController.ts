@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import express from 'express';
 import { TrainingRoom, CreateTrainingRoomRequest, UpdateTrainingRoomRequest,  } from '../models/TrainingRoom';
 import { ExerciseType } from '../models/ExerciseType';
-import { DifficultyLevel } from '../models/common/enums';
-import { authenticateToken, requireSuperAdmin, requireAdmin } from '../middleware/auth';
+import {DifficultyLevel, UserRole} from '../models/common/enums';
+import { authenticateToken } from '../middleware/auth';
+import { requireRole } from "../middleware/requireRole";
 
 export class TrainingRoomController {
 
@@ -399,7 +400,7 @@ export class TrainingRoomController {
     const router = express.Router();
 
     router.use(authenticateToken);
-    router.use(requireAdmin);
+    router.use(requireRole([UserRole.SUPER_ADMIN, UserRole.GYM_OWNER]));
 
     router.get('/', this.getAllTrainingRooms.bind(this));
     router.get('/:id', this.getTrainingRoomById.bind(this));
@@ -414,25 +415,3 @@ export class TrainingRoomController {
     return router;
   }
 }
-
-export const getTrainingRoomsByGym = async (req: Request, res: Response) => {
-  try {
-    const { gymId } = req.params;
-
-    const rooms = await TrainingRoom.find()
-      .populate('assignedExerciseTypeId', 'name description')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: rooms.length,
-      data: rooms
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching training rooms for gym',
-      error: (error as Error).message
-    });
-  }
-};

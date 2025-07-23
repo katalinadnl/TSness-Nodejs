@@ -1,9 +1,11 @@
 import express, { Request, Response, Router } from 'express';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 import { Gym } from '../models/Gym';
 import { User } from '../models/User';
 import { TrainingRoom } from '../models/TrainingRoom';
 import mongoose from 'mongoose';
+import { requireRole } from "../middleware/requireRole";
+import { UserRole } from "../models/common/enums";
 
 export class GymController {
     async getAllGyms(req: Request, res: Response): Promise<void> {
@@ -13,9 +15,9 @@ export class GymController {
 
             let gyms;
 
-            if (userRole === 'super_admin') {
+            if (userRole === UserRole.SUPER_ADMIN) {
                 gyms = await Gym.find();
-            } else if (userRole === 'gym_owner') {
+            } else if (userRole === UserRole.GYM_OWNER) {
                 gyms = await Gym.find({ ownerId: userId });
             } else {
                 res.status(403).json({ success: false, message: 'You have not the right to be here' });
@@ -46,7 +48,7 @@ export class GymController {
                 return;
             }
 
-            if (userRole === 'gym_owner') {
+            if (userRole === UserRole.GYM_OWNER) {
                 if (!userId || gym.ownerId.toString() !== userId.toString()) {
                     res.status(403).json({ success: false, message: 'access not authorized at this gym ' });
                     return;
@@ -68,7 +70,7 @@ export class GymController {
                 return;
             }
 
-            const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
+            const owner = await User.findOne({ _id: ownerId, role: UserRole.GYM_OWNER });
             if (!owner) {
                 res.status(400).json({ success: false, message: 'Owner of this gym is not found or doesn\'t exist' });
                 return;
@@ -93,7 +95,7 @@ export class GymController {
             }
 
             if (ownerId && mongoose.Types.ObjectId.isValid(ownerId)) {
-                const owner = await User.findOne({ _id: ownerId, role: 'gym_owner' });
+                const owner = await User.findOne({ _id: ownerId, role: UserRole.GYM_OWNER });
                 if (!owner) {
                     res.status(400).json({ success: false, message: 'owner not found or incorrect role' });
                     return;
@@ -137,9 +139,9 @@ export class GymController {
             const userId = req.user?._id;
 
             let gyms;
-            if (userRole === 'super_admin') {
+            if (userRole === UserRole.SUPER_ADMIN) {
                 gyms = await Gym.find();
-            } else if (userRole === 'gym_owner') {
+            } else if (userRole === UserRole.GYM_OWNER) {
                 gyms = await Gym.find({ ownerId: userId });
             } else {
                 res.status(403).json({ success: false, message: 'Access not authorized' });
@@ -177,7 +179,7 @@ export class GymController {
                 return;
             }
 
-            if (userRole === 'gym_owner') {
+            if (userRole === UserRole.GYM_OWNER) {
                 if (!userId || gym.ownerId.toString() !== userId.toString()) {
                     res.status(403).json({ success: false, message: 'not authorized' });
                     return;
@@ -200,9 +202,9 @@ export class GymController {
         router.get('/full', this.getGymsWithRooms.bind(this));
         router.get('/:id', this.getGymById.bind(this));
         router.get('/:id/full', this.getGymWithRoomsById.bind(this));
-        router.post('/', requireSuperAdmin, this.createGym.bind(this));
-        router.put('/:id', requireSuperAdmin, this.updateGym.bind(this));
-        router.delete('/:id', requireSuperAdmin, this.deleteGym.bind(this));
+        router.post('/', requireRole([UserRole.SUPER_ADMIN]), this.createGym.bind(this));
+        router.put('/:id', requireRole([UserRole.SUPER_ADMIN]), this.updateGym.bind(this));
+        router.delete('/:id', requireRole([UserRole.SUPER_ADMIN]), this.deleteGym.bind(this));
 
         return router;
     }

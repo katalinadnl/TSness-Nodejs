@@ -3,7 +3,7 @@ import { ExerciseType } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
 import { Gym } from '../models/Gym';
 import { User } from '../models/User';
-import { DifficultyLevel } from '../models/common/enums';
+import {DifficultyLevel, UserRole} from '../models/common/enums';
 
 dotenv.config();
 
@@ -46,7 +46,7 @@ export const seedExercisesAndRooms = async () => {
     const createdExerciseTypes = await ExerciseType.insertMany(sampleExerciseTypes);
 
     // Vérifie qu'il y a un gymOwner
-    const gymOwner = await User.findOne({ role: 'gym_owner' });
+    const gymOwner = await User.findOne({ role: UserRole.GYM_OWNER });
     if (!gymOwner) throw new Error('Aucun gym_owner trouvé. Exécutez seedUsers d\'abord.');
 
     // Récupère un gym existant

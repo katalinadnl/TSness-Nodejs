@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { User, IUser } from '../models/User';
 import { UserRole} from "../models/common/enums";
 import { Types } from 'mongoose';
 
@@ -18,11 +18,9 @@ export type JwtUser = {
     updatedAt: Date;
 };
 
-declare global {
-    namespace Express {
-        interface Request {
-            user?: JwtUser;
-        }
+declare module 'express' {
+    interface Request {
+        user?: JwtUser;
     }
 }
 
@@ -90,66 +88,4 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
             message: 'invalid token',
         });
     }
-};
-
-export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-        res.status(401).json({
-            success: false,
-            message: 'login required'
-        });
-        return;
-    }
-
-    if (req.user.role !== UserRole.SUPER_ADMIN) {
-        res.status(403).json({
-            success: false,
-            message: 'Access reserved for super administrators'
-        });
-        return;
-    }
-
-    next();
-};
-
-export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-        res.status(401).json({
-            success: false,
-            message: 'login required'
-        });
-        return;
-    }
-
-    if (![UserRole.SUPER_ADMIN, UserRole.GYM_OWNER].includes(req.user.role)) {
-        res.status(403).json({
-            success: false,
-            message: 'Access reserved for administrators'
-        });
-        return;
-    }
-
-    next();
-};
-
-export const requireRoles = (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-        if (!req.user) {
-            res.status(401).json({
-                success: false,
-                message: 'login required'
-            });
-            return;
-        }
-
-        if (!roles.includes(req.user.role)) {
-            res.status(403).json({
-                success: false,
-                message: 'you do not have the permission to access this resource'
-            });
-            return;
-        }
-
-        next();
-    };
 };

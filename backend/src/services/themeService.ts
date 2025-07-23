@@ -29,9 +29,9 @@ export class ThemeService {
                 if (userBadge.badge?.themeId) {
                     try {
                         const theme = await this.getThemeById(userBadge.badge.themeId.toString());
-                        if (theme && theme.isActive === true) {
+                        if (theme && theme.isActive) {
                             associatedThemes.push(theme);
-                        } else if (theme && theme.isActive === false) {
+                        } else if (theme && !theme.isActive) {
                             console.log(`Theme ${theme.name} (${theme.slug}) disabled for badge ${userBadge.badge.name}, switch to default theme`);
                         }
                     } catch (err) {

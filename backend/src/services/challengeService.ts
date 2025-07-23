@@ -75,7 +75,7 @@ export class ChallengeService {
     async createChallenge(data: any, creatorId: string, creatorRole: string): Promise<any> {
         if (!Types.ObjectId.isValid(creatorId)) throw new Error('id user invalid');
 
-        if (creatorRole === 'gym_owner') {
+        if (creatorRole === UserRole.GYM_OWNER) {
             if (!Types.ObjectId.isValid(data.gymId)) {
                 throw new Error('gymId required for gym owners');
             }
@@ -112,7 +112,7 @@ export class ChallengeService {
             }
         }
 
-        if (creatorRole === 'client') {
+        if (creatorRole === UserRole.CLIENT) {
             if (data.gymId) {
                 throw new Error('Clients cannot create challenges linked to a gym');
             }

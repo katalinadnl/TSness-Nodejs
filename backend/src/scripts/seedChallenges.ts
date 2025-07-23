@@ -2,16 +2,16 @@ import { Challenge } from '../models/Challenge';
 import { User } from '../models/User';
 import { Gym } from '../models/Gym';
 import { ExerciseType } from '../models/ExerciseType';
-import { DifficultyLevel, ChallengeGoal } from '../models/common/enums';
+import {DifficultyLevel, ChallengeGoal, UserRole} from '../models/common/enums';
 
 export const seedChallenges = async () => {
     console.log('Seeding challenges...');
 
     await Challenge.deleteMany({});
 
-    const superAdmin = await User.findOne({ role: 'super_admin' });
-    const gymOwner = await User.findOne({ role: 'gym_owner' });
-    const client = await User.findOne({ role: 'client' });
+    const superAdmin = await User.findOne({ role: UserRole.SUPER_ADMIN });
+    const gymOwner = await User.findOne({ role: UserRole.GYM_OWNER });
+    const client = await User.findOne({ role: UserRole.CLIENT });
     const gym = await Gym.findOne({ ownerId: gymOwner?._id });
     const exerciseTypes = await ExerciseType.find({});
 

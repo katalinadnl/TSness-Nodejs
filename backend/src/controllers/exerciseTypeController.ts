@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import express from 'express';
 import { ExerciseType, CreateExerciseTypeRequest, UpdateExerciseTypeRequest } from '../models/ExerciseType';
 import { TrainingRoom } from '../models/TrainingRoom';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
+import {requireRole} from "../middleware/requireRole";
+import {UserRole} from "../models/common/enums";
 
 export class ExerciseTypeController {
 
@@ -262,7 +264,7 @@ export class ExerciseTypeController {
     const router = express.Router();
 
     router.use(authenticateToken);
-    router.use(requireSuperAdmin);
+    router.use(requireRole([UserRole.SUPER_ADMIN]));
 
     router.get('/by-muscle/:muscle', this.getExerciseTypesByMuscle.bind(this));
     router.get('/', this.getAllExerciseTypes.bind(this));

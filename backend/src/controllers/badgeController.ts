@@ -1,7 +1,9 @@
 import express, { Request, Response, Router } from 'express';
 import { BadgeService } from '../services/badgeService';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 import { Error } from 'mongoose';
+import {requireRole} from "../middleware/requireRole";
+import {UserRole} from "../models/common/enums";
 
 export class BadgeController {
     constructor(private readonly badgeService: BadgeService) {}
@@ -159,9 +161,9 @@ export class BadgeController {
         router.get('/user/all-with-status', this.getAllBadgesWithStatus.bind(this));
         router.post('/user/evaluate', this.evaluateUserBadges.bind(this));
         router.get('/:id', this.getBadgeById.bind(this));
-        router.post('/', requireSuperAdmin, this.createBadge.bind(this));
-        router.put('/:id', requireSuperAdmin, this.updateBadge.bind(this));
-        router.delete('/:id', requireSuperAdmin, this.deleteBadge.bind(this));
+        router.post('/', requireRole([UserRole.SUPER_ADMIN]), this.createBadge.bind(this));
+        router.put('/:id', requireRole([UserRole.SUPER_ADMIN]), this.updateBadge.bind(this));
+        router.delete('/:id', requireRole([UserRole.SUPER_ADMIN]), this.deleteBadge.bind(this));
 
         return router;
     }

@@ -2,6 +2,7 @@ import { Badge, IBadge } from '../models/Badge';
 import { Types } from 'mongoose';
 import { ChallengeService } from "./challengeService";
 import { UserBadge, IUserBadge } from '../models/UserBadge';
+import {UserRole} from "../models/common/enums";
 
 const challengeService = new ChallengeService();
 
@@ -188,7 +189,7 @@ export class BadgeService {
         try {
             const { User } = await import('../models/User');
 
-            const users = await User.find({ role: 'client' }).lean();
+            const users = await User.find({ role: UserRole.CLIENT }).lean();
             console.log('DEBUG - Users found:', users.length);
 
             const leaderboard = [];

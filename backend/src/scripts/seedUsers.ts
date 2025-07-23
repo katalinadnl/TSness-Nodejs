@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { Gym } from '../models/Gym';
+import {UserRole} from "../models/common/enums";
 
 export const seedUsers = async () => {
     console.log('Seeding users...');
@@ -17,7 +18,7 @@ export const seedUsers = async () => {
         password: hashedSuperAdminPassword,
         firstName: 'Super',
         lastName: 'Admin',
-        role: 'super_admin',
+        role: UserRole.SUPER_ADMIN,
         isActive: true
     });
 
@@ -27,7 +28,7 @@ export const seedUsers = async () => {
         password: hashedGymOwnerPassword,
         firstName: 'Gym',
         lastName: 'Owner',
-        role: 'gym_owner',
+        role: UserRole.GYM_OWNER,
         isActive: true
     });
 
@@ -37,7 +38,7 @@ export const seedUsers = async () => {
         password: hashedClientPassword,
         firstName: 'Client',
         lastName: 'User',
-        role: 'client',
+        role: UserRole.CLIENT,
         isActive: true
     });
 
@@ -47,7 +48,7 @@ export const seedUsers = async () => {
         password: hashedClientPassword,
         firstName: 'Client2',
         lastName: 'User2',
-        role: 'client',
+        role: UserRole.CLIENT,
         isActive: true
     });
 
@@ -57,7 +58,7 @@ export const seedUsers = async () => {
         password: hashedClientPassword,
         firstName: 'Marie',
         lastName: 'Durant',
-        role: 'client',
+        role: UserRole.CLIENT,
         isActive: true
     });
 

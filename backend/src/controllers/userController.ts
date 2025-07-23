@@ -1,7 +1,9 @@
 import express, {Request, Response, Router} from 'express';
 import {UserService} from '../services/userService';
 import {Error} from "mongoose";
-import {authenticateToken, requireSuperAdmin} from "../middleware/auth";
+import {authenticateToken} from "../middleware/auth";
+import {requireRole} from "../middleware/requireRole";
+import {UserRole} from "../models/common/enums";
 
 export class UserController {
 
@@ -81,7 +83,7 @@ export class UserController {
         } catch (error) {
             const statusCode = (error as Error).message.includes('invalid') ||
             (error as Error).message.includes('not found') ? 404 :
-                (error as Error).message.includes('impossible') ? 403 : 500;
+                (error as Error).message.includes('you cannot') ? 403 : 500;
 
             res.status(statusCode).json({
                 success: false,
@@ -134,7 +136,7 @@ export class UserController {
         } catch (error) {
             const statusCode = (error as Error).message.includes('invalid') ||
             (error as Error).message.includes('not found') ? 404 :
-                (error as Error).message.includes('Impossible') ? 403 : 500;
+                (error as Error).message.includes('you cannot') ? 403 : 500;
 
             res.status(statusCode).json({
                 success: false,
@@ -166,7 +168,7 @@ export class UserController {
         } catch (error) {
             const statusCode = (error as Error).message.includes('invalid') ||
             (error as Error).message.includes('not found') ? 404 :
-                (error as Error).message.includes('Impossible') ? 403 : 500;
+                (error as Error).message.includes('you cannot') ? 403 : 500;
 
             res.status(statusCode).json({
                 success: false,
@@ -255,25 +257,23 @@ export class UserController {
         }
     }
 
-
     buildRoutes() {
         const router = express.Router();
 
         router.use(authenticateToken);
 
-        router.get('/stats', requireSuperAdmin, this.getUserStats.bind(this));
-        router.delete('/:id/permanent', requireSuperAdmin, this.permanentDeleteUser.bind(this));
-        router.get('/', requireSuperAdmin, this.getAllUsers.bind(this));
-        router.get('/:id', requireSuperAdmin, this.getUserById.bind(this));
-        router.put('/:id/deactivate', requireSuperAdmin, this.deactivateUser.bind(this));
-        router.put('/:id/activate', requireSuperAdmin, this.activateUser.bind(this));
-        router.delete('/:id', requireSuperAdmin, this.deleteUser.bind(this));
-        router.post('/create-client', requireSuperAdmin, this.createClient.bind(this));
-        router.post('/create-gym-owner', requireSuperAdmin, this.createGymOwner.bind(this));
-        router.post('/create-admin', requireSuperAdmin, this.createSuperAdmin.bind(this));
-        router.put('/me', authenticateToken, this.updateOwnProfile.bind(this));
-        router.put('/:id', requireSuperAdmin, this.updateUser.bind(this));
-
+        router.get('/stats', requireRole([UserRole.SUPER_ADMIN]), this.getUserStats.bind(this));
+        router.delete('/:id/permanent', requireRole([UserRole.SUPER_ADMIN]), this.permanentDeleteUser.bind(this));
+        router.get('/', requireRole([UserRole.SUPER_ADMIN]), this.getAllUsers.bind(this));
+        router.get('/:id', requireRole([UserRole.SUPER_ADMIN]), this.getUserById.bind(this));
+        router.put('/:id/deactivate', requireRole([UserRole.SUPER_ADMIN]), this.deactivateUser.bind(this));
+        router.put('/:id/activate', requireRole([UserRole.SUPER_ADMIN]), this.activateUser.bind(this));
+        router.delete('/:id', requireRole([UserRole.SUPER_ADMIN]), this.deleteUser.bind(this));
+        router.post('/create-client', requireRole([UserRole.SUPER_ADMIN]), this.createClient.bind(this));
+        router.post('/create-gym-owner', requireRole([UserRole.SUPER_ADMIN]), this.createGymOwner.bind(this));
+        router.post('/create-admin', requireRole([UserRole.SUPER_ADMIN]), this.createSuperAdmin.bind(this));
+        router.put('/:id', requireRole([UserRole.SUPER_ADMIN]), this.updateUser.bind(this));
+        router.put('/me', this.updateOwnProfile.bind(this));
 
         return router;
     }

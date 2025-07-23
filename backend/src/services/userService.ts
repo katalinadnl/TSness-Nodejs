@@ -1,6 +1,7 @@
 import { User, IUser} from '../models/User';
 import mongoose, {Error} from 'mongoose';
 import bcrypt from "bcryptjs";
+import {UserRole} from "../models/common/enums";
 
 export class UserService {
 
@@ -9,8 +10,8 @@ export class UserService {
 
         const query: any = {};
 
-        if (filters?.requestingRole !== 'super_admin') {
-            query.role = 'client';
+        if (filters?.requestingRole !== UserRole.SUPER_ADMIN) {
+            query.role = UserRole.CLIENT;
         }
 
         if (filters?.role) {
@@ -73,7 +74,7 @@ export class UserService {
             throw new Error('User not found');
         }
 
-        if (user.role === 'super_admin') {
+        if (user.role === UserRole.SUPER_ADMIN) {
             throw new Error('Is not possible to deactivate a super admin');
         }
 
@@ -129,7 +130,7 @@ export class UserService {
             throw new Error('User not found');
         }
 
-        if (user.role === 'super_admin') {
+        if (user.role === UserRole.SUPER_ADMIN) {
             throw new Error('Is not possible to delete a super admin');
         }
 
@@ -164,7 +165,7 @@ export class UserService {
             throw new Error('User not found');
         }
 
-        if (user.role === 'super_admin') {
+        if (user.role === UserRole.SUPER_ADMIN) {
             throw new Error('Is not possible to permanently delete a super admin');
         }
 
@@ -193,13 +194,13 @@ export class UserService {
                         $sum: {$cond: [{$eq: ['$isActive', false]}, 1, 0]}
                     },
                     clients: {
-                        $sum: {$cond: [{$eq: ['$role', 'client']}, 1, 0]}
+                        $sum: {$cond: [{$eq: ['$role', UserRole.CLIENT]}, 1, 0]}
                     },
                     gymOwners: {
-                        $sum: {$cond: [{$eq: ['$role', 'gym_owner']}, 1, 0]}
+                        $sum: {$cond: [{$eq: ['$role', UserRole.GYM_OWNER]}, 1, 0]}
                     },
                     superAdmins: {
-                        $sum: {$cond: [{$eq: ['$role', 'super_admin']}, 1, 0]}
+                        $sum: {$cond: [{$eq: ['$role', UserRole.SUPER_ADMIN]}, 1, 0]}
                     }
                 }
             }
@@ -216,15 +217,15 @@ export class UserService {
     }
 
     async createClient(data: any): Promise<IUser> {
-        return this.createUserWithRole(data, 'client');
+        return this.createUserWithRole(data, UserRole.CLIENT);
     }
 
     async createGymOwner(data: any): Promise<IUser> {
-        return this.createUserWithRole(data, 'gym_owner');
+        return this.createUserWithRole(data, UserRole.GYM_OWNER);
     }
 
     async createSuperAdmin(data: any): Promise<IUser> {
-        return this.createUserWithRole(data, 'super_admin');
+        return this.createUserWithRole(data, UserRole.SUPER_ADMIN);
     }
 
     private async createUserWithRole(data: any, role: string): Promise<IUser> {

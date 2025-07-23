@@ -1,17 +1,14 @@
-import express, { Request, Response, Router } from 'express';
+import express, {Request, Response, Router} from 'express';
 import mongoose from 'mongoose';
-import { Participation } from '../models/Participation';
-import { Challenge } from '../models/Challenge';
-import { authenticateToken } from '../middleware/auth';
-import { JwtUser } from '../middleware/auth';
+import {Participation} from '../models/Participation';
+import {Challenge} from '../models/Challenge';
+import {authenticateToken, JwtUser} from '../middleware/auth';
+import {requireRole} from "../middleware/requireRole";
+import {UserRole} from "../models/common/enums";
 
 export class ParticipationController {
     async getAll(req: Request, res: Response) {
         try {
-            const user = req.user as JwtUser;
-            if (user.role !== 'super_admin') {
-                return res.status(403).json({ message: 'access refused' });
-            }
 
             const participations = await Participation.find()
                 .populate('userId', 'username email')
@@ -26,7 +23,6 @@ export class ParticipationController {
     async getMine(req: Request, res: Response) {
         try {
             const user = req.user as JwtUser;
-            if (!user._id) return res.status(401).json({ message: 'not signed in' });
 
             const participations = await Participation.find({ userId: user._id })
                 .populate('challengeId', 'title description duration');
@@ -68,9 +64,6 @@ export class ParticipationController {
     async getForGymOwner(req: Request, res: Response) {
         try {
             const user = req.user as JwtUser;
-            if (user.role !== 'gym_owner') {
-                return res.status(403).json({ message: 'you do not have access' });
-            }
 
             const challenges = await Challenge.find({ creatorId: user._id });
             const challengeIds = challenges.map(c => c._id);
@@ -90,10 +83,10 @@ export class ParticipationController {
 
         router.use(authenticateToken);
 
-        router.get('/', this.getAll.bind(this) as express.RequestHandler);
-        router.get('/me', this.getMine.bind(this) as express.RequestHandler);
+        router.get('/', requireRole([UserRole.SUPER_ADMIN]) ,this.getAll.bind(this) as express.RequestHandler);
+        router.get('/me', requireRole([UserRole.CLIENT]), this.getMine.bind(this) as express.RequestHandler);
         router.delete('/:id', this.deleteMine.bind(this) as express.RequestHandler);
-        router.get('/gym-owner/mine', this.getForGymOwner.bind(this) as express.RequestHandler);
+        router.get('/gym-owner/mine', requireRole([UserRole.GYM_OWNER]) ,this.getForGymOwner.bind(this) as express.RequestHandler);
 
         return router;
     }

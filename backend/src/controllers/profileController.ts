@@ -64,11 +64,6 @@ export class ProfileController {
             const userId = req.user?._id;
             const { firstName, lastName, username, email } = req.body;
 
-            if (!userId) {
-                res.status(401).json({ message: 'Unauthenticated user' });
-                return;
-            }
-
             if (!firstName || !lastName || !username || !email) {
                 res.status(400).json({ 
                     message: 'All fields are required',

@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import express from 'express';
 import { ThemeService } from '../services/themeService';
-import { authenticateToken, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
+import {requireRole} from "../middleware/requireRole";
+import {UserRole} from "../models/common/enums";
 
 export class ThemeController {
     private themeService: ThemeService;
@@ -12,15 +14,8 @@ export class ThemeController {
 
     async getUserTheme(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user) {
-                res.status(401).json({
-                    success: false,
-                    message: 'user not authenticated'
-                });
-                return;
-            }
 
-            const themeInfo = await this.themeService.getUserThemeInfo(req.user._id.toString());
+            const themeInfo = await this.themeService.getUserThemeInfo(req.user!._id.toString());
 
             res.status(200).json({
                 success: true,
@@ -181,11 +176,11 @@ export class ThemeController {
         router.get('/my-theme', this.getUserTheme.bind(this));
         router.get('/all', this.getAllThemes.bind(this));
         router.get('/user/:userId', this.getUserThemeById.bind(this));
-        router.post('/', requireSuperAdmin, this.createTheme.bind(this));
-        router.put('/:id', requireSuperAdmin, this.updateTheme.bind(this));
-        router.delete('/:id', requireSuperAdmin, this.deleteTheme.bind(this));
-        router.put('/:id/activate', requireSuperAdmin, this.activateTheme.bind(this));
-        router.put('/:id/deactivate', requireSuperAdmin, this.deactivateTheme.bind(this));
+        router.post('/', requireRole([UserRole.SUPER_ADMIN]), this.createTheme.bind(this));
+        router.put('/:id', requireRole([UserRole.SUPER_ADMIN]), this.updateTheme.bind(this));
+        router.delete('/:id', requireRole([UserRole.SUPER_ADMIN]), this.deleteTheme.bind(this));
+        router.put('/:id/activate', requireRole([UserRole.SUPER_ADMIN]), this.activateTheme.bind(this));
+        router.put('/:id/deactivate', requireRole([UserRole.SUPER_ADMIN]), this.deactivateTheme.bind(this));
 
         return router;
     }

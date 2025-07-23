@@ -9,13 +9,8 @@ export class ChallengeController {
 
     async createChallenge(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id || !req.user.role) {
-                res.status(401).json({ success: false, message: 'user should be authentificated' });
-                return;
-            }
-
-            const creatorId = req.user._id.toString();
-            const creatorRole = req.user.role;
+            const creatorId = req.user!._id.toString();
+            const creatorRole = req.user!.role;
             const challenge = await this.challengeService.createChallenge(req.body, creatorId, creatorRole);
             res.status(201).json({
                 success: true,
@@ -32,12 +27,7 @@ export class ChallengeController {
 
     async getMyChallenges(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id) {
-                res.status(401).json({ success: false, message: 'user should be logged' });
-                return;
-            }
-
-            const ownerId = req.user._id.toString();
+            const ownerId = req.user!._id.toString();
             const challenges = await this.challengeService.getChallengesByOwner(ownerId);
 
             res.status(200).json({
@@ -70,18 +60,8 @@ export class ChallengeController {
 
     async participate(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id || !req.user.role) {
-                res.status(401).json({ success: false, message: 'user not authentificated' });
-                return;
-            }
-
-            const userId = req.user._id.toString();
-            const userRole = req.user.role;
-
-            if (userRole !== 'client') {
-                res.status(403).json({ success: false, message: 'only clients can participate at challenges' });
-                return;
-            }
+            const userId = req.user!._id.toString();
+            const userRole = req.user!.role;
 
             const challengeId = req.params.id;
             const challenge = await this.challengeService.participateInChallenge(challengeId, userId);
@@ -94,13 +74,8 @@ export class ChallengeController {
 
     async updateProgress(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id) {
-                res.status(401).json({ success: false, message: 'User not auth' });
-                return;
-            }
-
             const challengeId = req.params.id;
-            const userId = req.user._id.toString();
+            const userId = req.user!._id.toString();
             const challenge = await this.challengeService.updateProgress(challengeId, userId, req.body);
             res.status(200).json({ success: true, message: 'Progression updated', data: challenge });
         } catch (error) {
@@ -110,13 +85,8 @@ export class ChallengeController {
 
     async getMySessions(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id) {
-                res.status(401).json({ success: false, message: 'user not authentificated' });
-                return;
-            }
-
             const challengeId = req.params.id;
-            const userId = req.user._id.toString();
+            const userId = req.user!._id.toString();
             const result = await this.challengeService.getMySessions(challengeId, userId);
             res.status(200).json({ success: true, data: result });
         } catch (error) {
@@ -126,14 +96,10 @@ export class ChallengeController {
 
     async deleteChallenge(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user || !req.user._id || !req.user.role) {
-                res.status(401).json({ success: false, message: 'user not authentificated' });
-                return;
-            }
 
             const challengeId = req.params.id;
-            const userId = req.user._id.toString();
-            const userRole = req.user.role;
+            const userId = req.user!._id.toString();
+            const userRole = req.user!.role;
 
             await this.challengeService.deleteChallenge(challengeId, userId, userRole);
             res.status(200).json({ success: true, message: 'challenge deleted successfully' });
