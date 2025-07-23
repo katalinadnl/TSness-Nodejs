@@ -4,8 +4,6 @@ import { Gym } from "../models/Gym";
 import { UserRole } from "../models/common/enums";
 
 export const seedUsers = async () => {
-	console.log("Seeding users...");
-
 	await User.deleteMany({});
 
 	const hashedSuperAdminPassword = await bcrypt.hash("superadmin123", 10);
@@ -22,10 +20,9 @@ export const seedUsers = async () => {
 		role: UserRole.SUPER_ADMIN,
 		isActive: true,
 	};
-	
+
 	await User.insertMany(superAdmin);
 
-	// Création des admins
 	const admins = [];
 	for (let i = 1; i <= 3; i++) {
 		admins.push({
@@ -53,7 +50,6 @@ export const seedUsers = async () => {
 		});
 	}
 	await User.insertMany(gymowners);
-	console.log(`GymOwners insérés : ${gymowners.length}`);
 
 	const clients = [];
 	for (let i = 1; i <= 15; i++) {

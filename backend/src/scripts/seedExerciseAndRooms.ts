@@ -39,27 +39,22 @@ const sampleExerciseTypes = [
 export const seedExercisesAndRooms = async () => {
 	console.log("Seeding exercise types and training rooms...");
 
-	// Suppression des anciens documents
 	await ExerciseType.deleteMany({});
 	await TrainingRoom.deleteMany({});
 
-	// Création des nouveaux exercise types
 	const createdExerciseTypes =
 		await ExerciseType.insertMany(sampleExerciseTypes);
 
-	// Vérifie qu'il y a un gymOwner
 	const gymOwner = await User.findOne({ role: UserRole.GYM_OWNER });
 	if (!gymOwner)
 		throw new Error("Aucun gym_owner trouvé. Exécutez seedUsers d'abord.");
 
-	// Récupère un gym existant
 	const gym = await Gym.findOne({ ownerId: gymOwner._id });
 	if (!gym)
 		throw new Error(
 			"Aucune salle de sport trouvée. Exécutez seedGyms d'abord.",
 		);
 
-	// Génère des training rooms pour chaque gym
 	const gyms = await Gym.find({});
 	let totalRooms = 0;
 	for (const gym of gyms) {
@@ -113,8 +108,4 @@ export const seedExercisesAndRooms = async () => {
 		await TrainingRoom.insertMany(rooms);
 		totalRooms += rooms.length;
 	}
-	console.log(`✅ ${createdExerciseTypes.length} types d'exercices créés`);
-	console.log(
-		`✅ ${totalRooms} salles d'entraînement créées pour ${gyms.length} gyms.`,
-	);
 };

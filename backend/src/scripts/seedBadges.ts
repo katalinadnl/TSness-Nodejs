@@ -6,8 +6,6 @@ import { Theme } from "../models/Theme";
 dotenv.config();
 
 export const seedBadges = async () => {
-	console.log("Seeding badges...");
-
 	await Badge.deleteMany({});
 
 	const themeDebutant = await Theme.findOne({ slug: "theme-debutant" });
@@ -78,9 +76,6 @@ export const seedBadges = async () => {
 
 	const createdBadges = await Badge.insertMany(sampleBadges);
 
-	console.log(
-		`${createdBadges.length} badges created with theme associations:`,
-	);
 	createdBadges.forEach((badge) => {
 		console.log(
 			`- ${badge.name}: ${badge.themeId ? "Associé au thème" : "Aucun thème"}`,

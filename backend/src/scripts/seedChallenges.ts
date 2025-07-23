@@ -9,8 +9,6 @@ import {
 } from "../models/common/enums";
 
 export const seedChallenges = async () => {
-	console.log("Seeding challenges...");
-
 	await Challenge.deleteMany({});
 
 	const superAdmin = await User.findOne({ role: UserRole.SUPER_ADMIN });
@@ -67,6 +65,4 @@ export const seedChallenges = async () => {
 			participants: [],
 		},
 	]);
-
-	console.log("✅ Challenges seeded.");
 };
