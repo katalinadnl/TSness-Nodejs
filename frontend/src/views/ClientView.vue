@@ -216,6 +216,28 @@ const logout = () => {
   router.push('/login')
 }
 
+const profile = ref<any>(null)
+const editingProfile = ref(false)
+const savingProfile = ref(false)
+const changingPassword = ref(false)
+const changingPasswordState = ref(false)
+
+const editForm = ref({
+  firstName: '',
+  lastName: '',
+  username: '',
+  email: ''
+})
+
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const formErrors = ref<any>({})
+const passwordErrors = ref<any>({})
+
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return 'Date non disponible'
 
@@ -229,6 +251,208 @@ const formatDate = (dateString: string | undefined) => {
   })
 }
 
+const getMembershipDays = () => {
+  if (!profile.value?.user.createdAt) return 0
+  const creationDate = new Date(profile.value.user.createdAt)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - creationDate.getTime())
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+const getPasswordAge = () => {
+  const days = getMembershipDays()
+  if (days < 30) return `${days} jour(s)`
+  if (days < 365) return `${Math.floor(days / 30)} mois`
+  return `${Math.floor(days / 365)} an(s)`
+}
+
+const getThemeDisplayName = (themeKey: string) => {
+  const themeNames: Record<string, string> = {
+    'default': 'Standard',
+    'debutant': 'Débutant',
+    'intermediaire': 'Intermédiaire',
+    'avance': 'Avancé',
+    'champion': 'Champion'
+  }
+  return themeNames[themeKey] || themeKey
+}
+
+const fetchProfile = async () => {
+  if (!checkAuth()) return
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile`, {
+      headers: getAuthHeaders()
+    })
+    const data = await response.json()
+    if (response.ok) {
+      profile.value = data
+    } else {
+      error.value = data.message || 'Error loading profile'
+    }
+  } catch (err) {
+    error.value = 'Error loading profile'
+  }
+}
+
+const startEditingProfile = () => {
+  if (!profile.value) return
+
+  editForm.value = {
+    firstName: profile.value.user.firstName,
+    lastName: profile.value.user.lastName,
+    username: profile.value.user.username,
+    email: profile.value.user.email
+  }
+  formErrors.value = {}
+  editingProfile.value = true
+}
+
+const cancelEdit = () => {
+  editingProfile.value = false
+  editForm.value = {
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: ''
+  }
+  formErrors.value = {}
+}
+
+const validateForm = () => {
+  const errors: any = {}
+
+  if (!editForm.value.firstName.trim()) {
+    errors.firstName = 'Le prénom est requis'
+  }
+
+  if (!editForm.value.lastName.trim()) {
+    errors.lastName = 'Le nom est requis'
+  }
+
+  if (!editForm.value.username.trim()) {
+    errors.username = 'Le nom d\'utilisateur est requis'
+  } else if (editForm.value.username.length < 3) {
+    errors.username = 'Le nom d\'utilisateur doit contenir au moins 3 caractères'
+  }
+
+  if (!editForm.value.email.trim()) {
+    errors.email = 'L\'email est requis'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.value.email)) {
+    errors.email = 'Format d\'email invalide'
+  }
+
+  formErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
+const saveProfile = async () => {
+  if (!validateForm()) return
+
+  savingProfile.value = true
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(editForm.value)
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      profile.value.user = data.user
+
+      const userData = JSON.parse(localStorage.getItem('user') || '{}')
+      Object.assign(userData, data.user)
+      localStorage.setItem('user', JSON.stringify(userData))
+      currentUser.value = userData
+
+      editingProfile.value = false
+      formErrors.value = {}
+
+      alert('Profil mis à jour avec succès!')
+    } else {
+      formErrors.value = { general: data.message || 'Erreur lors de la sauvegarde' }
+    }
+  } catch (err) {
+    formErrors.value = { general: 'Erreur lors de la sauvegarde' }
+  } finally {
+    savingProfile.value = false
+  }
+}
+
+const startChangingPassword = () => {
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+  passwordErrors.value = {}
+  changingPassword.value = true
+}
+
+const cancelPasswordChange = () => {
+  changingPassword.value = false
+  passwordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+  passwordErrors.value = {}
+}
+
+const validatePasswordForm = () => {
+  const errors: any = {}
+
+  if (!passwordForm.value.currentPassword) {
+    errors.currentPassword = 'Le mot de passe actuel est requis'
+  }
+
+  if (!passwordForm.value.newPassword) {
+    errors.newPassword = 'Le nouveau mot de passe est requis'
+  } else if (passwordForm.value.newPassword.length < 6) {
+    errors.newPassword = 'Le mot de passe doit contenir au moins 6 caractères'
+  }
+
+  if (!passwordForm.value.confirmPassword) {
+    errors.confirmPassword = 'La confirmation est requise'
+  } else if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    errors.confirmPassword = 'Les mots de passe ne correspondent pas'
+  }
+
+  passwordErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
+const changePassword = async () => {
+  if (!validatePasswordForm()) return
+
+  changingPasswordState.value = true
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile/password`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(passwordForm.value)
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      changingPassword.value = false
+      passwordErrors.value = {}
+      alert('Mot de passe changé avec succès!')
+    } else {
+      passwordErrors.value = { general: data.message || 'Erreur lors du changement de mot de passe' }
+    }
+  } catch (err) {
+    passwordErrors.value = { general: 'Erreur lors du changement de mot de passe' }
+  } finally {
+    changingPasswordState.value = false
+  }
+}
+
 onMounted(async () => {
   if (checkAuth()) {
     await fetchMyGym()
@@ -236,6 +460,7 @@ onMounted(async () => {
     await fetchAllBadges()
     await fetchMyBadges()
     await fetchLeaderboard()
+    await fetchProfile() // Charger le profil
   }
 })
 </script>
@@ -571,75 +796,124 @@ onMounted(async () => {
 
         <div class="profile-details">
           <div class="detail-card">
-            <h3>Informations personnelles</h3>
-            <div class="detail-grid">
+            <div class="card-header">
+              <h3>👤 Informations personnelles</h3>
+            </div>
+
+            <div v-if="!editingProfile" class="detail-grid">
               <div class="detail-item">
                 <strong>Nom:</strong>
-                <span>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+                <span>{{ profile?.user.firstName }} {{ profile?.user.lastName }}</span>
               </div>
               <div class="detail-item">
                 <strong>Nom d'utilisateur:</strong>
-                <span>@{{ currentUser?.username }}</span>
+                <span>@{{ profile?.user.username }}</span>
               </div>
               <div class="detail-item">
                 <strong>Email:</strong>
-                <span>{{ currentUser?.email }}</span>
+                <span>{{ profile?.user.email }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Score:</strong>
+                <span>{{ profile?.user.score || 0 }} points</span>
+              </div>
+              <div class="detail-item">
+                <strong>Membre depuis:</strong>
+                <span>{{ formatDate(profile?.user.createdAt) }}</span>
+              </div>
+            </div>
+            <div v-else class="profile-edit-form">
+              <div class="form-group">
+                <label>Prénom</label>
+                <input
+                  v-model="editForm.firstName"
+                  type="text"
+                  class="form-input"
+                  :class="{ 'error': formErrors.firstName }"
+                />
+                <span v-if="formErrors.firstName" class="error-text">{{ formErrors.firstName }}</span>
+              </div>
+
+              <div class="form-group">
+                <label>Nom</label>
+                <input
+                  v-model="editForm.lastName"
+                  type="text"
+                  class="form-input"
+                  :class="{ 'error': formErrors.lastName }"
+                />
+                <span v-if="formErrors.lastName" class="error-text">{{ formErrors.lastName }}</span>
+              </div>
+
+              <div class="form-group">
+                <label>Nom d'utilisateur</label>
+                <input
+                  v-model="editForm.username"
+                  type="text"
+                  class="form-input"
+                  :class="{ 'error': formErrors.username }"
+                />
+                <span v-if="formErrors.username" class="error-text">{{ formErrors.username }}</span>
+              </div>
+
+              <div class="form-group">
+                <label>Email</label>
+                <input
+                  v-model="editForm.email"
+                  type="email"
+                  class="form-input"
+                  :class="{ 'error': formErrors.email }"
+                />
+                <span v-if="formErrors.email" class="error-text">{{ formErrors.email }}</span>
+              </div>
+
+              <div class="form-actions">
+                <button @click="saveProfile" class="save-btn" :disabled="savingProfile">
+                  {{ savingProfile ? 'Sauvegarde...' : '💾 Sauvegarder' }}
+                </button>
+                <button @click="cancelEdit" class="cancel-btn">
+                  ❌ Annuler
+                </button>
               </div>
             </div>
           </div>
-
+          <!-- Thème actuel -->
           <div class="detail-card theme-card">
-            <h3>🎨 Thème d'Interface</h3>
-            <div class="theme-info">
+            <h3>🎨 Thème d'Interface Actuel</h3>
+            <div v-if="profile?.theme" class="theme-info">
               <div class="theme-preview">
                 <div class="theme-colors">
-                  <div class="color-swatch primary" :style="{ backgroundColor: themeInfo?.colors.primary || '#6366f1' }"></div>
-                  <div class="color-swatch secondary" :style="{ backgroundColor: themeInfo?.colors.secondary || '#8b5cf6' }"></div>
-                  <div class="color-swatch accent" :style="{ backgroundColor: themeInfo?.colors.accent || '#06b6d4' }"></div>
+                  <div class="color-swatch primary" :style="{ backgroundColor: profile.theme.colors.primary }"></div>
+                  <div class="color-swatch secondary" :style="{ backgroundColor: profile.theme.colors.secondary }"></div>
+                  <div class="color-swatch accent" :style="{ backgroundColor: profile.theme.colors.accent }"></div>
                 </div>
                 <div class="theme-details">
-                  <h4>{{ themeDisplayName }}</h4>
-                  <p>{{ themeDescription }}</p>
-                  <div class="theme-badge" :class="`theme-${currentTheme}`">
-                    <span class="theme-level">{{ currentTheme === 'default' ? 'Standard' : currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1) }}</span>
+                  <h4>{{ profile.theme.name }}</h4>
+                  <p>{{ profile.theme.description }}</p>
+                  <div class="theme-badge" :class="`theme-${profile.theme.theme}`">
+                    <span class="theme-level">{{ getThemeDisplayName(profile.theme.theme) }}</span>
                   </div>
                 </div>
               </div>
+            </div>
+            <div v-else class="no-theme">
+              <p>Aucun thème personnalisé actif</p>
+            </div>
+          </div>
 
-              <div class="theme-progression">
-                <h4>🏆 Progression des Récompenses</h4>
-                <div class="progression-levels">
-                  <div class="progression-level" :class="{ 'achieved': currentTheme !== 'default' }">
-                    <div class="level-icon">🟣</div>
-                    <div class="level-info">
-                      <strong>Débutant</strong>
-                      <span>Thème violet - Complétez 1 défi</span>
-                    </div>
-                  </div>
-                  <div class="progression-level" :class="{ 'achieved': ['intermediaire', 'avance', 'champion'].includes(currentTheme) }">
-                    <div class="level-icon">🔵</div>
-                    <div class="level-info">
-                      <strong>Intermédiaire</strong>
-                      <span>Thème bleu - Complétez 5 défis</span>
-                    </div>
-                  </div>
-                  <div class="progression-level" :class="{ 'achieved': ['avance', 'champion'].includes(currentTheme) }">
-                    <div class="level-icon">🟠</div>
-                    <div class="level-info">
-                      <strong>Avancé</strong>
-                      <span>Thème orange - Complétez 10 défis</span>
-                    </div>
-                  </div>
-                  <div class="progression-level" :class="{ 'achieved': currentTheme === 'champion' }">
-                    <div class="level-icon">🟡</div>
-                    <div class="level-info">
-                      <strong>Champion</strong>
-                      <span>Thème doré - Complétez 20 défis</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="progression-tip">
-                  <p>💡 <strong>Astuce:</strong> Continuez à compléter des défis pour débloquer de nouveaux thèmes d'interface exclusifs !</p>
+          <!-- Mes badges récents -->
+          <div v-if="profile?.badges && profile.badges.length > 0" class="detail-card">
+            <h3>🏆 Mes Badges Récents</h3>
+            <div class="recent-badges">
+              <div
+                v-for="userBadge in profile.badges.slice(0, 5)"
+                :key="userBadge._id"
+                class="badge-item"
+              >
+                <div class="badge-icon">🏅</div>
+                <div class="badge-info">
+                  <strong>{{ userBadge.badgeId?.name || 'Badge' }}</strong>
+                  <span>Obtenu le {{ formatDate(userBadge.earnedAt) }}</span>
                 </div>
               </div>
             </div>
@@ -1558,6 +1832,187 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+/* Styles pour les formulaires de profil */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.edit-btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.profile-edit-form,
+.password-form {
+  display: grid;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.form-input {
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.save-btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: var(--color-background-mute);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: var(--color-border);
+}
+
+.security-info {
+  color: var(--color-text-muted);
+}
+
+.security-info p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.security-tip {
+  background: rgba(var(--color-accent-rgb, 6, 182, 212), 0.1);
+  border: 1px solid rgba(var(--color-accent-rgb, 6, 182, 212), 0.2);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.no-theme {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-muted);
+}
+
+.recent-badges {
+  display: grid;
+  gap: 12px;
+}
+
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-background-mute);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.badge-item:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-primary);
+}
+
+.badge-item .badge-icon {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.badge-info {
+  flex: 1;
+}
+
+.badge-info strong {
+  display: block;
+  color: var(--color-text);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.badge-info span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
 @media (max-width: 768px) {
   .theme-preview {
     flex-direction: column;
@@ -1567,6 +2022,20 @@ onMounted(async () => {
 
   .user-stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .edit-btn {
+    align-self: flex-start;
   }
 }
 </style>

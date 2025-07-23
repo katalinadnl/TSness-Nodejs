@@ -1,7 +1,8 @@
 import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { connectDB } from './config/db';
+import {connectDB} from './config/db';
+import { ProfileController } from './controllers/profileController';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import { UserService } from "./services/userService";
 import { UserController } from "./controllers/userController";
@@ -50,6 +51,8 @@ app.use('/api/themes', themeController.buildRoutes());
 app.use('/api/gyms', gymController.buildRoutes());
 app.use('/api/participations', participationController.buildRoutes());
 app.use('/api/invitations', invitationController.buildRoutes());
+const profileController = new ProfileController();
+app.use('/api/profile', profileController.buildRoutes());
 
 app.get('/', (_req: Request, res: Response) => {
     res.json({

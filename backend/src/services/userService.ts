@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 
 export class UserService {
 
-    // Récupérer tous les utilisateurs (avec pagination)
     async getAllUsers(page: number = 1, limit: number = 10, filters?: any) {
         const skip = (page - 1) * limit;
 
@@ -14,7 +13,6 @@ export class UserService {
             query.role = 'client';
         }
 
-        // Filtres optionnels
         if (filters?.role) {
             query.role = filters.role;
         }
@@ -50,7 +48,6 @@ export class UserService {
         };
     }
 
-    // Récupérer un utilisateur par ID
     async getUserById(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
@@ -66,7 +63,6 @@ export class UserService {
         return user;
     }
 
-    // Désactiver un utilisateur
     async deactivateUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
@@ -99,7 +95,6 @@ export class UserService {
         };
     }
 
-    // Réactiver un utilisateur
     async activateUser(userId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
@@ -124,7 +119,6 @@ export class UserService {
         };
     }
 
-    // Supprimer un utilisateur (soft delete)
     async deleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
@@ -160,7 +154,6 @@ export class UserService {
         };
     }
 
-    // Supprimer définitivement un utilisateur (hard delete)
     async permanentDeleteUser(userId: string, adminId: string) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error('invalid user ID');
@@ -187,7 +180,6 @@ export class UserService {
         };
     }
 
-    // Obtenir les statistiques des utilisateurs
     async getUserStats() {
         const stats = await User.aggregate([
             {
