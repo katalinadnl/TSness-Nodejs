@@ -27,11 +27,14 @@ services:
     build:
       context: ./frontend
       target: prod
+      args:
+        VITE_BACKEND_URL: "http://89.234.183.149:5001"
     container_name: frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
-
+    environment: 
+      - VITE_BACKEND_URL=http://89.234.183.149:5001
 volumes:
   mongo_data:
