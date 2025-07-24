@@ -1,7 +1,7 @@
 # TSness - NodeJS Project
 
 Projet Node.js + Vue 3 pour la gestion de salles de sport.  
-Cette appli est divisée en deux parties : **backend (API Express)** et **frontend (Vue 3)**.
+Cette appli est divisée en deux parties : **backend (API NodeJS Express)** et **frontend (Vue 3)**.
 
 ---
 
@@ -34,65 +34,74 @@ cd TSness-Nodejs
 
 ---
 
-### 2️⃣ Installer les dépendances
+### 2️⃣ Docker
 
-#### 📌 Backend
+#### 📌 .env
 
 ```bash
-cd backend
-npm install
+cd backend 
+cp .env.example .env
+npm install 
+npm run build
 ```
 
-#### 📌 Frontend
+```bash
+cd frontend 
+cp .env.example .env
+npm install
+npm run build
+```
+
+#### 📌 Lancer Docker
 
 ```bash
-cd ../frontend
-npm install
+docker compose up -d --build
+```
+
+#### 📌 Lancer les seeds pour remplir la base de données
+
+```bash
+docker compose exec backend sh
+
+node dist/scripts/seedAll.js
+
+```
+
+```bash
+cd frontend 
+cp .env.example .env
 ```
 
 ---
 
-## 🖥️ Démarrer le projet
+## Voir le projet en action
 
-### ✅ Lancer le backend (API)
-
-```bash
-cd backend
-npm run dev
-```
-
-➡️ L'API Express démarre sur [http://localhost:3001](http://localhost:3001)
+L'API Express démarre sur [http://localhost:3001](http://localhost:3001)
 
 ---
 
-### ✅ Lancer le frontend (Vue 3)
-
-```bash
-cd ../frontend
-npm run dev
-```
-
-➡️ Le frontend démarre sur [http://localhost:5173](http://localhost:5173)
+Le frontend démarre sur [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## 🔗 Résumé des ports
 
 | Partie   | Adresse                                        |
-| -------- | ---------------------------------------------- |
-| Backend  | [http://localhost:5000](http://localhost:5000) |
+| -------- |------------------------------------------------|
+| Backend  | [http://localhost:5001](http://localhost:5001) |
 | Frontend | [http://localhost:5173](http://localhost:5173) |
 
 
 ---
 
-## ✅ Notes
+## Comptes de test
+| Type de compte | Username   | Mot de passe  |
+|----------------|------------|---------------|
+| Super Admin    | superadmin | superadmin123 |
+| Gym Owner      | gymowner   | gymowner123   |
+| Client 1       | client1    | client123     |
+| Client 2       | client2    | client123     |
 
-* L'API Express doit être lancée **avant** pour que le frontend puisse consommer ses routes.
-* Vous pouvez tester les endpoints de l'API avec **Postman**.
-* Le projet est prévu pour être **testé en local** sur deux serveurs différents (API + Front).
-
----
 
 ## 🤝 Auteurs de la classe 4IW2 - ou autrement - Les best de la classe
 

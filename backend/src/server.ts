@@ -59,10 +59,6 @@ app.get("/", (_req: Request, res: Response) => {
 		message:
 			"API Fitness - Gestion des salles d'entraînement et types d'exercices",
 		version: "1.0.0",
-		endpoints: {
-			trainingRooms: "/api/training-rooms",
-			exerciseTypes: "/api/exercise-types",
-		},
 	});
 });
 
