@@ -94,7 +94,7 @@ const challengeForm = ref({
   difficulty: 'BEGINNER' as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED',
   goal: 'STAY_HEALTHY' as 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'IMPROVE_ENDURANCE' | 'STAY_HEALTHY',
   points: 50,
-  instructions: ''
+  instructions: '',
 })
 
 const checkAuth = () => {
@@ -119,8 +119,8 @@ const checkAuth = () => {
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   }
 }
 
@@ -129,7 +129,7 @@ const fetchMyGyms = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/gyms`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success && data.data.length > 0) {
@@ -152,7 +152,7 @@ const fetchMyTrainingRooms = async () => {
     const allRooms: TrainingRoom[] = []
     for (const gym of myGyms.value) {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/gyms/${gym._id}/full`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
       const data = await response.json()
       if (data.success && data.data && data.data.trainingRooms) {
@@ -161,7 +161,7 @@ const fetchMyTrainingRooms = async () => {
     }
     myTrainingRooms.value = allRooms
   } catch (err) {
-    error.value = 'Erreur lors du chargement des salles d\'entraînement'
+    error.value = "Erreur lors du chargement des salles d'entraînement"
   }
 }
 
@@ -170,7 +170,7 @@ const fetchLeaderboard = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/leaderboard`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -187,7 +187,7 @@ const fetchAllBadges = async () => {
   try {
     console.log('Fetching badges from API...')
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     console.log('Badges API response:', data)
@@ -219,7 +219,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -237,53 +237,60 @@ const fetchOwnerProfile = async () => {
 }
 
 const suggestChallenge = (badge: Badge) => {
-  alert(`Proposition de défi pour le badge "${badge.name}":\n\nCréez un défi personnalisé basé sur ce badge pour vos clients. Les participants peuvent gagner +100 points et obtenir ce badge en réussissant le défi!\n\nVous pouvez l'adapter selon les équipements de votre salle : ${myGym.value?.equipment.join(', ') || 'Aucun équipement'}.`)
+  alert(
+    `Proposition de défi pour le badge "${badge.name}":\n\nCréez un défi personnalisé basé sur ce badge pour vos clients. Les participants peuvent gagner +100 points et obtenir ce badge en réussissant le défi!\n\nVous pouvez l'adapter selon les équipements de votre salle : ${myGym.value?.equipment.join(', ') || 'Aucun équipement'}.`,
+  )
 }
 
 const createEquipmentChallenge = (equipment: string) => {
   selectedEquipment.value = equipment
 
   const challengeIdeas = {
-    'haltères': {
+    haltères: {
       title: 'Défi Haltères',
       description: 'Soulevez 80% de votre poids corporel 5 fois en moins de 2 minutes',
-      instructions: 'Échauffez-vous pendant 10 minutes, puis effectuez 5 répétitions de développé couché avec 80% de votre poids corporel en moins de 2 minutes.',
+      instructions:
+        'Échauffez-vous pendant 10 minutes, puis effectuez 5 répétitions de développé couché avec 80% de votre poids corporel en moins de 2 minutes.',
       goal: 'GAIN_MUSCLE' as const,
       difficulty: 'INTERMEDIATE' as const,
-      points: 75
+      points: 75,
     },
     'tapis de course': {
       title: 'Défi Cardio Course',
       description: 'Courez 5km en moins de 30 minutes',
-      instructions: 'Maintenez un rythme constant, hydratez-vous régulièrement. Objectif : 5km en moins de 30 minutes.',
+      instructions:
+        'Maintenez un rythme constant, hydratez-vous régulièrement. Objectif : 5km en moins de 30 minutes.',
       goal: 'IMPROVE_ENDURANCE' as const,
       difficulty: 'INTERMEDIATE' as const,
-      points: 100
+      points: 100,
     },
     'bancs de musculation': {
       title: 'Défi Développé-couché',
       description: 'Effectuez 20 répétitions à 60% de votre max',
-      instructions: 'Échauffement obligatoire. Effectuez 20 répétitions consécutives à 60% de votre 1RM au développé-couché.',
+      instructions:
+        'Échauffement obligatoire. Effectuez 20 répétitions consécutives à 60% de votre 1RM au développé-couché.',
       goal: 'GAIN_MUSCLE' as const,
       difficulty: 'INTERMEDIATE' as const,
-      points: 80
+      points: 80,
     },
     'vélos elliptiques': {
       title: 'Défi Endurance Elliptique',
-      description: '45 minutes d\'elliptique avec résistance moyenne',
-      instructions: 'Maintenez une résistance niveau 5-7 pendant 45 minutes. Gardez un rythme cardiaque entre 140-160 bpm.',
+      description: "45 minutes d'elliptique avec résistance moyenne",
+      instructions:
+        'Maintenez une résistance niveau 5-7 pendant 45 minutes. Gardez un rythme cardiaque entre 140-160 bpm.',
       goal: 'IMPROVE_ENDURANCE' as const,
       difficulty: 'BEGINNER' as const,
-      points: 60
+      points: 60,
     },
-    'barres': {
+    barres: {
       title: 'Défi Force Squat',
       description: '15 répétitions à votre poids corporel',
-      instructions: 'Squat avec barre - 15 répétitions avec une charge équivalente à votre poids corporel. Technique stricte exigée.',
+      instructions:
+        'Squat avec barre - 15 répétitions avec une charge équivalente à votre poids corporel. Technique stricte exigée.',
       goal: 'GAIN_MUSCLE' as const,
       difficulty: 'ADVANCED' as const,
-      points: 90
-    }
+      points: 90,
+    },
   }
 
   const suggestion = challengeIdeas[equipment as keyof typeof challengeIdeas] || {
@@ -292,7 +299,7 @@ const createEquipmentChallenge = (equipment: string) => {
     instructions: `Effectuez un entraînement complet avec ${equipment} en maintenant une intensité élevée pendant 30 minutes.`,
     goal: 'STAY_HEALTHY' as const,
     difficulty: 'BEGINNER' as const,
-    points: 50
+    points: 50,
   }
 
   challengeForm.value = {
@@ -303,7 +310,7 @@ const createEquipmentChallenge = (equipment: string) => {
     difficulty: suggestion.difficulty,
     goal: suggestion.goal,
     points: suggestion.points,
-    instructions: suggestion.instructions
+    instructions: suggestion.instructions,
   }
 
   showChallengeModal.value = true
@@ -326,12 +333,14 @@ const submitChallenge = async () => {
       gymId: myGym.value?._id,
       createdBy: currentUser.value?._id,
       type: 'equipment',
-      status: 'active'
+      status: 'active',
     }
 
     console.log('Creating challenge:', challengeData)
 
-    alert(`✅ Défi "${challengeForm.value.title}" créé avec succès!\n\nVos clients pourront maintenant participer à ce défi et gagner ${challengeForm.value.points} points.`)
+    alert(
+      `✅ Défi "${challengeForm.value.title}" créé avec succès!\n\nVos clients pourront maintenant participer à ce défi et gagner ${challengeForm.value.points} points.`,
+    )
 
     closeChallengeModal()
   } catch (error) {
@@ -342,15 +351,19 @@ const submitChallenge = async () => {
 
 const createActivityChallenge = (activity: string) => {
   const challengeIdeas = {
-    'yoga': 'Défi Yoga: Maintenez la position du guerrier III pendant 1 minute',
-    'crossfit': 'Défi CrossFit: Complétez un WOD de 15 minutes sans pause',
-    'musculation': 'Défi Muscu: Circuit de 5 exercices différents, 3 séries chacun',
-    'cardio': 'Défi Cardio: Brûlez 300 calories en moins de 45 minutes',
-    'fitness': 'Défi Fitness: Séance complète de 1h avec 3 types d\'exercices différents'
+    yoga: 'Défi Yoga: Maintenez la position du guerrier III pendant 1 minute',
+    crossfit: 'Défi CrossFit: Complétez un WOD de 15 minutes sans pause',
+    musculation: 'Défi Muscu: Circuit de 5 exercices différents, 3 séries chacun',
+    cardio: 'Défi Cardio: Brûlez 300 calories en moins de 45 minutes',
+    fitness: "Défi Fitness: Séance complète de 1h avec 3 types d'exercices différents",
   }
 
-  const challenge = challengeIdeas[activity as keyof typeof challengeIdeas] || `Défi ${activity}: Participez à une séance intensive de cette activité`
-  alert(`🎯 ${challenge}\n\nRécompense: +75 points + bonus participation\n\nVos clients vont adorer ce nouveau défi !`)
+  const challenge =
+    challengeIdeas[activity as keyof typeof challengeIdeas] ||
+    `Défi ${activity}: Participez à une séance intensive de cette activité`
+  alert(
+    `🎯 ${challenge}\n\nRécompense: +75 points + bonus participation\n\nVos clients vont adorer ce nouveau défi !`,
+  )
 }
 
 const getTrainingRoomsEquipment = () => {
@@ -360,9 +373,9 @@ const getTrainingRoomsEquipment = () => {
 
   const equipmentSet = new Set<string>()
 
-  myTrainingRooms.value.forEach(room => {
+  myTrainingRooms.value.forEach((room) => {
     if (room.equipment && Array.isArray(room.equipment)) {
-      room.equipment.forEach(eq => {
+      room.equipment.forEach((eq) => {
         if (typeof eq === 'string' && eq.trim()) {
           equipmentSet.add(eq.trim())
         }
@@ -393,9 +406,7 @@ onMounted(() => {
         <p v-if="myGym" class="gym-name">{{ myGym.name }}</p>
       </div>
       <div class="header-actions">
-        <button @click="logout" class="btn btn-secondary">
-          Déconnexion
-        </button>
+        <button @click="logout" class="btn btn-secondary">Déconnexion</button>
       </div>
     </div>
 
@@ -426,7 +437,15 @@ onMounted(() => {
         🏃 Salles d'Entraînement
       </button>
       <button
-        @click="activeTab = 'badges'; console.log('Badge tab clicked, activeTab is now:', activeTab, 'allBadges count:', allBadges.length)"
+        @click="
+          activeTab = 'badges'
+          console.log(
+            'Badge tab clicked, activeTab is now:',
+            activeTab,
+            'allBadges count:',
+            allBadges.length,
+          )
+        "
         :class="{ active: activeTab === 'badges' }"
         class="tab-button"
       >
@@ -470,7 +489,7 @@ onMounted(() => {
           <div class="stat-card">
             <div class="stat-icon">✅</div>
             <div class="stat-content">
-              <h3>{{ myTrainingRooms.filter(room => room.isApproved).length }}</h3>
+              <h3>{{ myTrainingRooms.filter((room) => room.isApproved).length }}</h3>
               <p>Salles Approuvées</p>
             </div>
           </div>
@@ -478,7 +497,7 @@ onMounted(() => {
           <div class="stat-card">
             <div class="stat-icon">⏳</div>
             <div class="stat-content">
-              <h3>{{ myTrainingRooms.filter(room => !room.isApproved).length }}</h3>
+              <h3>{{ myTrainingRooms.filter((room) => !room.isApproved).length }}</h3>
               <p>Salles en Attente</p>
             </div>
           </div>
@@ -505,40 +524,43 @@ onMounted(() => {
 
       <div v-if="activeTab === 'gym'" class="gym-content">
         <div v-if="!myGym" class="no-gym-message">
-          <p>Aucune salle de sport trouvée. Veuillez vous assurer d'être assigné à une salle de sport.</p>
+          <p>
+            Aucune salle de sport trouvée. Veuillez vous assurer d'être assigné à une salle de
+            sport.
+          </p>
         </div>
 
         <div v-else>
-        <div class="section-header">
-          <h2>Ma Salle de Sport</h2>
-        </div>
-        <div class="gym-details">
-          <div class="detail-card">
-            <h3>Informations générales</h3>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <strong>Nom:</strong>
-                <span>{{ myGym.name }}</span>
-              </div>
-              <div class="detail-item">
-                <strong>Description:</strong>
-                <span>{{ myGym.description }}</span>
-              </div>
-              <div class="detail-item">
-                <strong>Adresse:</strong>
-                <span>{{ myGym.address }}</span>
-              </div>
-              <div class="detail-item">
-                <strong>Téléphone:</strong>
-                <span>{{ myGym.contactPhone }}</span>
-              </div>
-              <div class="detail-item">
-                <strong>Email:</strong>
-                <span>{{ myGym.contactEmail }}</span>
+          <div class="section-header">
+            <h2>Ma Salle de Sport</h2>
+          </div>
+          <div class="gym-details">
+            <div class="detail-card">
+              <h3>Informations générales</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <strong>Nom:</strong>
+                  <span>{{ myGym.name }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Description:</strong>
+                  <span>{{ myGym.description }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Adresse:</strong>
+                  <span>{{ myGym.address }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Téléphone:</strong>
+                  <span>{{ myGym.contactPhone }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Email:</strong>
+                  <span>{{ myGym.contactEmail }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 
@@ -550,9 +572,7 @@ onMounted(() => {
         <div class="items-grid">
           <div v-for="room in myTrainingRooms" :key="room._id" class="item-card">
             <div class="item-info">
-              <div class="item-avatar room-avatar">
-                🏃
-              </div>
+              <div class="item-avatar room-avatar">🏃</div>
               <div class="item-details">
                 <h3>{{ room.name }}</h3>
                 <p>👥 Capacité: {{ room.capacity }} personnes</p>
@@ -567,9 +587,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(room, 'room')" class="btn btn-info">
-                Voir
-              </button>
+              <button @click="viewDetails(room, 'room')" class="btn btn-info">Voir</button>
             </div>
           </div>
         </div>
@@ -585,16 +603,21 @@ onMounted(() => {
           <div class="detail-card">
             <h3>🏆 Tous les Badges Disponibles</h3>
             <p class="section-description">
-              Découvrez tous les badges que vos clients peuvent obtenir et proposez des défis personnalisés.
+              Découvrez tous les badges que vos clients peuvent obtenir et proposez des défis
+              personnalisés.
             </p>
 
             <div class="items-grid">
               <div v-for="badge in allBadges" :key="badge._id" class="item-card">
                 <div class="item-info">
                   <div class="item-avatar badge-avatar">
-                    <img :src="badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                         :alt="badge.name"
-                         class="badge-icon"
+                    <img
+                      :src="
+                        badge.iconUrl ||
+                        'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                      "
+                      :alt="badge.name"
+                      class="badge-icon"
                     />
                   </div>
                   <div class="item-details">
@@ -606,9 +629,7 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="item-actions">
-                  <button @click="viewDetails(badge, 'badge')" class="btn btn-info">
-                    Voir
-                  </button>
+                  <button @click="viewDetails(badge, 'badge')" class="btn btn-info">Voir</button>
                 </div>
               </div>
             </div>
@@ -618,8 +639,15 @@ onMounted(() => {
             <div class="challenge-generator">
               <div class="equipment-based-challenges">
                 <h4>🏋️ Défis basés sur vos équipements</h4>
-                <div v-if="myGym?.equipment && myGym.equipment.length > 0" class="equipment-challenges-grid">
-                  <div v-for="equipment in myGym.equipment" :key="equipment" class="equipment-challenge">
+                <div
+                  v-if="myGym?.equipment && myGym.equipment.length > 0"
+                  class="equipment-challenges-grid"
+                >
+                  <div
+                    v-for="equipment in myGym.equipment"
+                    :key="equipment"
+                    class="equipment-challenge"
+                  >
                     <div class="equipment-info">
                       <span class="equipment-name">{{ equipment }}</span>
                       <p>Défi suggéré pour cet équipement</p>
@@ -631,23 +659,43 @@ onMounted(() => {
                 </div>
                 <div v-else class="equipment-challenges-grid">
                   <div v-if="getTrainingRoomsEquipment().length > 0">
-                    <div v-for="equipment in getTrainingRoomsEquipment()" :key="equipment" class="equipment-challenge">
+                    <div
+                      v-for="equipment in getTrainingRoomsEquipment()"
+                      :key="equipment"
+                      class="equipment-challenge"
+                    >
                       <div class="equipment-info">
                         <span class="equipment-name">{{ equipment }}</span>
                         <p>Défi suggéré pour cet équipement (depuis vos salles d'entraînement)</p>
                       </div>
-                      <button @click="createEquipmentChallenge(equipment)" class="btn btn-secondary">
+                      <button
+                        @click="createEquipmentChallenge(equipment)"
+                        class="btn btn-secondary"
+                      >
                         Créer Défi
                       </button>
                     </div>
                   </div>
                   <div v-else>
-                    <div v-for="equipment in ['haltères', 'tapis de course', 'bancs de musculation', 'vélos elliptiques', 'barres']" :key="equipment" class="equipment-challenge">
+                    <div
+                      v-for="equipment in [
+                        'haltères',
+                        'tapis de course',
+                        'bancs de musculation',
+                        'vélos elliptiques',
+                        'barres',
+                      ]"
+                      :key="equipment"
+                      class="equipment-challenge"
+                    >
                       <div class="equipment-info">
                         <span class="equipment-name">{{ equipment }}</span>
                         <p>Défi suggéré pour cet équipement (TEST)</p>
                       </div>
-                      <button @click="createEquipmentChallenge(equipment)" class="btn btn-secondary">
+                      <button
+                        @click="createEquipmentChallenge(equipment)"
+                        class="btn btn-secondary"
+                      >
                         Créer Défi
                       </button>
                     </div>
@@ -655,10 +703,17 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="activity-based-challenges" v-if="myGym && myGym.activities && myGym.activities.length > 0">
+              <div
+                class="activity-based-challenges"
+                v-if="myGym && myGym.activities && myGym.activities.length > 0"
+              >
                 <h4>🎯 Défis basés sur vos activités</h4>
                 <div class="activity-challenges-grid">
-                  <div v-for="activity in myGym.activities" :key="activity" class="activity-challenge">
+                  <div
+                    v-for="activity in myGym.activities"
+                    :key="activity"
+                    class="activity-challenge"
+                  >
                     <div class="activity-info">
                       <span class="activity-name">{{ activity }}</span>
                       <p>Défi suggéré pour cette activité</p>
@@ -683,11 +738,14 @@ onMounted(() => {
         <div class="leaderboard-grid">
           <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card">
             <div class="rank">
-              <div class="rank-number" :class="{
-                'gold': index === 0,
-                'silver': index === 1,
-                'bronze': index === 2
-              }">
+              <div
+                class="rank-number"
+                :class="{
+                  gold: index === 0,
+                  silver: index === 1,
+                  bronze: index === 2,
+                }"
+              >
                 {{ index + 1 }}
               </div>
               <div class="rank-icon">
@@ -716,9 +774,13 @@ onMounted(() => {
                   :key="userBadge.badgeId"
                   class="badge-mini"
                 >
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                       :alt="userBadge.badge?.name || 'Badge'"
-                       class="badge-mini-icon"
+                  <img
+                    :src="
+                      userBadge.badge?.iconUrl ||
+                      'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                    "
+                    :alt="userBadge.badge?.name || 'Badge'"
+                    class="badge-mini-icon"
                   />
                 </div>
                 <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
@@ -738,7 +800,8 @@ onMounted(() => {
         <div v-if="ownerProfile" class="profile-section">
           <div class="profile-card">
             <div class="profile-avatar">
-              {{ ownerProfile.firstName?.charAt(0) || '' }}{{ ownerProfile.lastName?.charAt(0) || '' }}
+              {{ ownerProfile.firstName?.charAt(0) || ''
+              }}{{ ownerProfile.lastName?.charAt(0) || '' }}
             </div>
           </div>
 
@@ -760,27 +823,29 @@ onMounted(() => {
                 </div>
                 <div class="detail-item">
                   <strong>Rôle:</strong>
-                  <span>{{ ownerProfile.role === 'gym_owner' ? 'Gestionnaire de Salle' : ownerProfile.role }}</span>
+                  <span>{{
+                    ownerProfile.role === 'gym_owner' ? 'Gestionnaire de Salle' : ownerProfile.role
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <strong>Statut:</strong>
-                  <span class="status active">{{ ownerProfile.isActive ? 'Actif' : 'Inactif' }}</span>
+                  <span class="status active">{{
+                    ownerProfile.isActive ? 'Actif' : 'Inactif'
+                  }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div v-else class="loading-message">
-          Chargement du profil...
-        </div>
+        <div v-else class="loading-message">Chargement du profil...</div>
       </div>
     </div>
 
     <div v-if="showModal" class="modal-overlay" @click="showModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ modalType === 'badge' ? 'Détails du Badge' : 'Détails Salle d\'Entraînement' }}</h3>
+          <h3>{{ modalType === 'badge' ? 'Détails du Badge' : "Détails Salle d'Entraînement" }}</h3>
           <button @click="showModal = false" class="modal-close">&times;</button>
         </div>
         <div v-if="selectedItem" class="modal-body">
@@ -788,9 +853,13 @@ onMounted(() => {
           <div v-if="modalType === 'badge'" class="detail-grid">
             <div class="detail-item badge-icon-detail">
               <div class="badge-icon-large">
-                <img :src="selectedItem.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                     :alt="selectedItem.name"
-                     class="badge-image-large"
+                <img
+                  :src="
+                    selectedItem.iconUrl ||
+                    'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                  "
+                  :alt="selectedItem.name"
+                  class="badge-image-large"
                 />
               </div>
             </div>
@@ -839,7 +908,7 @@ onMounted(() => {
             </div>
             <div class="detail-item">
               <strong>Statut:</strong>
-              <span>{{ selectedItem.isApproved ? 'Approuvé' : 'En attente d\'approbation' }}</span>
+              <span>{{ selectedItem.isApproved ? 'Approuvé' : "En attente d'approbation" }}</span>
             </div>
             <div class="detail-item">
               <strong>Créé par:</strong>
@@ -947,9 +1016,7 @@ onMounted(() => {
             <button type="button" class="btn-secondary" @click="closeChallengeModal">
               Annuler
             </button>
-            <button type="submit" class="btn-primary">
-              Créer le Défi
-            </button>
+            <button type="submit" class="btn-primary">Créer le Défi</button>
           </div>
         </form>
       </div>
@@ -1164,13 +1231,15 @@ onMounted(() => {
   color: var(--color-text-muted);
 }
 
-.equipment-list, .activities-list {
+.equipment-list,
+.activities-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.equipment-tag, .activity-tag {
+.equipment-tag,
+.activity-tag {
   background: var(--color-primary);
   color: white;
   padding: 4px 12px;
@@ -1245,7 +1314,8 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.status, .manager {
+.status,
+.manager {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;

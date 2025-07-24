@@ -19,9 +19,13 @@ onMounted(async () => {
   await initTheme()
 })
 
-watch(() => router.currentRoute.value.path, async () => {
-  await initTheme()
-}, { flush: 'post' })
+watch(
+  () => router.currentRoute.value.path,
+  async () => {
+    await initTheme()
+  },
+  { flush: 'post' },
+)
 </script>
 
 <style scoped>

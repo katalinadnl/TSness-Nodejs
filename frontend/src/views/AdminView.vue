@@ -113,7 +113,7 @@ const badgeFormData = ref({
   iconUrl: '',
   requirements: {
     type: 'participation',
-    value: 0
+    value: 0,
   },
   theme: {
     createNew: false,
@@ -128,10 +128,10 @@ const badgeFormData = ref({
         background: '#ffffff',
         backgroundSoft: '#f8fafc',
         text: '#1e293b',
-        textMuted: '#64748b'
-      }
-    }
-  }
+        textMuted: '#64748b',
+      },
+    },
+  },
 })
 const createBadgeLoading = ref(false)
 const updateBadgeLoading = ref(false)
@@ -157,8 +157,8 @@ const checkAuth = () => {
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   }
 }
 
@@ -167,7 +167,7 @@ const fetchUsers = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -183,7 +183,7 @@ const fetchGyms = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/gyms`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -199,14 +199,14 @@ const fetchTrainingRooms = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/training-rooms`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
       trainingRooms.value = data.data
     }
   } catch (err) {
-    error.value = 'Erreur lors du chargement des salles d\'entraînement'
+    error.value = "Erreur lors du chargement des salles d'entraînement"
   }
 }
 
@@ -215,7 +215,7 @@ const fetchBadges = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -231,7 +231,7 @@ const fetchLeaderboard = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/leaderboard`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -248,7 +248,7 @@ const fetchThemes = async () => {
   try {
     console.log('Fetching themes from:', `${import.meta.env.VITE_BACKEND_URL}/api/themes/all`)
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes/all`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     console.log('Response status:', response.status)
     const data = await response.json()
@@ -271,10 +271,13 @@ const toggleUserStatus = async (userId: string, isActive: boolean) => {
 
   try {
     const endpoint = isActive ? 'deactivate' : 'activate'
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users/${userId}/${endpoint}`, {
-      method: 'PUT',
-      headers: getAuthHeaders()
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/users/${userId}/${endpoint}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      },
+    )
 
     const data = await response.json()
     if (data.success) {
@@ -306,7 +309,7 @@ const openCreateBadgeModal = () => {
     iconUrl: '',
     requirements: {
       type: 'participation',
-      value: 0
+      value: 0,
     },
     theme: {
       createNew: false,
@@ -321,10 +324,10 @@ const openCreateBadgeModal = () => {
           background: '#ffffff',
           backgroundSoft: '#f8fafc',
           text: '#1e293b',
-          textMuted: '#64748b'
-        }
-      }
-    }
+          textMuted: '#64748b',
+        },
+      },
+    },
   }
   showCreateBadgeModal.value = true
 }
@@ -337,7 +340,7 @@ const closeCreateBadgeModal = () => {
     iconUrl: '',
     requirements: {
       type: 'participation',
-      value: 0
+      value: 0,
     },
     theme: {
       createNew: false,
@@ -352,10 +355,10 @@ const closeCreateBadgeModal = () => {
           background: '#ffffff',
           backgroundSoft: '#f8fafc',
           text: '#1e293b',
-          textMuted: '#64748b'
-        }
-      }
-    }
+          textMuted: '#64748b',
+        },
+      },
+    },
   }
 }
 
@@ -390,7 +393,7 @@ const createBadge = async () => {
       const themeResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(badgeFormData.value.theme.newTheme)
+        body: JSON.stringify(badgeFormData.value.theme.newTheme),
       })
 
       const themeData = await themeResponse.json()
@@ -410,13 +413,13 @@ const createBadge = async () => {
       description: badgeFormData.value.description,
       iconUrl: badgeFormData.value.iconUrl,
       rule: rule,
-      themeId: themeId
+      themeId: themeId,
     }
 
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(badgeData)
+      body: JSON.stringify(badgeData),
     })
 
     const data = await response.json()
@@ -437,17 +440,17 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
 const getManagerName = (managerId: string) => {
-  const manager = users.value.find(u => u._id === managerId)
+  const manager = users.value.find((u) => u._id === managerId)
   return manager ? `${manager.firstName} ${manager.lastName}` : 'Non assigné'
 }
 
 const getGymName = (gymId: string) => {
-  const gym = gyms.value.find(g => g._id === gymId)
+  const gym = gyms.value.find((g) => g._id === gymId)
   return gym ? gym.name : 'Salle inconnue'
 }
 
@@ -484,11 +487,11 @@ const getRequirementPlaceholder = () => {
 const getRequirementDescription = () => {
   switch (badgeFormData.value.requirements.type) {
     case 'participation':
-      return 'Le nombre total de défis qu\'un utilisateur doit compléter pour obtenir ce badge'
+      return "Le nombre total de défis qu'un utilisateur doit compléter pour obtenir ce badge"
     case 'streak':
-      return 'Le nombre de défis qu\'un utilisateur doit avoir actifs en même temps'
+      return "Le nombre de défis qu'un utilisateur doit avoir actifs en même temps"
     case 'achievement':
-      return 'Le nombre total de calories qu\'un utilisateur doit brûler (cumulé)'
+      return "Le nombre total de calories qu'un utilisateur doit brûler (cumulé)"
     case 'time_based':
       return 'Le pourcentage de progression moyenne requis (de 1 à 100)'
     default:
@@ -510,10 +513,13 @@ const toggleThemeStatus = async (themeId: string, isActive: boolean) => {
 
   try {
     const endpoint = isActive ? 'deactivate' : 'activate'
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes/${themeId}/${endpoint}`, {
-      method: 'PUT',
-      headers: getAuthHeaders()
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/themes/${themeId}/${endpoint}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      },
+    )
 
     const data = await response.json()
     if (data.success) {
@@ -559,7 +565,7 @@ const openEditBadgeModal = (badge: Badge) => {
     iconUrl: badge.iconUrl,
     requirements: {
       type: requirementType,
-      value: requirementValue
+      value: requirementValue,
     },
     theme: {
       createNew: false,
@@ -574,10 +580,10 @@ const openEditBadgeModal = (badge: Badge) => {
           background: '#ffffff',
           backgroundSoft: '#f8fafc',
           text: '#1e293b',
-          textMuted: '#64748b'
-        }
-      }
-    }
+          textMuted: '#64748b',
+        },
+      },
+    },
   }
   showEditBadgeModal.value = true
 }
@@ -591,7 +597,7 @@ const closeEditBadgeModal = () => {
     iconUrl: '',
     requirements: {
       type: 'participation',
-      value: 0
+      value: 0,
     },
     theme: {
       createNew: false,
@@ -606,10 +612,10 @@ const closeEditBadgeModal = () => {
           background: '#ffffff',
           backgroundSoft: '#f8fafc',
           text: '#1e293b',
-          textMuted: '#64748b'
-        }
-      }
-    }
+          textMuted: '#64748b',
+        },
+      },
+    },
   }
 }
 
@@ -644,7 +650,7 @@ const updateBadge = async () => {
       const themeResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(badgeFormData.value.theme.newTheme)
+        body: JSON.stringify(badgeFormData.value.theme.newTheme),
       })
 
       const themeData = await themeResponse.json()
@@ -664,14 +670,17 @@ const updateBadge = async () => {
       description: badgeFormData.value.description,
       iconUrl: badgeFormData.value.iconUrl,
       rule: rule,
-      themeId: themeId
+      themeId: themeId,
     }
 
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/${editingBadge.value._id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(badgeData)
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/badges/${editingBadge.value._id}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(badgeData),
+      },
+    )
 
     const data = await response.json()
     if (data.success) {
@@ -690,13 +699,15 @@ const updateBadge = async () => {
 const deleteBadge = async (badgeId: string, badgeName: string) => {
   if (!checkAuth()) return
 
-  const confirmed = confirm(`Êtes-vous sûr de vouloir supprimer le badge "${badgeName}" ?\n\nCette action est irréversible.`)
+  const confirmed = confirm(
+    `Êtes-vous sûr de vouloir supprimer le badge "${badgeName}" ?\n\nCette action est irréversible.`,
+  )
   if (!confirmed) return
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/${badgeId}`, {
       method: 'DELETE',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
 
     const data = await response.json()
@@ -723,8 +734,8 @@ const themeFormData = ref({
     background: '#ffffff',
     backgroundSoft: '#f8fafc',
     text: '#1e293b',
-    textMuted: '#64748b'
-  }
+    textMuted: '#64748b',
+  },
 })
 const createThemeLoading = ref(false)
 const updateThemeLoading = ref(false)
@@ -740,8 +751,8 @@ const openCreateThemeModal = () => {
       background: '#ffffff',
       backgroundSoft: '#f8fafc',
       text: '#1e293b',
-      textMuted: '#64748b'
-    }
+      textMuted: '#64748b',
+    },
   }
   showCreateThemeModal.value = true
 }
@@ -758,8 +769,8 @@ const closeCreateThemeModal = () => {
       background: '#ffffff',
       backgroundSoft: '#f8fafc',
       text: '#1e293b',
-      textMuted: '#64748b'
-    }
+      textMuted: '#64748b',
+    },
   }
 }
 
@@ -773,7 +784,7 @@ const createTheme = async () => {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(themeFormData.value)
+      body: JSON.stringify(themeFormData.value),
     })
 
     const data = await response.json()
@@ -795,7 +806,7 @@ const openEditThemeModal = (theme: Theme) => {
   themeFormData.value = {
     name: theme.name,
     description: theme.description,
-    colors: { ...theme.colors }
+    colors: { ...theme.colors },
   }
   showEditThemeModal.value = true
 }
@@ -813,8 +824,8 @@ const closeEditThemeModal = () => {
       background: '#ffffff',
       backgroundSoft: '#f8fafc',
       text: '#1e293b',
-      textMuted: '#64748b'
-    }
+      textMuted: '#64748b',
+    },
   }
 }
 
@@ -825,11 +836,14 @@ const updateTheme = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes/${editingTheme.value._id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(themeFormData.value)
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/themes/${editingTheme.value._id}`,
+      {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(themeFormData.value),
+      },
+    )
 
     const data = await response.json()
     if (data.success) {
@@ -848,13 +862,15 @@ const updateTheme = async () => {
 const deleteTheme = async (themeId: string, themeName: string) => {
   if (!checkAuth()) return
 
-  const confirmed = confirm(`Êtes-vous sûr de vouloir supprimer le thème "${themeName}" ?\n\nCette action est irréversible.`)
+  const confirmed = confirm(
+    `Êtes-vous sûr de vouloir supprimer le thème "${themeName}" ?\n\nCette action est irréversible.`,
+  )
   if (!confirmed) return
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes/${themeId}`, {
       method: 'DELETE',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
 
     const data = await response.json()
@@ -869,12 +885,12 @@ const deleteTheme = async (themeId: string, themeName: string) => {
 }
 
 const getThemeName = (themeId: string) => {
-  const theme = themes.value.find(t => t._id === themeId)
+  const theme = themes.value.find((t) => t._id === themeId)
   return theme ? theme.name : 'Theme not found'
 }
 
 const getThemePreviewStyle = (themeId: string) => {
-  const theme = themes.value.find(t => t._id === themeId)
+  const theme = themes.value.find((t) => t._id === themeId)
   if (!theme) return {}
 
   return {
@@ -883,7 +899,7 @@ const getThemePreviewStyle = (themeId: string) => {
     height: '20px',
     borderRadius: '4px',
     display: 'inline-block',
-    marginLeft: '8px'
+    marginLeft: '8px',
   }
 }
 
@@ -921,9 +937,7 @@ onMounted(() => {
         <p>Gestion complète de TSness</p>
       </div>
       <div class="header-actions">
-        <button @click="logout" class="btn btn-secondary">
-          Déconnexion
-        </button>
+        <button @click="logout" class="btn btn-secondary">Déconnexion</button>
       </div>
     </div>
 
@@ -1047,9 +1061,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(user, 'user')" class="btn btn-info">
-                Voir
-              </button>
+              <button @click="viewDetails(user, 'user')" class="btn btn-info">Voir</button>
               <button
                 v-if="user.role === 'gym_owner' || user.role === 'client'"
                 @click="toggleUserStatus(user._id, user.isActive)"
@@ -1069,9 +1081,7 @@ onMounted(() => {
         <div class="items-grid">
           <div v-for="gym in gyms" :key="gym._id" class="item-card">
             <div class="item-info">
-              <div class="item-avatar gym-avatar">
-                🏋️
-              </div>
+              <div class="item-avatar gym-avatar">🏋️</div>
               <div class="item-details">
                 <h3>{{ gym.name }}</h3>
                 <p>{{ gym.address }}</p>
@@ -1086,9 +1096,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(gym, 'gym')" class="btn btn-info">
-                Voir
-              </button>
+              <button @click="viewDetails(gym, 'gym')" class="btn btn-info">Voir</button>
             </div>
           </div>
         </div>
@@ -1101,9 +1109,7 @@ onMounted(() => {
         <div class="items-grid">
           <div v-for="room in trainingRooms" :key="room._id" class="item-card">
             <div class="item-info">
-              <div class="item-avatar room-avatar">
-                🏃
-              </div>
+              <div class="item-avatar room-avatar">🏃</div>
               <div class="item-details">
                 <h3>{{ room.name }}</h3>
                 <p>👥 Capacité: {{ room.capacity }} personnes</p>
@@ -1118,9 +1124,7 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(room, 'room')" class="btn btn-info">
-                Voir
-              </button>
+              <button @click="viewDetails(room, 'room')" class="btn btn-info">Voir</button>
             </div>
           </div>
         </div>
@@ -1129,9 +1133,7 @@ onMounted(() => {
         <div class="section-header">
           <h2>Badges et Récompenses</h2>
           <div class="header-actions">
-            <button @click="openCreateBadgeModal" class="btn btn-primary">
-              + Créer Badge
-            </button>
+            <button @click="openCreateBadgeModal" class="btn btn-primary">+ Créer Badge</button>
             <span class="count">{{ badges.length }} badge(s)</span>
           </div>
         </div>
@@ -1155,12 +1157,8 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(badge, 'badge')" class="btn btn-info">
-                Voir
-              </button>
-              <button @click="openEditBadgeModal(badge)" class="btn btn-secondary">
-                Modifier
-              </button>
+              <button @click="viewDetails(badge, 'badge')" class="btn btn-info">Voir</button>
+              <button @click="openEditBadgeModal(badge)" class="btn btn-secondary">Modifier</button>
               <button
                 @click="deleteBadge(badge._id, badge.name)"
                 class="btn btn-danger"
@@ -1181,11 +1179,14 @@ onMounted(() => {
         <div class="leaderboard-grid">
           <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card">
             <div class="rank">
-              <div class="rank-number" :class="{
-                'gold': index === 0,
-                'silver': index === 1,
-                'bronze': index === 2
-              }">
+              <div
+                class="rank-number"
+                :class="{
+                  gold: index === 0,
+                  silver: index === 1,
+                  bronze: index === 2,
+                }"
+              >
                 {{ index + 1 }}
               </div>
               <div class="rank-icon">
@@ -1214,9 +1215,13 @@ onMounted(() => {
                   :key="userBadge.badgeId"
                   class="badge-mini"
                 >
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                       :alt="userBadge.badge?.name || 'Badge'"
-                       class="badge-mini-icon"
+                  <img
+                    :src="
+                      userBadge.badge?.iconUrl ||
+                      'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                    "
+                    :alt="userBadge.badge?.name || 'Badge'"
+                    class="badge-mini-icon"
                   />
                 </div>
                 <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
@@ -1247,62 +1252,89 @@ onMounted(() => {
                 </div>
                 <div class="detail-item">
                   <strong>Rôle:</strong>
-                  <span>{{ adminProfile.role === 'super_admin' ? 'Super Administrateur' : adminProfile.role }}</span>
+                  <span>{{
+                    adminProfile.role === 'super_admin' ? 'Super Administrateur' : adminProfile.role
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <strong>Statut:</strong>
-                  <span class="status active">{{ adminProfile.isActive ? 'Actif' : 'Inactif' }}</span>
+                  <span class="status active">{{
+                    adminProfile.isActive ? 'Actif' : 'Inactif'
+                  }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div v-else class="loading-message">
-          Chargement du profil...
-        </div>
+        <div v-else class="loading-message">Chargement du profil...</div>
       </div>
 
       <div v-if="activeTab === 'themes'" class="themes-content">
         <div class="section-header">
           <h2>Thèmes</h2>
           <div class="header-actions">
-            <button @click="openCreateThemeModal" class="btn btn-primary">
-              + Créer Thème
-            </button>
+            <button @click="openCreateThemeModal" class="btn btn-primary">+ Créer Thème</button>
             <span class="count">{{ themes.length }} thème(s)</span>
           </div>
         </div>
         <div class="items-grid">
           <div v-for="theme in themes" :key="theme._id" class="item-card theme-card">
             <div class="item-info">
-              <div class="theme-preview-card"
-                   :style="{
-                     '--theme-primary': theme.colors.primary,
-                     '--theme-secondary': theme.colors.secondary,
-                     '--theme-accent': theme.colors.accent,
-                     '--theme-background': theme.colors.background,
-                     '--theme-background-soft': theme.colors.backgroundSoft,
-                     '--theme-text': theme.colors.text,
-                     '--theme-text-muted': theme.colors.textMuted
-                   }">
-                <div class="theme-header" :style="{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})` }">
-                  <div class="theme-title" :style="{ color: theme.colors.text }">{{ theme.name }}</div>
-                  <div class="theme-subtitle" :style="{ color: theme.colors.textMuted }">Prévisualisation</div>
+              <div
+                class="theme-preview-card"
+                :style="{
+                  '--theme-primary': theme.colors.primary,
+                  '--theme-secondary': theme.colors.secondary,
+                  '--theme-accent': theme.colors.accent,
+                  '--theme-background': theme.colors.background,
+                  '--theme-background-soft': theme.colors.backgroundSoft,
+                  '--theme-text': theme.colors.text,
+                  '--theme-text-muted': theme.colors.textMuted,
+                }"
+              >
+                <div
+                  class="theme-header"
+                  :style="{
+                    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+                  }"
+                >
+                  <div class="theme-title" :style="{ color: theme.colors.text }">
+                    {{ theme.name }}
+                  </div>
+                  <div class="theme-subtitle" :style="{ color: theme.colors.textMuted }">
+                    Prévisualisation
+                  </div>
                 </div>
                 <div class="theme-content" :style="{ background: theme.colors.background }">
-                  <div class="theme-element primary-btn"
-                       :style="{
-                         background: theme.colors.primary,
-                         color: theme.colors.background === '#ffffff' || theme.colors.background === '#f0fdf4' || theme.colors.background === '#fff7ed' || theme.colors.background === '#f0f9ff' ? '#000' : '#fff'
-                       }">
+                  <div
+                    class="theme-element primary-btn"
+                    :style="{
+                      background: theme.colors.primary,
+                      color:
+                        theme.colors.background === '#ffffff' ||
+                        theme.colors.background === '#f0fdf4' ||
+                        theme.colors.background === '#fff7ed' ||
+                        theme.colors.background === '#f0f9ff'
+                          ? '#000'
+                          : '#fff',
+                    }"
+                  >
                     Bouton Principal
                   </div>
-                  <div class="theme-element secondary-btn"
-                       :style="{
-                         background: theme.colors.secondary,
-                         color: theme.colors.background === '#ffffff' || theme.colors.background === '#f0fdf4' || theme.colors.background === '#fff7ed' || theme.colors.background === '#f0f9ff' ? '#000' : '#fff'
-                       }">
+                  <div
+                    class="theme-element secondary-btn"
+                    :style="{
+                      background: theme.colors.secondary,
+                      color:
+                        theme.colors.background === '#ffffff' ||
+                        theme.colors.background === '#f0fdf4' ||
+                        theme.colors.background === '#fff7ed' ||
+                        theme.colors.background === '#f0f9ff'
+                          ? '#000'
+                          : '#fff',
+                    }"
+                  >
                     Bouton Secondaire
                   </div>
                   <div class="theme-text" :style="{ color: theme.colors.text }">
@@ -1313,10 +1345,26 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="theme-colors">
-                  <div class="color-dot" :style="{ background: theme.colors.primary }" :title="`Primaire: ${theme.colors.primary}`"></div>
-                  <div class="color-dot" :style="{ background: theme.colors.secondary }" :title="`Secondaire: ${theme.colors.secondary}`"></div>
-                  <div class="color-dot" :style="{ background: theme.colors.accent }" :title="`Accent: ${theme.colors.accent}`"></div>
-                  <div class="color-dot" :style="{ background: theme.colors.background }" :title="`Arrière-plan: ${theme.colors.background}`"></div>
+                  <div
+                    class="color-dot"
+                    :style="{ background: theme.colors.primary }"
+                    :title="`Primaire: ${theme.colors.primary}`"
+                  ></div>
+                  <div
+                    class="color-dot"
+                    :style="{ background: theme.colors.secondary }"
+                    :title="`Secondaire: ${theme.colors.secondary}`"
+                  ></div>
+                  <div
+                    class="color-dot"
+                    :style="{ background: theme.colors.accent }"
+                    :title="`Accent: ${theme.colors.accent}`"
+                  ></div>
+                  <div
+                    class="color-dot"
+                    :style="{ background: theme.colors.background }"
+                    :title="`Arrière-plan: ${theme.colors.background}`"
+                  ></div>
                 </div>
               </div>
               <div class="item-details">
@@ -1332,12 +1380,8 @@ onMounted(() => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(theme, 'theme')" class="btn btn-info">
-                Voir
-              </button>
-              <button @click="openEditThemeModal(theme)" class="btn btn-secondary">
-                Modifier
-              </button>
+              <button @click="viewDetails(theme, 'theme')" class="btn btn-info">Voir</button>
+              <button @click="openEditThemeModal(theme)" class="btn btn-secondary">Modifier</button>
               <button
                 @click="toggleThemeStatus(theme._id, theme.isActive)"
                 :class="theme.isActive ? 'btn btn-warning' : 'btn btn-success'"
@@ -1360,11 +1404,17 @@ onMounted(() => {
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>
-            {{ modalType === 'user' ? 'Détails Utilisateur' :
-               modalType === 'gym' ? 'Détails Salle de Sport' :
-               modalType === 'room' ? 'Détails Salle d\'Entraînement' :
-               modalType === 'badge' ? 'Détails Badge' :
-               'Détails Thème' }}
+            {{
+              modalType === 'user'
+                ? 'Détails Utilisateur'
+                : modalType === 'gym'
+                  ? 'Détails Salle de Sport'
+                  : modalType === 'room'
+                    ? "Détails Salle d'Entraînement"
+                    : modalType === 'badge'
+                      ? 'Détails Badge'
+                      : 'Détails Thème'
+            }}
           </h3>
           <button @click="showModal = false" class="modal-close">&times;</button>
         </div>
@@ -1419,7 +1469,7 @@ onMounted(() => {
               </div>
               <div class="detail-item">
                 <strong>Statut:</strong>
-                <span>{{ selectedItem.isApproved ? 'Approuvé' : 'En attente d\'approbation' }}</span>
+                <span>{{ selectedItem.isApproved ? 'Approuvé' : "En attente d'approbation" }}</span>
               </div>
             </template>
             <template v-if="modalType === 'room'">
@@ -1445,7 +1495,7 @@ onMounted(() => {
               </div>
               <div class="detail-item">
                 <strong>Statut:</strong>
-                <span>{{ selectedItem.isApproved ? 'Approuvé' : 'En attente d\'approbation' }}</span>
+                <span>{{ selectedItem.isApproved ? 'Approuvé' : "En attente d'approbation" }}</span>
               </div>
               <div class="detail-item">
                 <strong>Créé par:</strong>
@@ -1483,15 +1533,24 @@ onMounted(() => {
                 <strong>Couleurs:</strong>
                 <div class="theme-colors-detail">
                   <div class="color-item">
-                    <div class="color-sample" :style="{ background: selectedItem.colors.primary }"></div>
+                    <div
+                      class="color-sample"
+                      :style="{ background: selectedItem.colors.primary }"
+                    ></div>
                     <span>Primaire: {{ selectedItem.colors.primary }}</span>
                   </div>
                   <div class="color-item">
-                    <div class="color-sample" :style="{ background: selectedItem.colors.secondary }"></div>
+                    <div
+                      class="color-sample"
+                      :style="{ background: selectedItem.colors.secondary }"
+                    ></div>
                     <span>Secondaire: {{ selectedItem.colors.secondary }}</span>
                   </div>
                   <div class="color-item">
-                    <div class="color-sample" :style="{ background: selectedItem.colors.accent }"></div>
+                    <div
+                      class="color-sample"
+                      :style="{ background: selectedItem.colors.accent }"
+                    ></div>
                     <span>Accent: {{ selectedItem.colors.accent }}</span>
                   </div>
                 </div>
@@ -1577,7 +1636,9 @@ onMounted(() => {
             </div>
             <div class="theme-section">
               <h4>Thème et Récompense</h4>
-              <p class="section-description">Associez ce badge à un thème existant ou créez un nouveau thème</p>
+              <p class="section-description">
+                Associez ce badge à un thème existant ou créez un nouveau thème
+              </p>
               <div class="form-group">
                 <label>Option de thème</label>
                 <div class="radio-group">
@@ -1711,14 +1772,17 @@ onMounted(() => {
                       '--preview-secondary': badgeFormData.theme.newTheme.colors.secondary,
                       '--preview-accent': badgeFormData.theme.newTheme.colors.accent,
                       '--preview-background': badgeFormData.theme.newTheme.colors.background,
-                      '--preview-background-soft': badgeFormData.theme.newTheme.colors.backgroundSoft,
+                      '--preview-background-soft':
+                        badgeFormData.theme.newTheme.colors.backgroundSoft,
                       '--preview-text': badgeFormData.theme.newTheme.colors.text,
-                      '--preview-text-muted': badgeFormData.theme.newTheme.colors.textMuted
+                      '--preview-text-muted': badgeFormData.theme.newTheme.colors.textMuted,
                     }"
                   >
                     <div class="preview-header">
                       <h6>{{ badgeFormData.theme.newTheme.name || 'Nom du thème' }}</h6>
-                      <p>{{ badgeFormData.theme.newTheme.description || 'Description du thème' }}</p>
+                      <p>
+                        {{ badgeFormData.theme.newTheme.description || 'Description du thème' }}
+                      </p>
                     </div>
                     <div class="preview-content">
                       <div class="preview-button">Bouton Primaire</div>
@@ -1732,11 +1796,7 @@ onMounted(() => {
               <button type="button" @click="closeCreateBadgeModal" class="btn btn-secondary">
                 Annuler
               </button>
-              <button
-                type="submit"
-                :disabled="createBadgeLoading"
-                class="btn btn-primary"
-              >
+              <button type="submit" :disabled="createBadgeLoading" class="btn btn-primary">
                 {{ createBadgeLoading ? 'Création...' : 'Créer Badge' }}
               </button>
             </div>
@@ -1814,7 +1874,9 @@ onMounted(() => {
             </div>
             <div class="theme-section">
               <h4>Thème et Récompense</h4>
-              <p class="section-description">Associez ce badge à un thème existant ou créez un nouveau thème</p>
+              <p class="section-description">
+                Associez ce badge à un thème existant ou créez un nouveau thème
+              </p>
               <div class="form-group">
                 <label>Option de thème</label>
                 <div class="radio-group">
@@ -1948,14 +2010,17 @@ onMounted(() => {
                       '--preview-secondary': badgeFormData.theme.newTheme.colors.secondary,
                       '--preview-accent': badgeFormData.theme.newTheme.colors.accent,
                       '--preview-background': badgeFormData.theme.newTheme.colors.background,
-                      '--preview-background-soft': badgeFormData.theme.newTheme.colors.backgroundSoft,
+                      '--preview-background-soft':
+                        badgeFormData.theme.newTheme.colors.backgroundSoft,
                       '--preview-text': badgeFormData.theme.newTheme.colors.text,
-                      '--preview-text-muted': badgeFormData.theme.newTheme.colors.textMuted
+                      '--preview-text-muted': badgeFormData.theme.newTheme.colors.textMuted,
                     }"
                   >
                     <div class="preview-header">
                       <h6>{{ badgeFormData.theme.newTheme.name || 'Nom du thème' }}</h6>
-                      <p>{{ badgeFormData.theme.newTheme.description || 'Description du thème' }}</p>
+                      <p>
+                        {{ badgeFormData.theme.newTheme.description || 'Description du thème' }}
+                      </p>
                     </div>
                     <div class="preview-content">
                       <div class="preview-button">Bouton Primaire</div>
@@ -1969,11 +2034,7 @@ onMounted(() => {
               <button type="button" @click="closeEditBadgeModal" class="btn btn-secondary">
                 Annuler
               </button>
-              <button
-                type="submit"
-                :disabled="updateBadgeLoading"
-                class="btn btn-primary"
-              >
+              <button type="submit" :disabled="updateBadgeLoading" class="btn btn-primary">
                 {{ updateBadgeLoading ? 'Mise à jour...' : 'Mettre à jour' }}
               </button>
             </div>
@@ -2095,7 +2156,7 @@ onMounted(() => {
                   '--preview-background': themeFormData.colors.background,
                   '--preview-background-soft': themeFormData.colors.backgroundSoft,
                   '--preview-text': themeFormData.colors.text,
-                  '--preview-text-muted': themeFormData.colors.textMuted
+                  '--preview-text-muted': themeFormData.colors.textMuted,
                 }"
               >
                 <div class="preview-header">
@@ -2113,11 +2174,7 @@ onMounted(() => {
               <button type="button" @click="closeCreateThemeModal" class="btn btn-secondary">
                 Annuler
               </button>
-              <button
-                type="submit"
-                :disabled="createThemeLoading"
-                class="btn btn-primary"
-              >
+              <button type="submit" :disabled="createThemeLoading" class="btn btn-primary">
                 {{ createThemeLoading ? 'Création...' : 'Créer Thème' }}
               </button>
             </div>
@@ -2239,7 +2296,7 @@ onMounted(() => {
                   '--preview-background': themeFormData.colors.background,
                   '--preview-background-soft': themeFormData.colors.backgroundSoft,
                   '--preview-text': themeFormData.colors.text,
-                  '--preview-text-muted': themeFormData.colors.textMuted
+                  '--preview-text-muted': themeFormData.colors.textMuted,
                 }"
               >
                 <div class="preview-header">
@@ -2257,11 +2314,7 @@ onMounted(() => {
               <button type="button" @click="closeEditThemeModal" class="btn btn-secondary">
                 Annuler
               </button>
-              <button
-                type="submit"
-                :disabled="updateThemeLoading"
-                class="btn btn-primary"
-              >
+              <button type="submit" :disabled="updateThemeLoading" class="btn btn-primary">
                 {{ updateThemeLoading ? 'Mise à jour...' : 'Mettre à jour' }}
               </button>
             </div>
@@ -2958,7 +3011,7 @@ onMounted(() => {
   color: var(--color-text);
 }
 
-.radio-label input[type="radio"] {
+.radio-label input[type='radio'] {
   margin: 0;
   cursor: pointer;
 }

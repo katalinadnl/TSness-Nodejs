@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 
-const message = ref<string>('Chargement...');
+const message = ref<string>('Chargement...')
 
 onMounted(async () => {
   try {
-    const res = await fetch(import.meta.env.VITE_BACKEND_URL);
-    const data = await res.json();
-    message.value = data.message;
+    const res = await fetch(import.meta.env.VITE_BACKEND_URL)
+    const data = await res.json()
+    message.value = data.message
   } catch (error) {
-    console.error('Erreur:', error);
-    message.value = 'Erreur lors de la récupération du message';
+    console.error('Erreur:', error)
+    message.value = 'Erreur lors de la récupération du message'
   }
-});
+})
 </script>
 
 <template>
@@ -26,7 +26,7 @@ onMounted(async () => {
       <div class="card status-card">
         <h2>Statut de l'API</h2>
         <p class="status-message">{{ message }}</p>
-        <div class="status-indicator" :class="{ 'online': !message.includes('Erreur') }"></div>
+        <div class="status-indicator" :class="{ online: !message.includes('Erreur') }"></div>
       </div>
 
       <div class="login-section">
@@ -101,9 +101,18 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .login-section {
@@ -116,7 +125,11 @@ onMounted(async () => {
   max-width: 400px;
   text-align: center;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--color-background-soft) 0%, var(--color-background-mute) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-background-soft) 0%,
+    var(--color-background-mute) 100%
+  );
 }
 
 .login-card:hover {

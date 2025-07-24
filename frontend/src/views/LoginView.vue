@@ -6,7 +6,7 @@ const router = useRouter()
 
 const form = ref({
   username: '',
-  password: ''
+  password: '',
 })
 
 const loading = ref(false)
@@ -25,12 +25,12 @@ const login = async () => {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/login/signin`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         username: form.value.username,
-        password: form.value.password
-      })
+        password: form.value.password,
+      }),
     })
 
     const data = await response.json()
@@ -38,7 +38,7 @@ const login = async () => {
     if (data.success) {
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.admin))
-      
+
       if (data.admin.role === 'super_admin') {
         router.push('/admin')
       } else if (data.admin.role === 'gym_owner') {
@@ -121,7 +121,11 @@ const logout = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-background-soft) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-background) 0%,
+    var(--color-background-soft) 100%
+  );
   padding: 20px;
 }
 
@@ -246,7 +250,7 @@ const logout = () => {
   .login-card {
     padding: 24px;
   }
-  
+
   .login-header h1 {
     font-size: 2rem;
   }

@@ -107,8 +107,8 @@ const checkAuth = () => {
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   }
 }
 
@@ -117,7 +117,7 @@ const fetchMyGym = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/gyms`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success && data.length > 0) {
@@ -133,14 +133,14 @@ const fetchAvailableTrainingRooms = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/training-rooms`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
       availableTrainingRooms.value = data.data.filter((room: TrainingRoom) => room.isApproved)
     }
   } catch (err) {
-    error.value = 'Erreur lors du chargement des salles d\'entraînement'
+    error.value = "Erreur lors du chargement des salles d'entraînement"
   }
 }
 
@@ -149,7 +149,7 @@ const fetchAllBadges = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -165,7 +165,7 @@ const fetchMyBadges = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/user/my-badges`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -181,7 +181,7 @@ const fetchLeaderboard = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/badges/leaderboard`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (data.success) {
@@ -193,7 +193,7 @@ const fetchLeaderboard = async () => {
 }
 
 const getBadgeStatus = (badge: Badge) => {
-  return myBadges.value.some(mb => mb.badge?._id === badge._id) ? 'earned' : 'available'
+  return myBadges.value.some((mb) => mb.badge?._id === badge._id) ? 'earned' : 'available'
 }
 
 const getEarnedBadgesCount = () => {
@@ -226,13 +226,13 @@ const editForm = ref({
   firstName: '',
   lastName: '',
   username: '',
-  email: ''
+  email: '',
 })
 
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 const formErrors = ref<any>({})
@@ -247,7 +247,7 @@ const formatDate = (dateString: string | undefined) => {
   return date.toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -268,11 +268,11 @@ const getPasswordAge = () => {
 
 const getThemeDisplayName = (themeKey: string) => {
   const themeNames: Record<string, string> = {
-    'default': 'Standard',
-    'debutant': 'Débutant',
-    'intermediaire': 'Intermédiaire',
-    'avance': 'Avancé',
-    'champion': 'Champion'
+    default: 'Standard',
+    debutant: 'Débutant',
+    intermediaire: 'Intermédiaire',
+    avance: 'Avancé',
+    champion: 'Champion',
   }
   return themeNames[themeKey] || themeKey
 }
@@ -282,7 +282,7 @@ const fetchProfile = async () => {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await response.json()
     if (response.ok) {
@@ -302,7 +302,7 @@ const startEditingProfile = () => {
     firstName: profile.value.user.firstName,
     lastName: profile.value.user.lastName,
     username: profile.value.user.username,
-    email: profile.value.user.email
+    email: profile.value.user.email,
   }
   formErrors.value = {}
   editingProfile.value = true
@@ -314,7 +314,7 @@ const cancelEdit = () => {
     firstName: '',
     lastName: '',
     username: '',
-    email: ''
+    email: '',
   }
   formErrors.value = {}
 }
@@ -331,15 +331,15 @@ const validateForm = () => {
   }
 
   if (!editForm.value.username.trim()) {
-    errors.username = 'Le nom d\'utilisateur est requis'
+    errors.username = "Le nom d'utilisateur est requis"
   } else if (editForm.value.username.length < 3) {
-    errors.username = 'Le nom d\'utilisateur doit contenir au moins 3 caractères'
+    errors.username = "Le nom d'utilisateur doit contenir au moins 3 caractères"
   }
 
   if (!editForm.value.email.trim()) {
-    errors.email = 'L\'email est requis'
+    errors.email = "L'email est requis"
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.value.email)) {
-    errors.email = 'Format d\'email invalide'
+    errors.email = "Format d'email invalide"
   }
 
   formErrors.value = errors
@@ -355,7 +355,7 @@ const saveProfile = async () => {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify(editForm.value)
+      body: JSON.stringify(editForm.value),
     })
 
     const data = await response.json()
@@ -386,7 +386,7 @@ const startChangingPassword = () => {
   passwordForm.value = {
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   }
   passwordErrors.value = {}
   changingPassword.value = true
@@ -397,7 +397,7 @@ const cancelPasswordChange = () => {
   passwordForm.value = {
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   }
   passwordErrors.value = {}
 }
@@ -434,7 +434,7 @@ const changePassword = async () => {
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/profile/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify(passwordForm.value)
+      body: JSON.stringify(passwordForm.value),
     })
 
     const data = await response.json()
@@ -444,7 +444,9 @@ const changePassword = async () => {
       passwordErrors.value = {}
       alert('Mot de passe changé avec succès!')
     } else {
-      passwordErrors.value = { general: data.message || 'Erreur lors du changement de mot de passe' }
+      passwordErrors.value = {
+        general: data.message || 'Erreur lors du changement de mot de passe',
+      }
     }
   } catch (err) {
     passwordErrors.value = { general: 'Erreur lors du changement de mot de passe' }
@@ -474,9 +476,7 @@ onMounted(async () => {
         <p v-if="myGym" class="gym-name">Membre de {{ myGym.name }}</p>
       </div>
       <div class="header-actions">
-        <button @click="logout" class="btn btn-secondary">
-          Déconnexion
-        </button>
+        <button @click="logout" class="btn btn-secondary">Déconnexion</button>
       </div>
     </div>
 
@@ -576,7 +576,11 @@ onMounted(async () => {
               <div class="activities-preview">
                 <h4>Activités disponibles :</h4>
                 <div class="activities-list">
-                  <span v-for="activity in myGym.activities.slice(0, 3)" :key="activity" class="activity-tag">
+                  <span
+                    v-for="activity in myGym.activities.slice(0, 3)"
+                    :key="activity"
+                    class="activity-tag"
+                  >
                     {{ activity }}
                   </span>
                   <span v-if="myGym.activities.length > 3" class="activity-tag more">
@@ -648,9 +652,7 @@ onMounted(async () => {
         <div class="items-grid">
           <div v-for="room in availableTrainingRooms" :key="room._id" class="item-card">
             <div class="item-info">
-              <div class="item-avatar room-avatar">
-                🏃
-              </div>
+              <div class="item-avatar room-avatar">🏃</div>
               <div class="item-details">
                 <h3>{{ room.name }}</h3>
                 <p>👥 Capacité: {{ room.capacity }} personnes</p>
@@ -665,12 +667,8 @@ onMounted(async () => {
               </div>
             </div>
             <div class="item-actions">
-              <button @click="viewDetails(room, 'room')" class="btn btn-info">
-                Voir
-              </button>
-              <button class="btn btn-primary">
-                Réserver
-              </button>
+              <button @click="viewDetails(room, 'room')" class="btn btn-info">Voir</button>
+              <button class="btn btn-primary">Réserver</button>
             </div>
           </div>
         </div>
@@ -679,16 +677,29 @@ onMounted(async () => {
       <div v-if="activeTab === 'badges'" class="badges-content">
         <div class="section-header">
           <h2>Mes Badges</h2>
-          <span class="count">{{ getEarnedBadgesCount() }}/{{ allBadges.length }} badge(s) obtenus</span>
+          <span class="count"
+            >{{ getEarnedBadgesCount() }}/{{ allBadges.length }} badge(s) obtenus</span
+          >
         </div>
 
         <div class="badges-section">
           <h3>Badges Obtenus</h3>
           <div class="items-grid">
-            <div v-for="userBadge in myBadges" :key="userBadge.badgeId" class="item-card earned-badge">
+            <div
+              v-for="userBadge in myBadges"
+              :key="userBadge.badgeId"
+              class="item-card earned-badge"
+            >
               <div class="item-info">
                 <div class="item-avatar badge-avatar earned">
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" :alt="userBadge.badge?.name || 'Badge'" class="badge-icon" />
+                  <img
+                    :src="
+                      userBadge.badge?.iconUrl ||
+                      'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                    "
+                    :alt="userBadge.badge?.name || 'Badge'"
+                    class="badge-icon"
+                  />
                 </div>
                 <div class="item-details">
                   <h3>{{ userBadge.badge?.name || 'Badge inconnu' }}</h3>
@@ -697,7 +708,11 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="item-actions">
-                <button @click="viewDetails(userBadge.badge, 'badge')" class="btn btn-info" v-if="userBadge.badge">
+                <button
+                  @click="viewDetails(userBadge.badge, 'badge')"
+                  class="btn btn-info"
+                  v-if="userBadge.badge"
+                >
                   Voir
                 </button>
               </div>
@@ -709,13 +724,20 @@ onMounted(async () => {
           <h3>Badges À Obtenir</h3>
           <div class="items-grid">
             <div
-              v-for="badge in allBadges.filter(b => getBadgeStatus(b) === 'available')"
+              v-for="badge in allBadges.filter((b) => getBadgeStatus(b) === 'available')"
               :key="badge._id"
               class="item-card available-badge"
             >
               <div class="item-info">
                 <div class="item-avatar badge-avatar available">
-                  <img :src="badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'" :alt="badge.name" class="badge-icon" />
+                  <img
+                    :src="
+                      badge.iconUrl ||
+                      'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                    "
+                    :alt="badge.name"
+                    class="badge-icon"
+                  />
                 </div>
                 <div class="item-details">
                   <h3>{{ badge.name }}</h3>
@@ -724,9 +746,7 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="item-actions">
-                <button @click="viewDetails(badge, 'badge')" class="btn btn-info">
-                  Voir
-                </button>
+                <button @click="viewDetails(badge, 'badge')" class="btn btn-info">Voir</button>
               </div>
             </div>
           </div>
@@ -740,13 +760,21 @@ onMounted(async () => {
         </div>
 
         <div class="leaderboard-grid">
-          <div v-for="(entry, index) in leaderboard" :key="entry.user._id" class="leaderboard-card" :class="{ 'current-user': currentUser && entry.user._id === currentUser._id }">
+          <div
+            v-for="(entry, index) in leaderboard"
+            :key="entry.user._id"
+            class="leaderboard-card"
+            :class="{ 'current-user': currentUser && entry.user._id === currentUser._id }"
+          >
             <div class="rank">
-              <div class="rank-number" :class="{
-                'gold': index === 0,
-                'silver': index === 1,
-                'bronze': index === 2
-              }">
+              <div
+                class="rank-number"
+                :class="{
+                  gold: index === 0,
+                  silver: index === 1,
+                  bronze: index === 2,
+                }"
+              >
                 {{ index + 1 }}
               </div>
               <div class="rank-icon">
@@ -775,9 +803,13 @@ onMounted(async () => {
                   :key="userBadge.badgeId"
                   class="badge-mini"
                 >
-                  <img :src="userBadge.badge?.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                       :alt="userBadge.badge?.name || 'Badge'"
-                       class="badge-mini-icon"
+                  <img
+                    :src="
+                      userBadge.badge?.iconUrl ||
+                      'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'
+                    "
+                    :alt="userBadge.badge?.name || 'Badge'"
+                    class="badge-mini-icon"
                   />
                 </div>
                 <div v-if="entry.badges.length > 3" class="badge-mini more-badges">
@@ -829,9 +861,11 @@ onMounted(async () => {
                   v-model="editForm.firstName"
                   type="text"
                   class="form-input"
-                  :class="{ 'error': formErrors.firstName }"
+                  :class="{ error: formErrors.firstName }"
                 />
-                <span v-if="formErrors.firstName" class="error-text">{{ formErrors.firstName }}</span>
+                <span v-if="formErrors.firstName" class="error-text">{{
+                  formErrors.firstName
+                }}</span>
               </div>
 
               <div class="form-group">
@@ -840,7 +874,7 @@ onMounted(async () => {
                   v-model="editForm.lastName"
                   type="text"
                   class="form-input"
-                  :class="{ 'error': formErrors.lastName }"
+                  :class="{ error: formErrors.lastName }"
                 />
                 <span v-if="formErrors.lastName" class="error-text">{{ formErrors.lastName }}</span>
               </div>
@@ -851,7 +885,7 @@ onMounted(async () => {
                   v-model="editForm.username"
                   type="text"
                   class="form-input"
-                  :class="{ 'error': formErrors.username }"
+                  :class="{ error: formErrors.username }"
                 />
                 <span v-if="formErrors.username" class="error-text">{{ formErrors.username }}</span>
               </div>
@@ -862,7 +896,7 @@ onMounted(async () => {
                   v-model="editForm.email"
                   type="email"
                   class="form-input"
-                  :class="{ 'error': formErrors.email }"
+                  :class="{ error: formErrors.email }"
                 />
                 <span v-if="formErrors.email" class="error-text">{{ formErrors.email }}</span>
               </div>
@@ -871,9 +905,7 @@ onMounted(async () => {
                 <button @click="saveProfile" class="save-btn" :disabled="savingProfile">
                   {{ savingProfile ? 'Sauvegarde...' : '💾 Sauvegarder' }}
                 </button>
-                <button @click="cancelEdit" class="cancel-btn">
-                  ❌ Annuler
-                </button>
+                <button @click="cancelEdit" class="cancel-btn">❌ Annuler</button>
               </div>
             </div>
           </div>
@@ -883,9 +915,18 @@ onMounted(async () => {
             <div v-if="profile?.theme" class="theme-info">
               <div class="theme-preview">
                 <div class="theme-colors">
-                  <div class="color-swatch primary" :style="{ backgroundColor: profile.theme.colors.primary }"></div>
-                  <div class="color-swatch secondary" :style="{ backgroundColor: profile.theme.colors.secondary }"></div>
-                  <div class="color-swatch accent" :style="{ backgroundColor: profile.theme.colors.accent }"></div>
+                  <div
+                    class="color-swatch primary"
+                    :style="{ backgroundColor: profile.theme.colors.primary }"
+                  ></div>
+                  <div
+                    class="color-swatch secondary"
+                    :style="{ backgroundColor: profile.theme.colors.secondary }"
+                  ></div>
+                  <div
+                    class="color-swatch accent"
+                    :style="{ backgroundColor: profile.theme.colors.accent }"
+                  ></div>
                 </div>
                 <div class="theme-details">
                   <h4>{{ profile.theme.name }}</h4>
@@ -926,7 +967,7 @@ onMounted(async () => {
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>
-            {{ modalType === 'room' ? 'Détails Salle d\'Entraînement' : 'Détails Badge' }}
+            {{ modalType === 'room' ? "Détails Salle d'Entraînement" : 'Détails Badge' }}
           </h3>
           <button @click="showModal = false" class="modal-close">&times;</button>
         </div>
@@ -961,7 +1002,11 @@ onMounted(async () => {
               </div>
               <div class="detail-item">
                 <strong>Icône:</strong>
-                <img :src="selectedItem.iconUrl" :alt="selectedItem.name" class="modal-badge-icon" />
+                <img
+                  :src="selectedItem.iconUrl"
+                  :alt="selectedItem.name"
+                  class="modal-badge-icon"
+                />
               </div>
             </template>
           </div>
@@ -1180,13 +1225,15 @@ onMounted(async () => {
   color: var(--color-text-muted);
 }
 
-.equipment-list, .activities-list {
+.equipment-list,
+.activities-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.equipment-tag, .activity-tag {
+.equipment-tag,
+.activity-tag {
   background: var(--color-primary);
   color: white;
   padding: 4px 12px;
@@ -1319,7 +1366,8 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-.status, .difficulty {
+.status,
+.difficulty {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -1655,7 +1703,11 @@ onMounted(async () => {
 }
 
 .theme-card {
-  background: linear-gradient(135deg, var(--color-background-soft) 0%, rgba(var(--color-primary-rgb, 99, 102, 241), 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-background-soft) 0%,
+    rgba(var(--color-primary-rgb, 99, 102, 241), 0.05) 100%
+  );
   border-color: rgba(var(--color-primary-rgb, 99, 102, 241), 0.2);
 }
 
@@ -1794,7 +1846,11 @@ onMounted(async () => {
 }
 
 .stats-card {
-  background: linear-gradient(135deg, var(--color-background-soft) 0%, rgba(var(--color-accent-rgb, 6, 182, 212), 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-background-soft) 0%,
+    rgba(var(--color-accent-rgb, 6, 182, 212), 0.05) 100%
+  );
   border-color: rgba(var(--color-accent-rgb, 6, 182, 212), 0.2);
 }
 

@@ -27,8 +27,8 @@ export function useTheme() {
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token')
     return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     }
   }
 
@@ -36,7 +36,7 @@ export function useTheme() {
     isLoading.value = true
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/themes/my-theme`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
       const data = await response.json()
 
@@ -76,7 +76,7 @@ export function useTheme() {
       background: '#ffffff',
       backgroundSoft: '#f8fafc',
       text: '#1e293b',
-      textMuted: '#64748b'
+      textMuted: '#64748b',
     }
     currentTheme.value = 'default'
     applyTheme(defaultColors)
@@ -112,6 +112,6 @@ export function useTheme() {
     themeDescription,
     fetchUserTheme,
     initTheme,
-    applyDefaultTheme
+    applyDefaultTheme,
   }
 }

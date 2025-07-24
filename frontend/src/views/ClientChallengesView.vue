@@ -43,8 +43,8 @@ const checkAuth = () => {
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   }
 }
 
@@ -52,7 +52,7 @@ const fetchChallenges = async () => {
   if (!checkAuth()) return
   try {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/challenges`, {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     })
     const data = await res.json()
     if (data.success) challenges.value = data.data
@@ -63,10 +63,13 @@ const fetchChallenges = async () => {
 
 const participateInChallenge = async (challengeId: string) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/challenges/${challengeId}/participate`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    })
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/challenges/${challengeId}/participate`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      },
+    )
     const data = await res.json()
     if (data.success) {
       alert('Participation enregistrée !')
@@ -81,11 +84,14 @@ const participateInChallenge = async (challengeId: string) => {
 
 const submitProgress = async (challengeId: string) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/challenges/${challengeId}/progress`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(progress)
-    })
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/challenges/${challengeId}/progress`,
+      {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(progress),
+      },
+    )
     const data = await res.json()
     if (data.success) {
       alert('Progression mise à jour !')
@@ -123,7 +129,12 @@ onMounted(() => {
         </button>
 
         <form @submit.prevent="submitProgress(challenge._id)" class="progress-form">
-          <input type="number" v-model="progress.caloriesBurned" placeholder="Calories brûlées" required />
+          <input
+            type="number"
+            v-model="progress.caloriesBurned"
+            placeholder="Calories brûlées"
+            required
+          />
           <input type="number" v-model="progress.duration" placeholder="Durée (min)" required />
           <button type="submit" class="btn btn-info">Mettre à jour ma progression</button>
         </form>

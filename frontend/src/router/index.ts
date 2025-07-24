@@ -23,25 +23,25 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('../views/AdminView.vue'),
-      meta: { requiresAuth: true, requiresSuperAdmin: true }
+      meta: { requiresAuth: true, requiresSuperAdmin: true },
     },
     {
       path: '/gym-owner',
       name: 'gym-owner',
       component: () => import('../views/GymOwnerView.vue'),
-      meta: { requiresAuth: true, requiresGymOwner: true }
+      meta: { requiresAuth: true, requiresGymOwner: true },
     },
     {
       path: '/client',
       name: 'client',
       component: () => import('../views/ClientView.vue'),
-      meta: { requiresAuth: true, requiresClient: true }
+      meta: { requiresAuth: true, requiresClient: true },
     },
     {
       path: '/client/challenges',
       name: 'client-challenges',
       component: () => import('../views/ClientChallengesView.vue'),
-      meta: { requiresAuth: true, requiresClient: true }
+      meta: { requiresAuth: true, requiresClient: true },
     },
   ],
 })

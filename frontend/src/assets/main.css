@@ -71,7 +71,12 @@ a,
   transform: translateY(-4px);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--color-heading);
   font-weight: 700;
   margin-bottom: 16px;
@@ -112,7 +117,7 @@ h1 {
   #app {
     padding: 3rem 2rem;
   }
-  
+
   .grid {
     gap: 32px;
   }
