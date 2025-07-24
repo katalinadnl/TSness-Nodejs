@@ -84,6 +84,19 @@ const showModal = ref(false)
 const modalType = ref('')
 const selectedItem = ref<any>(null)
 
+const showChallengeModal = ref(false)
+const selectedEquipment = ref('')
+const challengeForm = ref({
+  title: '',
+  description: '',
+  equipment: '',
+  duration: '',
+  difficulty: 'BEGINNER' as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED',
+  goal: 'STAY_HEALTHY' as 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'IMPROVE_ENDURANCE' | 'STAY_HEALTHY',
+  points: 50,
+  instructions: ''
+})
+
 const checkAuth = () => {
   const token = localStorage.getItem('token')
   const user = localStorage.getItem('user')
@@ -228,16 +241,103 @@ const suggestChallenge = (badge: Badge) => {
 }
 
 const createEquipmentChallenge = (equipment: string) => {
+  selectedEquipment.value = equipment
+
   const challengeIdeas = {
-    'haltères': 'Défi Haltères: Soulevez 80% de votre poids corporel 5 fois en moins de 2 minutes',
-    'tapis de course': 'Défi Cardio: Courez 5km en moins de 30 minutes',
-    'bancs de musculation': 'Défi Développé-couché: Effectuez 20 répétitions à 60% de votre max',
-    'vélos elliptiques': 'Défi Endurance: 45 minutes d\'elliptique avec résistance moyenne',
-    'barres': 'Défi Force: Squat avec barre - 15 répétitions à votre poids corporel'
+    'haltères': {
+      title: 'Défi Haltères',
+      description: 'Soulevez 80% de votre poids corporel 5 fois en moins de 2 minutes',
+      instructions: 'Échauffez-vous pendant 10 minutes, puis effectuez 5 répétitions de développé couché avec 80% de votre poids corporel en moins de 2 minutes.',
+      goal: 'GAIN_MUSCLE' as const,
+      difficulty: 'INTERMEDIATE' as const,
+      points: 75
+    },
+    'tapis de course': {
+      title: 'Défi Cardio Course',
+      description: 'Courez 5km en moins de 30 minutes',
+      instructions: 'Maintenez un rythme constant, hydratez-vous régulièrement. Objectif : 5km en moins de 30 minutes.',
+      goal: 'IMPROVE_ENDURANCE' as const,
+      difficulty: 'INTERMEDIATE' as const,
+      points: 100
+    },
+    'bancs de musculation': {
+      title: 'Défi Développé-couché',
+      description: 'Effectuez 20 répétitions à 60% de votre max',
+      instructions: 'Échauffement obligatoire. Effectuez 20 répétitions consécutives à 60% de votre 1RM au développé-couché.',
+      goal: 'GAIN_MUSCLE' as const,
+      difficulty: 'INTERMEDIATE' as const,
+      points: 80
+    },
+    'vélos elliptiques': {
+      title: 'Défi Endurance Elliptique',
+      description: '45 minutes d\'elliptique avec résistance moyenne',
+      instructions: 'Maintenez une résistance niveau 5-7 pendant 45 minutes. Gardez un rythme cardiaque entre 140-160 bpm.',
+      goal: 'IMPROVE_ENDURANCE' as const,
+      difficulty: 'BEGINNER' as const,
+      points: 60
+    },
+    'barres': {
+      title: 'Défi Force Squat',
+      description: '15 répétitions à votre poids corporel',
+      instructions: 'Squat avec barre - 15 répétitions avec une charge équivalente à votre poids corporel. Technique stricte exigée.',
+      goal: 'GAIN_MUSCLE' as const,
+      difficulty: 'ADVANCED' as const,
+      points: 90
+    }
   }
 
-  const challenge = challengeIdeas[equipment as keyof typeof challengeIdeas] || `Défi ${equipment}: Utilisez cet équipement pendant 30 minutes avec intensité élevée`
-  alert(`💪 ${challenge}\n\nRécompense: +50 points + bonus performance\n\nCe défi sera proposé à tous vos clients et augmentera leur motivation !`)
+  const suggestion = challengeIdeas[equipment as keyof typeof challengeIdeas] || {
+    title: `Défi ${equipment}`,
+    description: `Utilisez ${equipment} pendant 30 minutes avec intensité élevée`,
+    instructions: `Effectuez un entraînement complet avec ${equipment} en maintenant une intensité élevée pendant 30 minutes.`,
+    goal: 'STAY_HEALTHY' as const,
+    difficulty: 'BEGINNER' as const,
+    points: 50
+  }
+
+  challengeForm.value = {
+    title: suggestion.title,
+    description: suggestion.description,
+    equipment: equipment,
+    duration: '30 minutes',
+    difficulty: suggestion.difficulty,
+    goal: suggestion.goal,
+    points: suggestion.points,
+    instructions: suggestion.instructions
+  }
+
+  showChallengeModal.value = true
+}
+
+const closeChallengeModal = () => {
+  showChallengeModal.value = false
+  selectedEquipment.value = ''
+}
+
+const submitChallenge = async () => {
+  if (!challengeForm.value.title || !challengeForm.value.description) {
+    alert('Veuillez remplir tous les champs obligatoires')
+    return
+  }
+
+  try {
+    const challengeData = {
+      ...challengeForm.value,
+      gymId: myGym.value?._id,
+      createdBy: currentUser.value?._id,
+      type: 'equipment',
+      status: 'active'
+    }
+
+    console.log('Creating challenge:', challengeData)
+
+    alert(`✅ Défi "${challengeForm.value.title}" créé avec succès!\n\nVos clients pourront maintenant participer à ce défi et gagner ${challengeForm.value.points} points.`)
+
+    closeChallengeModal()
+  } catch (error) {
+    console.error('Error creating challenge:', error)
+    alert('Erreur lors de la création du défi. Veuillez réessayer.')
+  }
 }
 
 const createActivityChallenge = (activity: string) => {
@@ -251,6 +351,26 @@ const createActivityChallenge = (activity: string) => {
 
   const challenge = challengeIdeas[activity as keyof typeof challengeIdeas] || `Défi ${activity}: Participez à une séance intensive de cette activité`
   alert(`🎯 ${challenge}\n\nRécompense: +75 points + bonus participation\n\nVos clients vont adorer ce nouveau défi !`)
+}
+
+const getTrainingRoomsEquipment = () => {
+  if (!myTrainingRooms.value || myTrainingRooms.value.length === 0) {
+    return []
+  }
+
+  const equipmentSet = new Set<string>()
+
+  myTrainingRooms.value.forEach(room => {
+    if (room.equipment && Array.isArray(room.equipment)) {
+      room.equipment.forEach(eq => {
+        if (typeof eq === 'string' && eq.trim()) {
+          equipmentSet.add(eq.trim())
+        }
+      })
+    }
+  })
+
+  return Array.from(equipmentSet)
 }
 
 onMounted(() => {
@@ -359,7 +479,7 @@ onMounted(() => {
             <div class="stat-icon">⏳</div>
             <div class="stat-content">
               <h3>{{ myTrainingRooms.filter(room => !room.isApproved).length }}</h3>
-              <p>En Attente</p>
+              <p>Salles en Attente</p>
             </div>
           </div>
         </div>
@@ -460,45 +580,34 @@ onMounted(() => {
           <h2>Badges Disponibles & Proposition de Défis</h2>
           <span class="count">{{ allBadges.length }} badge(s) disponible(s)</span>
         </div>
-        
-        <!-- Debug info -->
-        <div style="padding: 10px; background: #f0f0f0; margin-bottom: 20px;">
-          <p>Debug: activeTab = {{ activeTab }}</p>
-          <p>Debug: allBadges.length = {{ allBadges.length }}</p>
-          <p>Debug: Badges tab condition = {{ activeTab === 'badges' }}</p>
-        </div>
 
         <div class="badges-section">
           <div class="detail-card">
             <h3>🏆 Tous les Badges Disponibles</h3>
             <p class="section-description">
-              Découvrez tous les badges que vos clients peuvent obtenir et proposez des défis basés sur votre équipement.
+              Découvrez tous les badges que vos clients peuvent obtenir et proposez des défis personnalisés.
             </p>
 
-            <div class="badges-grid">
-              <div v-for="badge in allBadges" :key="badge._id" class="badge-card">
-                <div class="badge-icon">
-                  <img :src="badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
-                       :alt="badge.name"
-                       class="badge-image"
-                  />
-                </div>
-                <div class="badge-details">
-                  <h4>{{ badge.name }}</h4>
-                  <p>{{ badge.description }}</p>
-                  <div class="badge-meta">
-                    <span class="status" :class="{ active: badge.isActive }">
-                      {{ badge.isActive ? 'Actif' : 'Inactif' }}
-                    </span>
-                    <span class="badge-date">{{ formatDate(badge.createdAt) }}</span>
+            <div class="items-grid">
+              <div v-for="badge in allBadges" :key="badge._id" class="item-card">
+                <div class="item-info">
+                  <div class="item-avatar badge-avatar">
+                    <img :src="badge.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
+                         :alt="badge.name"
+                         class="badge-icon"
+                    />
+                  </div>
+                  <div class="item-details">
+                    <h3>{{ badge.name }}</h3>
+                    <p>{{ badge.description }}</p>
+                    <div class="item-meta">
+                      <span class="badge-date">{{ formatDate(badge.createdAt) }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="badge-actions">
+                <div class="item-actions">
                   <button @click="viewDetails(badge, 'badge')" class="btn btn-info">
-                    Détails
-                  </button>
-                  <button @click="suggestChallenge(badge)" class="btn btn-primary">
-                    Proposer Défi
+                    Voir
                   </button>
                 </div>
               </div>
@@ -506,15 +615,10 @@ onMounted(() => {
           </div>
 
           <div class="detail-card" v-if="myGym">
-            <h3>💡 Générateur de Défis Personnalisés</h3>
-            <p class="section-description">
-              Créez des défis basés sur les équipements disponibles dans votre salle pour motiver vos clients et augmenter leur score.
-            </p>
-
             <div class="challenge-generator">
               <div class="equipment-based-challenges">
                 <h4>🏋️ Défis basés sur vos équipements</h4>
-                <div class="equipment-challenges-grid">
+                <div v-if="myGym?.equipment && myGym.equipment.length > 0" class="equipment-challenges-grid">
                   <div v-for="equipment in myGym.equipment" :key="equipment" class="equipment-challenge">
                     <div class="equipment-info">
                       <span class="equipment-name">{{ equipment }}</span>
@@ -525,9 +629,33 @@ onMounted(() => {
                     </button>
                   </div>
                 </div>
+                <div v-else class="equipment-challenges-grid">
+                  <div v-if="getTrainingRoomsEquipment().length > 0">
+                    <div v-for="equipment in getTrainingRoomsEquipment()" :key="equipment" class="equipment-challenge">
+                      <div class="equipment-info">
+                        <span class="equipment-name">{{ equipment }}</span>
+                        <p>Défi suggéré pour cet équipement (depuis vos salles d'entraînement)</p>
+                      </div>
+                      <button @click="createEquipmentChallenge(equipment)" class="btn btn-secondary">
+                        Créer Défi
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <div v-for="equipment in ['haltères', 'tapis de course', 'bancs de musculation', 'vélos elliptiques', 'barres']" :key="equipment" class="equipment-challenge">
+                      <div class="equipment-info">
+                        <span class="equipment-name">{{ equipment }}</span>
+                        <p>Défi suggéré pour cet équipement (TEST)</p>
+                      </div>
+                      <button @click="createEquipmentChallenge(equipment)" class="btn btn-secondary">
+                        Créer Défi
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="activity-based-challenges" v-if="myGym.activities.length > 0">
+              <div class="activity-based-challenges" v-if="myGym && myGym.activities && myGym.activities.length > 0">
                 <h4>🎯 Défis basés sur vos activités</h4>
                 <div class="activity-challenges-grid">
                   <div v-for="activity in myGym.activities" :key="activity" class="activity-challenge">
@@ -538,24 +666,6 @@ onMounted(() => {
                     <button @click="createActivityChallenge(activity)" class="btn btn-secondary">
                       Créer Défi
                     </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="challenge-impact">
-                <h4>📈 Impact sur le Score des Joueurs</h4>
-                <div class="impact-info">
-                  <div class="impact-item">
-                    <strong>Défi Équipement :</strong>
-                    <span>+50 points de base + bonus performance</span>
-                  </div>
-                  <div class="impact-item">
-                    <strong>Défi Activité :</strong>
-                    <span>+75 points de base + bonus participation</span>
-                  </div>
-                  <div class="impact-item">
-                    <strong>Défi Badge :</strong>
-                    <span>+100 points + badge obtenu</span>
                   </div>
                 </div>
               </div>
@@ -670,11 +780,39 @@ onMounted(() => {
     <div v-if="showModal" class="modal-overlay" @click="showModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>Détails Salle d'Entraînement</h3>
+          <h3>{{ modalType === 'badge' ? 'Détails du Badge' : 'Détails Salle d\'Entraînement' }}</h3>
           <button @click="showModal = false" class="modal-close">&times;</button>
         </div>
         <div v-if="selectedItem" class="modal-body">
-          <div class="detail-grid">
+          <!-- Badge Details -->
+          <div v-if="modalType === 'badge'" class="detail-grid">
+            <div class="detail-item badge-icon-detail">
+              <div class="badge-icon-large">
+                <img :src="selectedItem.iconUrl || 'https://raw.githubusercontent.com/katalinadnl/TSness-Nodejs/refs/heads/feat/badges/backend/assets/icons/badge.png'"
+                     :alt="selectedItem.name"
+                     class="badge-image-large"
+                />
+              </div>
+            </div>
+            <div class="detail-item">
+              <strong>ID:</strong>
+              <span>{{ selectedItem._id }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Nom:</strong>
+              <span>{{ selectedItem.name }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Description:</strong>
+              <span>{{ selectedItem.description }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Créé le:</strong>
+              <span>{{ formatDate(selectedItem.createdAt) }}</span>
+            </div>
+          </div>
+          <!-- Room Details -->
+          <div v-else class="detail-grid">
             <div class="detail-item">
               <strong>ID:</strong>
               <span>{{ selectedItem._id }}</span>
@@ -713,6 +851,107 @@ onMounted(() => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Challenge Creation Modal -->
+  <div v-if="showChallengeModal" class="modal-overlay" @click="closeChallengeModal">
+    <div class="modal-content challenge-modal" @click.stop>
+      <div class="modal-header">
+        <h3>Créer un Défi - {{ selectedEquipment }}</h3>
+        <button class="close-btn" @click="closeChallengeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form @submit.prevent="submitChallenge" class="challenge-form">
+          <div class="form-group">
+            <label for="challenge-title">Titre du défi</label>
+            <input
+              id="challenge-title"
+              v-model="challengeForm.title"
+              type="text"
+              placeholder="Ex: Défi haltères - Force"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="challenge-description">Description</label>
+            <textarea
+              id="challenge-description"
+              v-model="challengeForm.description"
+              placeholder="Décrivez le défi..."
+              rows="3"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="challenge-duration">Durée</label>
+              <input
+                id="challenge-duration"
+                v-model="challengeForm.duration"
+                type="text"
+                placeholder="Ex: 30 minutes, 1 semaine"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="challenge-points">Points</label>
+              <input
+                id="challenge-points"
+                v-model="challengeForm.points"
+                type="number"
+                min="10"
+                max="500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="challenge-difficulty">Difficulté</label>
+              <select id="challenge-difficulty" v-model="challengeForm.difficulty" required>
+                <option value="BEGINNER">Débutant</option>
+                <option value="INTERMEDIATE">Intermédiaire</option>
+                <option value="ADVANCED">Avancé</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="challenge-goal">Objectif</label>
+              <select id="challenge-goal" v-model="challengeForm.goal" required>
+                <option value="LOSE_WEIGHT">Perte de poids</option>
+                <option value="GAIN_MUSCLE">Prise de muscle</option>
+                <option value="IMPROVE_ENDURANCE">Améliorer l'endurance</option>
+                <option value="STAY_HEALTHY">Rester en forme</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="challenge-instructions">Instructions détaillées</label>
+            <textarea
+              id="challenge-instructions"
+              v-model="challengeForm.instructions"
+              placeholder="Instructions spécifiques pour ce défi..."
+              rows="4"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" @click="closeChallengeModal">
+              Annuler
+            </button>
+            <button type="submit" class="btn-primary">
+              Créer le Défi
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -1514,6 +1753,46 @@ onMounted(() => {
   font-weight: 600;
 }
 
+/* Badge Detail Modal Styles */
+.badge-icon-detail {
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.badge-icon-large {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.badge-image-large {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Badge Avatar Styles */
+.badge-avatar {
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  font-size: 1.5rem;
+}
+
+.badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.badge-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 @media (max-width: 768px) {
   .badges-grid {
     grid-template-columns: 1fr;
@@ -1534,5 +1813,174 @@ onMounted(() => {
     gap: 12px;
     text-align: center;
   }
+}
+
+/* Challenge Creation Modal Styles */
+.challenge-modal {
+  max-width: 700px;
+}
+
+.challenge-form {
+  display: grid;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: var(--color-text);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: var(--color-secondary);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--color-background-mute);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--color-border-hover);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .challenge-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Styles pour le message d'avertissement des équipements */
+.no-equipment-message {
+  grid-column: 1 / -1;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.no-equipment-message p {
+  margin: 4px 0;
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.no-equipment-message p:first-child {
+  font-weight: 600;
+}
+
+/* Styles pour le message d'équipement des salles d'entraînement */
+.equipment-training-message {
+  grid-column: 1 / -1;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.equipment-training-message p {
+  margin: 4px 0;
+  color: #0891b2;
+  font-weight: 500;
+}
+
+.equipment-training-message p:first-child {
+  font-weight: 600;
 }
 </style>
